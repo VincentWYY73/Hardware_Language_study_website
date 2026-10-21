@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 ASM — 演算法狀態機與定序器／資料路徑 ｜ 硬體描述語言 HDL 學習網站</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+.svg-plain .box { fill: #fff; stroke: #5b6472; stroke-width: 2; }
+.svg-plain text { font-size: 13px; fill: #1f2430; }
+.svg-plain .edge { stroke: #8a93a3; stroke-width: 2.5; fill: none; }
+.svg-plain .proc { fill: #fff8e1; stroke: #b08b00; stroke-width: 2; }
+.svg-plain .dec { fill: #fde8f3; stroke: #a0246b; stroke-width: 2; }
+.svg-plain .term { fill: #e8f6e2; stroke: #4a7c2f; stroke-width: 2; }
+.svg-plain .dummy { fill: #e3f0ff; stroke: #1565c0; stroke-width: 2; stroke-dasharray: 5 4; }
+.svg-plain .lbl-state { font-size: 12px; font-style: italic; fill: #a0246b; }
+.svg-plain .lbl-br { font-size: 12px; font-weight: 700; fill: #8a5200; }
+.svg-plain .accent { stroke: #b36b00; stroke-width: 3; }
+.svg-plain .accent-text { fill: #8a5200; font-weight: 700; }
+[data-theme="dark"] .svg-plain .box { fill: #222733; stroke: #9aa4b4; }
+[data-theme="dark"] .svg-plain text { fill: #e7ebf2; }
+[data-theme="dark"] .svg-plain .proc { fill: #3a3312; }
+[data-theme="dark"] .svg-plain .dec { fill: #3a1b2c; }
+[data-theme="dark"] .svg-plain .term { fill: #1d3317; }
+[data-theme="dark"] .svg-plain .dummy { fill: #14283d; }
+[data-theme="dark"] .svg-plain .lbl-state { fill: #f2a0c8; }
+[data-theme="dark"] .svg-plain .lbl-br, [data-theme="dark"] .svg-plain .accent-text { fill: #ffc34d; }
+[data-theme="dark"] .svg-plain .accent { stroke: #ffc34d; }
+.cmp-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 1rem 0; }
+@media (min-width: 900px) { .cmp-grid { grid-template-columns: 1fr 1fr; } }
+.cmp-grid > div { min-width: 0; }
+.steps-flow { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 1rem 0; }
+.steps-flow .step-chip { border: 2px solid currentColor; border-radius: 999px; padding: .25rem .75rem; font-weight: 700; }
+</style>
+<script src="js/site.js"></script>
+</head>
+<body data-chapter="ch04">
+<a class="skiplink" href="#main">跳到主要內容</a>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="index.html">硬體描述語言 (HDL) 學習網站<span>Logic Design using Verilog ・ 離線版</span></a>
+    <nav class="site-nav" aria-label="主導覽">
+      <ul>
+        <li><a href="index.html">首頁</a></li>
+        <li><a href="ch01-overview.html">01 Overview</a></li>
+        <li><a href="ch02-ychart.html">02 Y 圖</a></li>
+        <li><a href="ch03-grammar.html">03 基本語法</a></li>
+        <li><a href="ch04-asm.html" aria-current="page">04 ASM</a></li>
+        <li><a href="ch05-fsm.html">05 FSM</a></li>
+        <li><a href="glossary.html">術語表</a></li>
+      </ul>
+    </nav>
+    <div class="header-tools">
+      <button type="button" class="btn btn-sm" data-action="toggle-theme" aria-pressed="false">
+        <span data-theme-label>深色模式：關</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc" data-toc aria-labelledby="toc-heading">
+    <h2 id="toc-heading">本章目錄</h2>
+    <div class="toc-tools">
+      <button type="button" class="btn btn-sm" data-toc-action="expand">全部展開</button>
+      <button type="button" class="btn btn-sm" data-toc-action="collapse">全部收起</button>
+    </div>
+    <details class="toc-group" open>
+      <summary>小節（51 張投影片）</summary>
+      <ol class="toc-list">
+        <li><a href="#sec-4-1">4.1 本章大綱</a></li>
+        <li><a href="#sec-4-2">4.2 RTL 還是行為模型？二進位與格雷計數器</a></li>
+        <li><a href="#sec-4-3">4.3 HDL 的兩大階段</a></li>
+        <li><a href="#sec-4-4">4.4 循序電路的四種看法</a></li>
+        <li><a href="#sec-4-5">4.5 從加法器到減法器</a></li>
+        <li><a href="#sec-4-6">4.6 平行乘法器：長乘法、單元電路與 6×6 陣列</a></li>
+        <li><a href="#sec-4-7">4.7 用 C 程式產生 Verilog 實體列表</a></li>
+        <li><a href="#sec-4-8">4.8 IEEE 1364-2001 (V2K) 的新功能</a></li>
+        <li><a href="#sec-4-9">4.9 八種 Block 與「Block」的兩種意思</a></li>
+        <li><a href="#sec-4-10">4.10 Verilog 的 for：時間、空間與並行</a></li>
+        <li><a href="#sec-4-11">4.11 用 generate 寫參數化乘法器</a></li>
+        <li><a href="#sec-4-12">4.12 大量資料的驗證</a></li>
+        <li><a href="#sec-4-13">4.13 佈局視圖</a></li>
+        <li><a href="#sec-4-14">4.14 N 位元移位器與移位暫存器</a></li>
+        <li><a href="#sec-4-15">4.15 演算法狀態機 (ASM) 與四步設計流程</a></li>
+        <li><a href="#sec-4-16">4.16 步驟 1：虛擬碼</a></li>
+        <li><a href="#sec-4-17">4.17 步驟 2：流程圖元件與控制結構</a></li>
+        <li><a href="#sec-4-18">4.18 步驟 3：流程圖對應到 ASM 圖的三條規則</a></li>
+        <li><a href="#sec-4-19">4.19 範例：8 位元乘法器的資料路徑與流程圖</a></li>
+        <li><a href="#sec-4-20">4.20 用 C 與組合語言驗證演算法</a></li>
+        <li><a href="#sec-4-21">4.21 流程圖 → ASM 圖對照</a></li>
+        <li><a href="#sec-4-22">4.22 步驟 4：ASM 元件對應到硬體</a></li>
+        <li><a href="#sec-4-23">4.23 對應到狀態定序器</a></li>
+        <li><a href="#sec-4-24">4.24 對應到 ALU / 資料路徑</a></li>
+        <li><a href="#sec-4-25">4.25 完整設計：控制器 + 資料路徑</a></li>
+        <li><a href="#sec-4-26">4.26 回到程式碼：定序器的閘級模型</a></li>
+        <li><a href="#sec-4-27">4.27 以計數器為基礎的狀態圖與 FSM 編碼</a></li>
+        <li><a href="#sec-4-28">4.28 面積與時間的取捨</a></li>
+        <li><a href="#sec-4-29">4.29 範例：最大公因數 GCD</a></li>
+        <li><a href="#sec-4-30">4.30 範例：氣泡排序器</a></li>
+        <li><a href="#sec-4-31">4.31 範例：質數表</a></li>
+        <li><a href="#sec-4-32">4.32 練習與再思考</a></li>
+        <li><a href="#sec-4-33">4.33 Lab04 計數器</a></li>
+      </ol>
+    </details>
+    <details class="toc-group" open>
+      <summary>本章結尾</summary>
+      <ul class="toc-list">
+        <li><a href="#takeaways">重點整理</a></li>
+        <li><a href="#terms">關鍵術語</a></li>
+        <li><a href="#quiz">自我測驗</a></li>
+      </ul>
+    </details>
+  </nav>
+
+  <main id="main">
+    <h1>04 ASM — 演算法狀態機與定序器／資料路徑</h1>
+    <p>流程圖 → ASM 圖 → 定序器與資料路徑，主要範例是位移相加乘法器。原始投影片 51 張，估計閱讀 70 分鐘。</p>
+
+    <section class="chapter-section" id="objectives">
+      <h2>學習目標</h2>
+      <ul>
+        <li>說明為什麼同一行 <code>assign P = A * B;</code> 可以合成出面積與速度完全不同的電路。</li>
+        <li>讀懂 6 位元平行乘法器的單元電路與 6×6 陣列結構。</li>
+        <li>用 <code>generate</code> 與 <code>genvar</code> 寫出參數化的結構複製，並分辨 <code>for</code> 在 <code>initial</code>／<code>generate</code>／<code>always</code> 三處的不同意義。</li>
+        <li>完整走過 <strong>ASM 的四步設計流程</strong>：虛擬碼 → 流程圖 → ASM 圖 → 硬體／HDL。</li>
+        <li>套用流程圖轉 ASM 圖的規則，特別是<strong>寫後讀 (WR) 相依必須拆成兩個狀態</strong>與 dummy 狀態的用途。</li>
+        <li>把 ASM 元件對應到<strong>一熱碼定序器</strong>與<strong>多工器堆疊式資料路徑</strong>。</li>
+        <li>說出 ASM 設計法的代價：面積開銷大、效能較低。</li>
+      </ul>
+    </section>
+
+    <section class="chapter-section" id="sec-4-1">
+      <h2>4.1 本章大綱</h2>
+      <p><span class="srcref" data-slides="1,2">投影片 p.1–2</span></p>
+      <p>本章封面日期 2022/10/06，是 Lec. 04「ASM, Serial Multipliers」。大綱四項：</p>
+      <ul>
+        <li>RTL or Behavioral（RTL 還是行為模型）</li>
+        <li>Two Major Phases of HDL（HDL 的兩大階段）</li>
+        <li>Applicative Tools Related to HDL（相關的應用工具）</li>
+        <li><strong>ASM-Based Synthesis using an Example</strong>（以範例貫穿的 ASM 合成法）</li>
+      </ul>
+      <div class="supplement">
+        <p>第四項是本章主體，從 §4.15 一路做到 §4.26，用同一個「位移相加乘法器」範例走完整個設計流程。前面 §4.2–§4.14 是鋪陳與工具介紹。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-4-2">
+      <h2>4.2 RTL 還是行為模型？二進位與格雷計數器</h2>
+      <p><span class="srcref" data-slides="3">投影片 p.3</span></p>
+      <p>投影片的提問是 <code>Which is Better – RTL or Behavior</code>，副標 <code>Rethink using Binary Counter and Gray Counter</code>，並在圖上寫著 <strong>Regular structure or regular behavior?</strong>（規律的結構，還是規律的行為？）</p>
+      <div class="cmp-grid">
+        <div>
+          <div class="codeblock" data-title="p.3 二進位計數器（照抄原文）">
+<pre><code data-lang="verilog">module Binary(Clk, Q);
+input  Clk;
+output [n-1:0] Q;
+wire   [n-1:0] Qb;
+
+always@(posedge Clk)
+	Q=Q+1;
+
+endmodule</code></pre>
+          </div>
+        </div>
+        <div>
+          <div class="codeblock" data-title="p.3 格雷計數器（照抄原文）">
+<pre><code data-lang="verilog">module Gray(Clk, Q);
+input  Clk;
+output [n-1:0] Q;
+wire   [n-1:0] Qb;
+
+binary_counter (Clk, Qb);
+    xor_array (Q, Qb);
+
+endmodule</code></pre>
+          </div>
+        </div>
+      </div>
+      <p>左邊用一行行為描述 <code>Q=Q+1</code>；右邊改成「二進位計數器 + XOR 陣列」的結構寫法。圖上畫出 <code>Q5 Q4 Q3 Q2 Q1 Q0</code> 暫存器，下面兩排各五個 XOR 閘，把相鄰兩位元相互 XOR — 這就是二進位轉格雷碼的 <code>xor_array</code>，並標著 <strong>Low Power Channel</strong>。</p>
+      <div class="supplement">
+        <p>格雷碼的特性是相鄰數值只差一個位元，所以計數時翻轉的位元數最少，功耗較低 — 這就是 <code>Low Power Channel</code> 的意思。轉換式是 <code>G[i] = B[i] ^ B[i+1]</code>。</p>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-03.png" alt="投影片 p.3 畫面：左側是標示 Q5 到 Q0 的暫存器方塊與時脈三角形，下方兩排各五個黃色 XOR 閘，以網線把相鄰位元兩兩相接，中間標示 Low Power Channel；右側上下各一段 Verilog 程式，分別是二進位計數器與格雷計數器。">
+        <figcaption>同一個計數器的行為寫法與結構寫法。<span class="srcref" data-slides="3">投影片 p.3</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-4-3">
+      <h2>4.3 HDL 的兩大階段</h2>
+      <p><span class="srcref" data-slides="4">投影片 p.4</span></p>
+      <div class="table-wrap">
+        <table>
+          <caption>Two Major Phases（照錄 p.4）</caption>
+          <thead><tr><th scope="col">階段</th><th scope="col">內容</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Simulation<br>模擬</th><td>Usually simulated along time axis (<code>initial</code>)（沿時間軸模擬）<br>With stimuli（需要刺激訊號）</td></tr>
+            <tr><th scope="row">Synthesis<br>合成</th><td>Continuously exists（持續存在）：Gate-Level (Structural View)、RTL ( <code>assign L = f(R);</code> )<br>Always Procedural (Behavioral Model)（<code>always</code> 程序式／行為模型）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>這一頁與第 03 章 §3.14 是同一個觀念的濃縮：<strong><code>initial</code> 屬於模擬；<code>assign</code> 與 <code>always</code> 才會變成電路。</strong></p>
+    </section>
+
+    <section class="chapter-section" id="sec-4-4">
+      <h2>4.4 循序電路的四種看法</h2>
+      <p><span class="srcref" data-slides="5">投影片 p.5</span></p>
+      <ul>
+        <li><strong>Huffman Model: Combinational Circuits with a set of DFFs</strong>（組合邏輯加上一組 D 型正反器）
+          <ul>
+            <li>Combinational Network is a DAG (Directed Acyclic Graph)（組合網路是有向無環圖）</li>
+            <li>1-Cycle FSM with additional Reset cycle.（單一週期的 FSM，外加一個重置週期）</li>
+            <li>Can be expanded to an iterative logic array (ILA) that is a combinational circuit, i.e. trivial 0-cycle FSM.（可以展開成迭代邏輯陣列 ILA，它就是一個組合電路，也就是零週期的 FSM）</li>
+            <li>Long critical paths can be spitted by inserted DFFs.（長的關鍵路徑可以插入正反器來切開）</li>
+          </ul>
+        </li>
+      </ul>
+      <p class="warn">原文 <code>spitted</code> 應為 <code>split</code>。照原文保留。</p>
+      <p>圖上四朵雲由左至右，說明同一個循序電路的四種看法：</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.5 的四種看法（依圖面標籤整理）</caption>
+          <thead><tr><th scope="col">#</th><th scope="col">標籤</th><th scope="col">意思</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Seq. Ckt</td><td>一般的循序電路</td></tr>
+            <tr><td>2</td><td>Datapath + ASM</td><td>拆成資料路徑與控制用的 ASM（本章主題）</td></tr>
+            <tr><td>3</td><td>Huffman Model / Pure FSM</td><td>純粹的有限狀態機（第 05 章主題）</td></tr>
+            <tr><td>4</td><td>Critical-Path Split</td><td>插入正反器切開關鍵路徑</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>下方另一排雲與暫存器交錯，標著 <strong>Pipelined Datapath</strong>（管線化資料路徑）與 <strong>Combinational Circuits</strong>，中間的箭頭標 <strong>ILA</strong> — 代表把 FSM 完全展開成組合電路。</p>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-05.png" alt="投影片 p.5 畫面：四朵雲形由左至右以粗箭頭相連，雲內有 D 型正反器與暫存器符號，分別標示 Seq. Ckt、Datapath 與 ASM、Huffman Model 與 Pure FSM、Critical-Path Split；下方另一排小雲與暫存器交錯，標示 Pipelined Datapath 與 Combinational Circuits，中間箭頭標示 ILA。">
+        <figcaption>循序電路的四種看法與兩種展開方式。<span class="srcref" data-slides="5">投影片 p.5</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-4-5">
+      <h2>4.5 從加法器到減法器</h2>
+      <p><span class="srcref" data-slides="6">投影片 p.6</span></p>
+      <ul>
+        <li>Boolean Function Based Design: Too Complex（直接用布林函數設計太複雜）</li>
+        <li>Half-Subtractor→Full-Subtractor→n-bit Subtractor（半減器 → 全減器 → n 位元減器）</li>
+        <li>Parallel Design（平行設計）</li>
+        <li><strong>Modified from Adder</strong>（由加法器改造）：
+          <ul>
+            <li><code>S = A + B   if Sub==0</code></li>
+            <li><code>S =A -  B = A + (-B) = A + (~B+1) if Sub==1 </code></li>
+            <li><code>D = S = A + (Sub ? ~B : B) + Sub</code></li>
+          </ul>
+        </li>
+      </ul>
+      <p>最後那一行是關鍵技巧：<strong>用一個 <code>Sub</code> 控制訊號同時決定「B 要不要反相」與「進位要不要加 1」，一組電路就能做加法與減法。</strong></p>
+      <div class="codeblock" data-title="p.6 的減法器模組（照抄原文）">
+<pre><code data-lang="verilog">module Sub(A, B, Bi, D, Bo);
+input  A[n-1:0], B[n-1:0], Bi;
+output D[n-1:0], Bo;
+reg    D[n-1:0], Bo;
+    assign {Bo, Bi}=A-B-Bi;
+endmodule</code></pre>
+      </div>
+      <p class="warn">這段程式有兩處問題：埠宣告寫成 <code>A[n-1:0]</code>（Verilog 的正確寫法是 <code>[n-1:0] A</code>）；<code>assign</code> 的左側把輸入 <code>Bi</code> 也放進串接 <code>{Bo, Bi}</code>，而輸出 <code>D</code> 從未被指定。照原文保留。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-4-6">
+      <h2>4.6 平行乘法器：長乘法、單元電路與 6×6 陣列</h2>
+      <p><span class="srcref" data-slides="7,8,9">投影片 p.7–9</span></p>
+
+      <h3>長乘法的算法（p.7）</h3>
+      <p>投影片並排十進位與二進位兩個長乘法，說明乘法就是「部分積相加」。</p>
+      <div class="cmp-grid">
+        <div>
+          <div class="codeblock" data-title="p.7 十進位長乘法（照抄原文版面）">
+<pre><code data-lang="text">      2 3 4
+  X ) 1 2 3
+  ---------
+      7 0 2
+    4 6 8
+  2 3 4
+  ---------
+  2 8 7 8 2</code></pre>
+          </div>
+        </div>
+        <div>
+          <div class="codeblock" data-title="p.7 二進位長乘法（照抄原文版面）">
+<pre><code data-lang="text">      1 0 1 1  = B
+  X ) 1 1 0 1  = A
+  -----------
+1 →   1 0 1 1
+0 →   0 0 0 0
+1 →   1 0 1 1
+1 →   1 0 1 1
+  -----------
+1 0 0 0 1 1 1 1</code></pre>
+          </div>
+        </div>
+      </div>
+      <p>圖上另有八條淡紫色垂直線標出乘積的各個位欄，綠色斜箭頭標出對角的進位／部分積流向，下方標題為 <code>Product P=BxA</code>。</p>
+      <p>關鍵觀察：<strong>每一列部分積要嘛是 B 本身、要嘛是全零，取決於 A 的那一位是 1 還是 0</strong> — 所以一個 AND 閘就夠了。</p>
+
+      <h3>乘法器單元 (p.8)</h3>
+      <div class="codeblock" data-title="p.8 的單元模組（照抄原文）">
+<pre><code data-lang="verilog">module MULij(Ai, Bj, Ci, Co, Pi, Po);
+input  Ai, Bj, Ci;
+output Co, Pij;
+    and (AB, Ai, Bj);
+    FullAdder (Pi, Ci, AB, Co, Po);
+endmodule</code></pre>
+      </div>
+      <p class="warn">埠列宣告的是 <code>Pi, Po</code>，但 <code>output</code> 卻寫 <code>Co, Pij</code>，三個名稱並不一致。照原文保留。</p>
+      <p>單元畫成一個白色方塊，上面跑著四種訊號：</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.8 單元電路的訊號（依圖面整理）</caption>
+          <thead><tr><th scope="col">訊號</th><th scope="col">方向</th><th scope="col">作用</th></tr></thead>
+          <tbody>
+            <tr><td><code>A<sub>i</sub></code> → <code>P<sub>ij</sub></code></td><td>左上 → 右下（洋紅對角線）</td><td>乘數位元穿過單元</td></tr>
+            <tr><td><code>B<sub>j</sub></code></td><td>由上往下（綠色垂直線）</td><td>被乘數位元</td></tr>
+            <tr><td>部分和</td><td>由左往右（白色水平箭頭）</td><td>累加值穿過單元</td></tr>
+            <tr><td><code>C<sub>i(j-1)</sub></code> → <code>C<sub>ij</sub></code></td><td>由右往左（深紅水平箭頭）</td><td>漣波進位</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>單元內部就是一個 AND 閘（算 <code>A<sub>i</sub> &amp; B<sub>j</sub></code>）接一個全加器（標 <code>+</code>）。</p>
+
+      <h3>6×6 陣列（p.9）</h3>
+      <p>把上面那顆單元排成 6 列 × 6 行就是完整的 6 位元平行乘法器：</p>
+      <ul>
+        <li>左側標 <code>B[0]</code>–<code>B[5]</code>（列，<code>j</code>），上方標 <code>A[0]</code>–<code>A[5]</code>（行，<code>i</code>）。</li>
+        <li><strong>第 0 列只有 AND 閘，沒有加法器</strong> — 因為還沒有東西要累加。</li>
+        <li>第 1–5 列每格都是 AND 閘加一個 <code>+</code> 全加器；黃色水平箭頭由右往左傳遞漣波進位，每列最左的進位再向下彎進下一列最左的單元。</li>
+        <li>洋紅色對角線把部分和往左下傳；最右欄與最左欄的單元是邊界單元（半乘法器單元），中間才是完整單元。</li>
+        <li>乘積從右緣往下輸出 <code>P[0]</code>–<code>P[5]</code>，以及沿底部輸出 <code>P[5]</code>–<code>P[11]</code>。</li>
+        <li>左下角另標一條對角軸 <code>k=i-j</code>。</li>
+      </ul>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-09.png" alt="投影片 p.9 畫面：6 列乘 6 行的乘法器陣列，上方標示 A0 到 A5，左側標示 B0 到 B5。第一列只有 AND 閘，其餘各列每格為 AND 閘加全加器；黃色水平箭頭由右往左傳遞進位，洋紅色對角線往左下傳遞部分和，乘積沿右緣與底部輸出。">
+        <figcaption>6 位元平行乘法器陣列。<span class="srcref" data-slides="9">投影片 p.9</span></figcaption>
+      </figure>
+      <div class="supplement">
+        <p>這種陣列乘法器是<strong>純組合電路</strong>：面積是 O(N²)，但一個時脈週期就算完。§4.28 會把它和循序乘法器放在同一張面積／時間取捨圖上比較。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-4-7">
+      <h2>4.7 用 C 程式產生 Verilog 實體列表</h2>
+      <p><span class="srcref" data-slides="10">投影片 p.10</span></p>
+      <p>標題是 <code>Coding by C2V in V95</code>。Verilog-1995 沒有 <code>generate</code>，要寫 36 個單元的實體化就只能一行一行打 — 或者<strong>寫一支 C 程式把它印出來</strong>。</p>
+      <div class="codeblock" data-title="p.10 左欄：產生器 C 程式（照抄原文）">
+<pre><code data-lang="c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+main()
+{
+  int i, j, N=6;
+  for(i=0; i&lt;N; i++) {
+    for(j=0; j&lt;N; j++) {
+      printf("MCell M%d(A[%d], B[%d], ", i*N+j, i, j);
+      if(j==0) printf("0, "); else printf("C[%d], ", i*N+j-1);
+      printf("C[%d], ", i*N+j);
+      if(i==0) printf("0, "); 
+      else if(j==N-1) printf("C[%d], ", (i-1)*N+j); 
+           else printf("S[%d], ", (i-1)*N+j+1);   
+      printf("S[%d]);\n", i*N+j);
+    }
+  }
+} </code></pre>
+      </div>
+      <div class="codeblock" data-title="p.10 右欄：產生出來的 36 行 Verilog（照抄原文）">
+<pre><code data-lang="verilog">MCell M0(A[0], B[0], 0, C[0], 0, S[0]);
+MCell M1(A[0], B[1], C[0], C[1], 0, S[1]);
+MCell M2(A[0], B[2], C[1], C[2], 0, S[2]);
+MCell M3(A[0], B[3], C[2], C[3], 0, S[3]);
+MCell M4(A[0], B[4], C[3], C[4], 0, S[4]);
+MCell M5(A[0], B[5], C[4], C[5], 0, S[5]);
+MCell M6(A[1], B[0], 0, C[6], S[1], S[6]);
+MCell M7(A[1], B[1], C[6], C[7], S[2], S[7]);
+MCell M8(A[1], B[2], C[7], C[8], S[3], S[8]);
+MCell M9(A[1], B[3], C[8], C[9], S[4], S[9]);
+MCell M10(A[1], B[4], C[9], C[10], S[5], S[10]);
+MCell M11(A[1], B[5], C[10], C[11], C[5], S[11]);
+MCell M12(A[2], B[0], 0, C[12], S[7], S[12]);
+MCell M13(A[2], B[1], C[12], C[13], S[8], S[13]);
+MCell M14(A[2], B[2], C[13], C[14], S[9], S[14]);
+MCell M15(A[2], B[3], C[14], C[15], S[10], S[15]);
+MCell M16(A[2], B[4], C[15], C[16], S[11], S[16]);
+MCell M17(A[2], B[5], C[16], C[17], C[11], S[17]);
+MCell M18(A[3], B[0], 0, C[18], S[13], S[18]);
+MCell M19(A[3], B[1], C[18], C[19], S[14], S[19]);
+MCell M20(A[3], B[2], C[19], C[20], S[15], S[20]);
+MCell M21(A[3], B[3], C[20], C[21], S[16], S[21]);
+MCell M22(A[3], B[4], C[21], C[22], S[17], S[22]);
+MCell M23(A[3], B[5], C[22], C[23], C[17], S[23]);
+MCell M24(A[4], B[0], 0, C[24], S[19], S[24]);
+MCell M25(A[4], B[1], C[24], C[25], S[20], S[25]);
+MCell M26(A[4], B[2], C[25], C[26], S[21], S[26]);
+MCell M27(A[4], B[3], C[26], C[27], S[22], S[27]);
+MCell M28(A[4], B[4], C[27], C[28], S[23], S[28]);
+MCell M29(A[4], B[5], C[28], C[29], C[23], S[29]);
+MCell M30(A[5], B[0], 0, C[30], S[25], S[30]);
+MCell M31(A[5], B[1], C[30], C[31], S[26], S[31]);
+MCell M32(A[5], B[2], C[31], C[32], S[27], S[32]);
+MCell M33(A[5], B[3], C[32], C[33], S[28], S[33]);
+MCell M34(A[5], B[4], C[33], C[34], S[29], S[34]);
+MCell M35(A[5], B[5], C[34], C[35], C[29], S[35]);</code></pre>
+      </div>
+      <p>讀法：<code>j==0</code> 時進位輸入給常數 <code>0</code>（每列最右端）；<code>i==0</code> 時部分和輸入給 <code>0</code>（第一列沒有東西可累加，呼應 §4.6 的觀察）；<code>j==N-1</code> 時取的是上一列的進位而不是部分和（最左邊界）。</p>
+      <div class="supplement">
+        <p>這種「用程式產生 HDL」的做法在 V2K 加入 <code>generate</code> 之後大致被取代（見 §4.11），但在產生測試向量、記憶體初始內容或超大規則陣列時仍然常用。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-4-8">
+      <h2>4.8 IEEE 1364-2001 (V2K) 的新功能</h2>
+      <p><span class="srcref" data-slides="11">投影片 p.11</span></p>
+      <p>投影片列出 17 項增強（<code>Enhancement in IEEE 1364-2001 V2K</code>），照錄：</p>
+      <ol>
+        <li>Design management—Verilog configurations</li>
+        <li><strong>Scalable models—Verilog generate</strong></li>
+        <li>Constant functions</li>
+        <li>Indexed vector part selects</li>
+        <li>Multidimensional arrays (<code>reg [7:0] a[1:4][0:255];</code>)</li>
+        <li>Bit and part selects within arrays</li>
+        <li>Signed arithmetic extensions (eg. <code>reg signed [15:0] x; &gt;&gt;&gt;</code>)</li>
+        <li>Power operator <code>**</code> (xor <code>^</code>)</li>
+        <li>Re-entrant tasks and recursive functions</li>
+        <li>Combinational logic sensitivity token (<code>always@*</code>)</li>
+        <li>Comma-separated sensitivity lists</li>
+        <li>Automatic width extension beyond 32 bits</li>
+        <li>Enhanced file I/O</li>
+        <li>In-line parameter passing by name</li>
+        <li>Combined port and data type declarations</li>
+        <li>ANSI-style input and output declarations</li>
+        <li><code>reg</code> declaration initial assignments</li>
+      </ol>
+      <div class="supplement">
+        <p>其中第 2 項 <code>generate</code> 直接取代了 §4.7 的 C 產生器；第 10 項 <code>always@*</code> 讓組合邏輯不必手動列敏感度；第 16 項 ANSI 式埠宣告就是第 03 章 §3.7 的那種寫法。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-4-9">
+      <h2>4.9 八種 Block 與「Block」的兩種意思</h2>
+      <p><span class="srcref" data-slides="12,13">投影片 p.12–13</span></p>
+      <p>p.12 的表格與第 03 章 §3.18 完全相同（同一張表在兩章都出現）：</p>
+      <div class="table-wrap">
+        <table>
+          <caption>8 Blocks in Verilog（照錄 p.12）</caption>
+          <thead><tr><th scope="col">Block</th><th scope="col">Outlook</th><th scope="col">Property</th><th scope="col">for-loop</th><th scope="col">index</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">statements</th><td><code>begin [:name]</code> / <code>end</code></td><td>grouping</td><td></td><td></td></tr>
+            <tr><th scope="row">module</th><td><code>module #(para) ID (ports);</code> / <code>endmodule</code></td><td>parallel</td><td></td><td></td></tr>
+            <tr><th scope="row">always</th><td><code>always@(events) statements;</code></td><td>procedural</td><td>concurrent</td><td>integer</td></tr>
+            <tr><th scope="row">initial</th><td><code>initial statements;</code></td><td>serial</td><td>sequential</td><td>Integer</td></tr>
+            <tr><th scope="row">task</th><td><code>task ID;</code> / <code>endtask</code></td><td>procedural</td><td>sequential</td><td>integer</td></tr>
+            <tr><th scope="row">function</th><td><code>function ID;</code> / <code>endfunction</code></td><td>procedural</td><td>sequential</td><td>sequential</td></tr>
+            <tr><th scope="row">generate</th><td><code>generate</code> / <code>endgenerate</code></td><td></td><td>by time 0</td><td>genvar</td></tr>
+            <tr><th scope="row">specify</th><td><code>specify</code> / <code>endspecify</code></td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>「Block」的兩種意思（p.13）</h3>
+      <ul>
+        <li><strong>A rectangle region（名詞：一塊矩形區域）</strong>
+          <ul>
+            <li>Hierarchical blocks（階層式區塊）</li>
+            <li>Specific blocks（特定區塊）：<code>module / endmodule</code>、<code>always</code>、<code>generate</code>、<code>Initial</code>、<code>specify / endspecify</code>、<code>function / endfunction</code>、<code>Task / endtask</code></li>
+          </ul>
+        </li>
+        <li><strong>To block is to stop something moving（動詞：阻擋）</strong>
+          <ul>
+            <li>Blocking Assignment：In “<code>x = y; z = x;</code>” write(x) will block read(x).</li>
+            <li>Non-blocking Assignment：In “<code>x &lt;= y; z &lt;= x;</code>” write(x) won’t block read(x).</li>
+          </ul>
+        </li>
+      </ul>
+      <p>這組對照把第 03 章 §3.21／§3.23 的阻塞／非阻塞講得更直白：<strong>「阻塞」就是「寫入 x 會擋住後面對 x 的讀取」</strong>。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-4-10">
+      <h2>4.10 Verilog 的 for：時間、空間與並行</h2>
+      <p><span class="srcref" data-slides="14">投影片 p.14</span></p>
+      <p>這是全章最重要的語法觀念之一。<strong>同一個 <code>for</code> 寫在不同的 block 裡，意思完全不同。</strong>投影片用一組 3D 的 <code>Space</code>（往上）與 <code>Time</code>（往右下）座標軸，把三段程式各放在對應的平面上。</p>
+
+      <div class="codeblock" data-title="p.14 面板 1（Time 平面）：initial 內的 for ＝ 時間上的迴圈（照抄原文）">
+<pre><code data-lang="verilog">integer i;
+initial begin
+  for(i=1; i&lt;10; i=i+1) begin
+      X = i[7:0];
+      #10;
+    end
+  $stop;
+end</code></pre>
+      </div>
+      <p>這個 <code>for</code> 在<strong>模擬時間</strong>上重複執行 9 次，每次間隔 10 個時間單位 — 用來產生測試刺激。</p>
+
+      <div class="codeblock" data-title="p.14 面板 2（Space 平面）：generate 內的 for ＝ 空間上的複製（照抄原文）">
+<pre><code data-lang="verilog">genvar i;
+(generate)
+  for(i=1; i&lt;10; i=i+1) begin:NAME
+    MODULE G1(X[i], Y[i+1]);
+    assign OUT[i] = IN[i-1]+A;
+  end
+(endgenerate)</code></pre>
+      </div>
+      <p>這個 <code>for</code> 在<strong>編譯時</strong>展開，產生 9 份硬體複製 — 迴圈結束後電路裡真的有 9 個 <code>MODULE</code> 實體。索引變數必須是 <code>genvar</code>。</p>
+
+      <div class="codeblock" data-title="p.14 面板 3（橫跨兩個平面）：always 內的 for ＝ 並行（照抄原文）">
+<pre><code data-lang="verilog">integer i;
+always@(posedge Clk) begin
+  for(i=1; i&lt;10; i=i+1) begin
+      R[i] &lt;= R[i-1];
+  end
+  R[9] &lt;= R[0];  
+end
+</code></pre>
+      </div>
+      <p>這個 <code>for</code> 在<strong>一個時脈週期內</strong>全部展開並<strong>同時</strong>生效（因為用的是非阻塞指定），結果是一個 10 級的環形移位暫存器 — 不是跑 9 個週期。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>三種 for 的比較</caption>
+          <thead><tr><th scope="col">寫在哪</th><th scope="col">索引型別</th><th scope="col">展開在</th><th scope="col">結果</th></tr></thead>
+          <tbody>
+            <tr><td><code>initial</code></td><td><code>integer</code></td><td>模擬時間</td><td>依序執行，不是硬體</td></tr>
+            <tr><td><code>generate</code></td><td><code>genvar</code></td><td>編譯時（空間）</td><td>複製出多份硬體</td></tr>
+            <tr><td><code>always</code></td><td><code>integer</code></td><td>一個時脈內（並行）</td><td>同時生效的多條指定</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">投影片 XML 中 <code>genvar i;</code> 與 <code>always@(posedge Clk)</code> 的空白在部分文字段落遺失（顯示為 <code>genvari;</code>、<code>always@(posedgeClk)</code>），上面照畫面的正確形式呈現。</p>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-14.png" alt="投影片 p.14 畫面：三段程式面板分別斜放在 Space 向上與 Time 向右下的三維座標軸上，粉紅面板是 initial 內的 for、乳白面板是 generate 內的 for、薄荷綠面板是 always 內的 for。">
+        <figcaption>for 在時間、空間與並行三種意義。<span class="srcref" data-slides="14">投影片 p.14</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-4-11">
+      <h2>4.11 用 generate 寫參數化乘法器</h2>
+      <p><span class="srcref" data-slides="15,16">投影片 p.15–16</span></p>
+      <p>有了 <code>generate</code>，§4.7 那支 C 產生器就可以直接寫進 Verilog 裡。</p>
+      <div class="codeblock" data-title="p.15 參數化平行乘法器（由投影片圖片轉錄，含原始行號）">
+<pre><code data-lang="verilog"> 1  module MulP(A, B, P);
+ 2    parameter N;
+ 3    input   [N-1:0] A, B;
+ 4    output  [2*N-1:0] P;
+ 5    wire    C[0:N-1][1:N-1]; // Carry Out at Column i, Row j
+ 6    wire    S[0:N-1][0:N-1]; // Sum
+ 7    genvar i, j; // (1)
+ 8    generate // (2)
+ 9      for(i=0; i&lt;N; i=i+1) begin: Top // (3)
+10        and U(S[i][0], A[i], B[0]);
+11      end
+12      for(j=1; j&lt;N; j=j+1) begin: Right
+13        HM  R(A[0], B[j], S[1][j-1], C[0][j], S[0][j]);
+14      end
+15      for(j=1; j&lt;N; j=j+1) begin: ROW
+16        for(i=1; i&lt;N-1; i=i+1) begin: COL
+17          FM  M(A[i], B[j], C[i-1][j], S[i+1][j-1], C[i][j], S[i][j]);
+18        end
+19      end
+20      for(j=2; j&lt;N; j=j+1) begin: Left
+21        FM  M(A[N-1], B[j], C[N-2][j], C[N-1][j-1], C[N-1][j], S[N-1][j]);
+22      end
+23
+24      for(j=0; j&lt;N; j=j+1) begin: Linka
+25        assign P[j] = S[0][j];
+26      end
+27      for(i=1; i&lt;N; i=i+1) begin: Linkb
+28        assign P[N+i-1] = S[i][N-1];
+29      end
+30    endgenerate // (4)
+31    HM  UL(A[N-1], B[1], C[N-2][1], C[N-1][1], S[N-1][1]);
+32    assign P[2*N-1] = C[N-1][N-1];
+33  endmodule</code></pre>
+      </div>
+      <p class="warn">這段程式在投影片中只是一張圖片（EMF），上面的內容是從畫面轉錄而來，不是從 XML 逐字取得。若要當成可編譯的程式使用，請再對照原始投影片核對一次。</p>
+      <p>結構對應到 §4.6 的陣列：<code>Top</code> 迴圈產生第 0 列的 AND 閘；<code>Right</code> 產生最右邊界的半乘法器單元 <code>HM</code>；<code>ROW</code>／<code>COL</code> 雙層迴圈產生中間的完整單元 <code>FM</code>；<code>Left</code> 產生最左邊界；<code>Linka</code>／<code>Linkb</code> 把乘積接出去。</p>
+      <div class="codeblock" data-title="p.15 的實體化範例（由投影片圖片轉錄）">
+<pre><code data-lang="verilog">parameter b = 6;
+reg [b-1:0] A, B;
+wire [2*b-1:0] P;
+MulP #(b) U1(A, B, P);</code></pre>
+      </div>
+      <div class="codeblock" data-title="p.16 的雙層 generate 迴圈（照抄原文）">
+<pre><code data-lang="verilog">  genvar i, j;
+  for(i=0; i&lt;N; i=i+1) begin : Row
+    for(j=0; j&lt;N; j=j+1) begin : Col
+      MCell Cell( A[i], B[j], Ci[i][j], Co[i][j], Si[i][j], So[i][j]);
+    end
+  end
+endmodule</code></pre>
+      </div>
+      <p>把 §4.7 的 36 行手工列表換成這六行 — 而且 <code>N</code> 可以是任意值。</p>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-16.png" alt="投影片 p.16 畫面：n 乘 n 的乘法器陣列以黃色方格繪出，每格是一個 AND 閘接一個加號加法器；上緣標示注入的常數 0 與 A 的各位元，左緣標示 A0、A1、Ai、An-1；青色水平箭頭由右往左傳遞進位，洋紅對角線往左下傳遞部分和，乘積沿右緣與底部輸出。">
+        <figcaption>以 n 位元通式畫出的乘法器陣列。<span class="srcref" data-slides="16">投影片 p.16</span></figcaption>
+      </figure>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-15.png" alt="投影片 p.15 畫面：一張全頁的程式編輯器截圖，顯示參數化平行乘法器 MulP 的完整程式碼，共 33 行並附行號；右下另有一個小插圖顯示實體化的四行範例。">
+        <figcaption>p.15 的原始畫面（程式在投影片中是圖片）。<span class="srcref" data-slides="15">投影片 p.15</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-4-12">
+      <h2>4.12 大量資料的驗證</h2>
+      <p><span class="srcref" data-slides="17">投影片 p.17</span></p>
+      <p>標題 <code>Big-Data Verification</code>。8 位元乘 8 位元共 2<sup>16</sup> = 65536 組輸入，用雙層 <code>for</code> 全部跑一遍並與 <code>i*j</code> 比對 — 這就是「窮舉驗證」。</p>
+      <div class="codeblock" data-title="p.17 的測試平台（照抄原文，含原始縮排）">
+<pre><code data-lang="verilog">`timescale 1ns/10ps
+module Test_MUL;
+  parameter N = 8;
+  reg [N-1:0] A, B;
+  wire [2*N-1:0] P;
+  MUL U1(A, B, P);
+  integer i, j, ok;
+  initial begin
+$monitor($time, ",", A, ",", B, ",", P);
+ok=1;
+    for(i=0; i &lt; 1&lt;&lt;N ; i=i+1)
+      for(j=0; j &lt; 1&lt;&lt;N ; j=j+1) 
+        begin
+          A=i; B=j;
+          #10;
+if(P != i*j) ok=0;
+        end
+$display("Varification: %s.", ok ? "Ok" : "Failed");
+    $stop;
+  end
+endmodule</code></pre>
+      </div>
+      <div class="codeblock" data-title="p.17 的模擬器輸出（照抄原文）">
+<pre><code data-lang="text">VSIM 3&gt; run
+#                    0,  0,  0,    0
+:
+:
+#               655340,255,254,64770
+#               655350,255,255,65025
+# Varification:     Ok.
+# Break in Module Test_MUL at D:/work/MulArray/Test_MUL.v line 20
+VSIM 4&gt; |</code></pre>
+      </div>
+      <p class="warn">原文把 Verification 拼成 <code>Varification</code>（程式與輸出都是）。照原文保留。</p>
+      <div class="supplement">
+        <p>注意最後時間是 655350 ns：65536 組 × 10 ns。用一個 <code>ok</code> 旗標累積結果、最後一次印出，比每組都印快得多 — 這正是第 01 章 Lab01 要求的 <code>Using a Flag, say, OK = 1</code> 手法。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-4-13">
+      <h2>4.13 佈局視圖</h2>
+      <p><span class="srcref" data-slides="18">投影片 p.18</span></p>
+      <p>標題 <code>Layout View: 6-Bit Parallel Multiplier</code>。整頁是一張實際的 IC 佈局截圖：方形晶粒外圈一整環打線接墊，四周是密集的標準單元列，中央是繞線通道與長網線，而<strong>正中央那塊規律的亮綠／黃色區塊就是乘法器陣列核心</strong>。</p>
+      <p>教學重點：§4.6 畫的那個規律 6×6 陣列，在真實佈局上看得出來是一塊明顯規律的方塊 — 規律的結構會留下規律的實體痕跡。</p>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-18.png" alt="投影片 p.18 畫面：一張彩色 IC 佈局截圖，方形晶粒外圈有一整環橘色打線接墊，四周是密集的粉紅與黃色標準單元列，中間是黑色繞線通道與青黃色長網線，正中央有一塊規律的亮綠黃色區塊，即乘法器陣列核心。">
+        <figcaption>6 位元平行乘法器的實際佈局。<span class="srcref" data-slides="18">投影片 p.18</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-4-14">
+      <h2>4.14 N 位元移位器與移位暫存器</h2>
+      <p><span class="srcref" data-slides="19">投影片 p.19</span></p>
+      <p>這一頁為後面的乘法器資料路徑準備零件。圖分三層：</p>
+      <ol>
+        <li><strong>Constant Shifter（桶式移位器）</strong>：三排各八個 2 對 1 多工器。第一排由 <code>Shift_Left1</code> 控制、第二排 <code>Shift_Left2</code>、第三排 <code>Shift_Left3</code>。每排的 <code>1</code> 腳分別往左取 1／2／4 個位置，右端空出的輸入接地。圖上用粗黃線標出一條路徑，示範 1+0+4 = 位移 5 位。</li>
+        <li><strong>平行四邊形抽象符號</strong>：把整個移位器縮成一個符號，八條對角箭頭往左出去，右端一個接地三角形。</li>
+        <li><strong>Shift Register（移位暫存器）</strong>：平行四邊形符號接到八個暫存器格，輸出再繞回輸入 — 形成循環移位。</li>
+      </ol>
+      <div class="supplement">
+        <p>為什麼用「1、2、4」三排？因為 1+2+4 可以組出 0 到 7 的任意位移量，只要三排多工器就夠（log₂N 排），這就是桶式移位器 (barrel shifter) 的標準做法。§4.24 的資料路徑會用到它的右移版本。</p>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-19.png" alt="投影片 p.19 畫面：上層是深青色方框內三排各八個 2 對 1 多工器梯形，分別由 Shift_Left1、Shift_Left2、Shift_Left3 控制，粗黃線標出一條位移路徑，下方標示 Constant Shifter；中層是把移位器抽象成的青色平行四邊形符號；下層是平行四邊形符號接到八個暫存器格並繞回輸入，標示 Shift Register。">
+        <figcaption>常數移位器、抽象符號與移位暫存器。<span class="srcref" data-slides="19">投影片 p.19</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-4-15">
+      <h2>4.15 演算法狀態機 (ASM) 與四步設計流程</h2>
+      <p><span class="srcref" data-slides="20">投影片 p.20</span></p>
+      <p>這一頁是全章的方法宣言。ASM 的定義與代價（照錄）：</p>
+      <ul>
+        <li>A special design style of general finite state machines.（一般有限狀態機的一種特殊設計風格。）</li>
+        <li>It can be designed by mapping from the flow-chart.（可以由流程圖對應而來。）</li>
+        <li>It can be synthesized manually.（可以手工合成。）</li>
+        <li><strong>High area overhead and low performance due multiplexer stack.</strong>（因為多工器堆疊，面積開銷高、效能低。）</li>
+      </ul>
+      <p class="warn">投影片自己就點出 ASM 的代價：<strong>多工器堆疊</strong>會造成面積大、速度慢。§4.24 會看到那個堆疊長什麼樣子。</p>
+      <h3>四個步驟</h3>
+      <div class="steps-flow">
+        <span class="step-chip">1. 虛擬碼</span>
+        <span aria-hidden="true">→</span>
+        <span class="step-chip">2. 流程圖</span>
+        <span aria-hidden="true">→</span>
+        <span class="step-chip">3. ASM 圖</span>
+        <span aria-hidden="true">→</span>
+        <span class="step-chip">4. HDL／電路</span>
+      </div>
+      <ol>
+        <li>Describe your system in pseudo code;（用虛擬碼描述系統）→ §4.16</li>
+        <li>Draw the flow-chart;（畫流程圖）→ §4.17、§4.19</li>
+        <li>Map the flow-chart to ASM chart;（把流程圖對應成 ASM 圖）→ §4.18、§4.21</li>
+        <li>Map the ASM chart to the HDL or circuit.（把 ASM 圖對應成 HDL 或電路）→ §4.22–§4.26</li>
+      </ol>
+    </section>
+
+    <section class="chapter-section" id="sec-4-16">
+      <h2>4.16 步驟 1：虛擬碼</h2>
+      <p><span class="srcref" data-slides="21">投影片 p.21</span></p>
+      <ul>
+        <li>A high-level, almost-executable description（高階、幾乎可執行的描述）</li>
+        <li>Used for leader’s instruction, explanation of algorithms, etc.（用於交辦工作、說明演算法等）</li>
+        <li>Pascal-like or C-like codes with some comprehensive English is preferable.（建議用類 Pascal 或類 C 的寫法，混一些易懂的英文。）</li>
+      </ul>
+      <p>投影片的範例是測試圖樣產生中的控制合理化演算法 (control justification)：</p>
+      <div class="codeblock" data-title="p.21 的虛擬碼範例（由投影片圖片轉錄，含原始行號）">
+<pre><code data-lang="text"> 1  C-alg()
+ 2  {
+ 3     C-frontier=φ;
+ 4     For each FF, f, propagate-C-frontier(f);
+ 5     While(C-frontier≠ φ){
+ 6        Get a gate g from C-frontier that has the maximum fanout;
+ 7        J-frontier=φ;
+ 8        c=controlling value of g;
+ 9        Set control(g) = FAILED;
+10        Repeat
+11           Select an input of gate g, l, with a don't-care X;
+12           If Justify(l,c) then control(g) = SUCCESS;
+13        Until control(g)=SUCCESS or no input has an X value;
+14        If control(g)=FAILED then propagate-C-frontier(g);
+15     }
+16     Return values at PI's as the control pattern;
+17  }
+18  propagate-C-frontier(g)
+19  {
+20     For each non-FF fanout gate, h, of g
+21        if h ∈{NOT, XOR, XNOR} or h does not have a don't care
+22           then propagate-C-frontier(h);
+22        else put h into C-frontier;
+23  }</code></pre>
+      </div>
+      <p class="warn">原圖的行號有誤：第 22 行出現兩次。另外這段內容只存在於投影片的圖片物件中，上面是從畫面轉錄而來。</p>
+      <p>注意這段虛擬碼的風格：用了數學符號 <code>φ</code>、<code>≠</code>、<code>∈</code>，也用了英文句子 <code>For each FF, f, ...</code> — 正是投影片建議的「類 C 加易懂英文」。</p>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-21.png" alt="投影片 p.21 畫面：白色面板中是一段帶行號的虛擬碼，內容為測試圖樣控制合理化演算法，混用 C 語言語法、數學符號與英文敘述。">
+        <figcaption>虛擬碼範例（投影片中為圖片物件）。<span class="srcref" data-slides="21">投影片 p.21</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-4-17">
+      <h2>4.17 步驟 2：流程圖元件與控制結構</h2>
+      <p><span class="srcref" data-slides="22,23,24,25,26">投影片 p.22–26</span></p>
+
+      <h3>基本元件（p.22）</h3>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 540 250" role="img" aria-labelledby="fc-title fc-desc">
+          <title id="fc-title">p.22 的基本流程圖元件</title>
+          <desc id="fc-desc">流程與方向用箭頭表示；處理用矩形；判斷用菱形，Y 由右側離開、N 由下方離開；終端用圓角形狀表示 begin 與 end；輸入用打孔卡形狀；特定輸出包含打孔帶、報表與顯示三種形狀。</desc>
+          <text x="10" y="26">Flow and Direction</text>
+          <path class="edge" d="M150 20 L215 20"></path>
+          <text x="250" y="26">Process</text>
+          <rect class="proc" x="330" y="6" width="90" height="30" rx="2"></rect>
+          <text x="375" y="26" text-anchor="middle">process</text>
+          <text x="10" y="86">Decision</text>
+          <path class="dec" d="M160 56 L215 81 L160 106 L105 81 Z"></path>
+          <text x="160" y="86" text-anchor="middle">condition</text>
+          <text class="lbl-br" x="224" y="78">Y</text>
+          <text class="lbl-br" x="166" y="124">N</text>
+          <text x="250" y="86">Terminals</text>
+          <rect class="term" x="330" y="66" width="80" height="30" rx="15"></rect>
+          <text x="370" y="86" text-anchor="middle">begin</text>
+          <rect class="term" x="430" y="66" width="80" height="30" rx="15"></rect>
+          <text x="470" y="86" text-anchor="middle">end</text>
+          <text x="10" y="166">(Card) Input</text>
+          <path class="box" d="M105 148 L215 148 L215 182 L105 182 Q118 165 105 148 Z"></path>
+          <text x="166" y="170" text-anchor="middle">card in</text>
+          <text x="250" y="166">Specific Outputs</text>
+          <circle class="box" cx="352" cy="165" r="17"></circle>
+          <text x="352" y="169" text-anchor="middle" style="font-size:10px">tape</text>
+          <path class="box" d="M382 148 L452 148 L452 176 Q417 190 382 176 Z"></path>
+          <text x="417" y="168" text-anchor="middle" style="font-size:11px">report</text>
+          <path class="box" d="M466 148 L526 148 L534 165 L526 182 L466 182 L474 165 Z"></path>
+          <text x="500" y="169" text-anchor="middle" style="font-size:10px">display</text>
+          <text x="10" y="226" class="accent-text">本課程只用到前四種：箭頭、矩形、菱形、終端</text>
+        </svg>
+      </div>
+      <p>投影片列出的六類元件照錄：<code>Flow and Direction</code>、<code>Decision</code>、<code>Process</code>、<code>Terminals</code>、<code>(Card) Input</code>、<code>Specific Outputs</code>（含打孔帶 <code>tapeout</code>、報表 <code>report</code>、顯示 <code>display</code>）。</p>
+
+      <h3>if-then-else（p.23）</h3>
+      <p>投影片把語法與圖形並排：<code>if (</code>〔菱形 C〕<code>) { </code>〔方塊 Y〕<code> }  else { </code>〔方塊 N〕<code> }</code>。流程是：進入菱形 <code>Condition</code>，<code>Y</code> 由右頂點出去進入 <code>Y</code> 方塊，<code>N</code> 由下頂點出去進入 <code>N</code> 方塊，兩條路徑最後匯合成一條往下。</p>
+
+      <h3>switch（p.24）</h3>
+      <p>多路判斷畫成一個半圓扇形符號，標 <code>c</code>，上方一個進入箭頭，下方五個出去箭頭標 <code>1</code>、<code>2</code>、<code>3</code>、…、<code>N</code>。投影片用兩段 C 程式對照：</p>
+      <div class="cmp-grid">
+        <div>
+          <div class="codeblock" data-title="p.24 寫成 if-else 鏈（照抄原文）">
+<pre><code data-lang="c">if (expr==const1) {P1}
+else if (expr==const2) {P2}
+     else if (expr==const3) {P3}
+          else if (expr==const4) {P4}
+               else {Pdefault}</code></pre>
+          </div>
+        </div>
+        <div>
+          <div class="codeblock" data-title="p.24 寫成 switch（照抄原文）">
+<pre><code data-lang="c">switch (expr) {
+	case const1: {P1} break;
+	case const2: {P2} break;
+	case const3: {P3} break;
+	case cosnt4: {P4} break;
+	...
+	default:     {Pdefault}
+}</code></pre>
+          </div>
+        </div>
+      </div>
+      <p class="warn">原文把 <code>const4</code> 誤寫成 <code>cosnt4</code>。照原樣保留。</p>
+
+      <h3>for 迴圈（p.25）</h3>
+      <p>語法與圖形：<code>for (</code>〔綠框 I 初始化〕<code>;</code>〔菱形 C 條件〕<code>;</code>〔黃框 N 遞增〕<code>) {</code>〔白框 P 處理〕<code>}</code>。流程是：<code>Initialization</code> → <code>Condition</code>；<code>Y</code> 往右進入 <code>Process</code> → <code>Next</code> → 繞回 <code>Condition</code> 之前；<code>N</code> 往下離開迴圈。</p>
+      <div class="codeblock" data-title="p.25 的 9×9 乘法表（照抄原文，含全形引號）">
+<pre><code data-lang="c">for(i=1;i&lt;=9;i++) {
+   for(j=1;j&lt;=9;j++)
+      printf(“%dX%d=%2d\t”,i,j,i*j);
+   printf(“\n”);
+}</code></pre>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-25.png" alt="投影片 p.25 畫面：上方是 for 迴圈的語法與流程圖，依序為初始化綠框、條件菱形、處理白框與遞增黃框並繞回；下方是 Windows 命令列視窗截圖，顯示 9 乘 9 乘法表的輸出結果。">
+        <figcaption>for 迴圈的流程圖與 9×9 乘法表的執行結果。<span class="srcref" data-slides="25">投影片 p.25</span></figcaption>
+      </figure>
+
+      <h3>do-while 與 while-do（p.26）</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>兩種迴圈的流程差別（依 p.26 整理）</caption>
+          <thead><tr><th scope="col">結構</th><th scope="col">語法</th><th scope="col">流程</th><th scope="col">本體執行次數</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">do-while</th><td><code>do {</code>P<code>} while(</code>C<code>} ;</code></td><td>先進 <code>Process</code>，再判斷 <code>Condition</code>；<code>Y</code> 繞回 Process 之前，<code>N</code> 離開</td><td><strong>至少一次</strong></td></tr>
+            <tr><th scope="row">while-do</th><td><code>while (</code>C<code>)   {</code>P<code>} ;</code></td><td>先判斷 <code>Condition</code>；<code>Y</code> 進 <code>Process</code> 再繞回判斷之前，<code>N</code> 離開</td><td><strong>可能零次</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">p.26 的 do-while 語法在投影片上寫成 <code>} while( C } ;</code>，右括號誤打成大括號。照原樣記錄。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-4-18">
+      <h2>4.18 步驟 3：流程圖對應到 ASM 圖的三條規則</h2>
+      <p><span class="srcref" data-slides="27,28,29">投影片 p.27–29</span></p>
+
+      <h3>規則 1：把處理切成「一個時脈做得完」的狀態（p.27）</h3>
+      <ul>
+        <li>Split Processes in flowchart into States that each state can be executed in 1 clock cycle.（把流程圖的處理切成狀態，每個狀態都能在一個時脈週期內完成。）</li>
+        <li><strong>Note that a WR-dependent process should be split into two states.</strong>（寫後讀相依的處理必須拆成兩個狀態。）</li>
+      </ul>
+      <div class="cmp-grid">
+        <div>
+          <p><strong>情況 A：先寫後讀（有相依，必須拆）</strong></p>
+          <div class="codeblock" data-title="p.27 拆解前（write first then read）">
+<pre><code data-lang="verilog">a = b + c;
+x = a * d;</code></pre>
+          </div>
+          <div class="codeblock" data-title="p.27 拆解後：兩個狀態">
+<pre><code data-lang="verilog">State1:  a = b + c;
+State2:  x = a * d;</code></pre>
+          </div>
+          <p>第二行要用到第一行剛算出來的 <code>a</code>，一個時脈內做不完，所以必須拆。</p>
+        </div>
+        <div>
+          <p><strong>情況 B：先讀後寫（無相依，可留在同一狀態）</strong></p>
+          <div class="codeblock" data-title="p.27 原樣（read first then write）">
+<pre><code data-lang="verilog">x = a + d;
+a = b * c;</code></pre>
+          </div>
+          <div class="codeblock" data-title="p.27 結果：仍是一個狀態">
+<pre><code data-lang="verilog">State1:  x = a + d;
+         a = b * c;</code></pre>
+          </div>
+          <p>兩行用的都是 <code>a</code> 的舊值，可以同時進行（正好對應非阻塞指定的語意）。</p>
+        </div>
+      </div>
+
+      <h3>規則 2：單一位元的判斷直接變成解多工器（p.28）</h3>
+      <ul>
+        <li>If the condition is a 1-bit variable, directly map the decision to a demultiplexer that is a combinational gate (i.e., it takes a delay less than the clock cycle).（若條件就是一個 1 位元變數，判斷可直接對應成解多工器 — 它是組合閘，延遲小於一個時脈週期。）</li>
+        <li>The clock state of a decision is belong to the last process, therefore the last process should be split into 2 states if there is a WR-dependency.（判斷的時脈狀態歸屬於前一個處理；因此若有寫後讀相依，前一個處理必須拆成兩個狀態。）</li>
+      </ul>
+      <p>轉換後，菱形的兩條分支標籤從 <code>Y</code>／<code>N</code> 改成解多工器的選擇值 <strong><code>1</code>／<code>0</code></strong>。</p>
+      <p>如果判斷讀的正是同一週期剛寫的值（例如 <code>C = A &amp; B;</code> 緊接著判斷 <code>C</code>），就要插入一個 <strong><code>(Dummy)</code> 空狀態</strong>，讓那個指定有完整一個時脈可以穩定下來。</p>
+
+      <h3>規則 3：運算式的判斷對應成菱形（解多工器 + 額外處理）（p.29）</h3>
+      <ul>
+        <li>If the condition is an expression instead of a direct input, map the decision to a a diamond.（若條件是運算式而不是直接的輸入，判斷對應成一個菱形。）</li>
+        <li>A diamond is composed of a demultiplexer and an extra process.（一個菱形由一個解多工器加一個額外處理組成。）</li>
+        <li>When the dealy of combinational circuit f( ) is too large, it is better to split it to two states with a demultiplexer.（當組合電路 f( ) 的延遲太大時，最好用解多工器把它拆成兩個狀態。）</li>
+      </ul>
+      <p class="warn">原文 <code>a a diamond</code> 重複冠詞、<code>dealy</code> 應為 <code>delay</code>。照原文保留。</p>
+      <p>硬體上：一個梯形組合區塊 <code>f( )</code> 算出 <code>C</code>，<code>C</code> 再去驅動解多工器的選擇端，兩條輸出腳標 <code>0</code> 與 <code>1</code>。若 <code>f( )</code> 太慢，就改成「<code>C = f( );</code> → <code>(Dummy)</code> → 判斷 <code>C</code>」三個狀態。</p>
+      <div class="supplement">
+        <p>三條規則可以濃縮成一句：<strong>ASM 圖的每個方塊都必須是「一個時脈週期做得完」的工作，而判斷不佔自己的週期，它寄生在前一個狀態的尾端。</strong>只要這兩件事成立，剩下的就是機械式地對應成硬體。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-4-19">
+      <h2>4.19 範例：8 位元乘法器的資料路徑與流程圖</h2>
+      <p><span class="srcref" data-slides="30,31">投影片 p.30–31</span></p>
+
+      <h3>資料路徑的規劃（p.30）</h3>
+      <p>投影片把資料路徑畫成一個大的倒梯形（ALU 符號），上方兩個輸入 <code>X</code>（被乘數）與 <code>Y</code>（乘數），左側進來 <code>Rst</code> 與 <code>Clk</code>，底部輸出乘積。梯形內部有：</p>
+      <ul>
+        <li>一個小綠框 <code>N</code>：迭代次數計數器。</li>
+        <li>一條黃色暫存器長條，切成三段 <code>C</code>（1 位元）、<code>A</code>（8 位元）、<code>B</code>（8 位元） — 也就是 <code>{C,A,B}</code> 這個 17 位元的移位暫存器。</li>
+      </ul>
+      <div class="supplement">
+        <p>這是位移相加 (shift-and-add) 乘法器的經典配置：<code>B</code> 一開始放乘數 <code>Y</code>，每次檢查 <code>B[0]</code> 決定要不要把 <code>X</code> 加到 <code>A</code>，然後整個 <code>{C,A,B}</code> 右移一位 — 乘數被逐位移出去，乘積則從高位往低位累積進來，最後答案就在 <code>{A,B}</code>。<strong>只要一個加法器就能做乘法</strong>，代價是要花 N 個時脈。</p>
+      </div>
+
+      <h3>流程圖（p.31）</h3>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 460 600" role="img" aria-labelledby="mf-title mf-desc">
+          <title id="mf-title">p.31 的位移相加乘法器流程圖</title>
+          <desc id="mf-desc">由 begin 開始，初始化 N 為 0、A 為 0、B 為 Y、C 為 0；接著判斷 B 的第 0 位，若為 Yes 則執行 C 與 A 等於 A 加 X 的累加，若為 No 則跳過；之後把 C、A、B 右移一位，再把 N 加一；最後判斷 N 是否為 0，若 No 則回到 B 第 0 位的判斷，若 Yes 則結束。</desc>
+          <rect class="term" x="160" y="8" width="100" height="30" rx="15"></rect>
+          <text x="210" y="28" text-anchor="middle">begin</text>
+          <path class="edge" d="M210 38 L210 60"></path>
+          <rect class="proc" x="92" y="60" width="236" height="34" rx="2"></rect>
+          <text x="210" y="82" text-anchor="middle">N←0; A←0; B←Y; C←0</text>
+          <path class="edge" d="M210 94 L210 124"></path>
+          <circle cx="210" cy="124" r="3.5" fill="#8a93a3"></circle>
+          <path class="edge" d="M210 124 L210 142"></path>
+          <path class="dec" d="M210 142 L278 178 L210 214 L142 178 Z"></path>
+          <text x="210" y="183" text-anchor="middle">B[0]</text>
+          <text class="lbl-br" x="288" y="172">No</text>
+          <text class="lbl-br" x="218" y="236">Yes</text>
+          <path class="edge" d="M210 214 L210 244"></path>
+          <rect class="proc" x="118" y="244" width="184" height="34" rx="2"></rect>
+          <text x="210" y="266" text-anchor="middle">{C,A}←A + X</text>
+          <path class="edge" d="M210 278 L210 306"></path>
+          <path class="edge" d="M278 178 L352 178 L352 306 L213 306"></path>
+          <circle cx="210" cy="306" r="3.5" fill="#8a93a3"></circle>
+          <path class="edge" d="M210 306 L210 324"></path>
+          <rect class="proc" x="96" y="324" width="228" height="34" rx="2"></rect>
+          <text x="210" y="346" text-anchor="middle">{C,A,B}←{C,A,B}&gt;&gt;1</text>
+          <path class="edge" d="M210 358 L210 388"></path>
+          <rect class="proc" x="146" y="388" width="128" height="34" rx="2"></rect>
+          <text x="210" y="410" text-anchor="middle">N ← N + 1</text>
+          <path class="edge" d="M210 422 L210 450"></path>
+          <path class="dec" d="M210 450 L272 484 L210 518 L148 484 Z"></path>
+          <text x="210" y="489" text-anchor="middle">N=0</text>
+          <text class="lbl-br" x="124" y="478">No</text>
+          <text class="lbl-br" x="218" y="540">Yes</text>
+          <path class="edge accent" d="M148 484 L46 484 L46 124 L207 124"></path>
+          <path class="edge" d="M210 518 L210 548"></path>
+          <rect class="term" x="160" y="548" width="100" height="30" rx="15"></rect>
+          <text x="210" y="568" text-anchor="middle">end</text>
+        </svg>
+      </div>
+      <p>注意兩條回路：<code>B[0]</code> 的 <strong>No</strong> 從右頂點出去、繞過累加方塊；<code>N=0</code> 的 <strong>No</strong> 從左頂點出去、繞回 <code>B[0]</code> 判斷之前（圖中橘色那條）。<code>N</code> 是 3 位元，加到 8 次會自然歸零，所以 <code>N=0</code> 就是「做完 8 次」的條件。</p>
+
+      <h3>執行軌跡（p.31 右半）</h3>
+      <p>投影片右半是一張逐時脈的軌跡表，範例為 <strong>X=151、Y=165</strong>。表格欄位由左至右是 <code>N</code>（3 格，黑）、<code>C</code>（1 格，黃）、<code>A</code>（8 格，綠）、<code>B</code>（8 格，粉），右緣標出該列是哪個動作產生的：<code>+</code>（累加 <code>A+X</code>）或 <code>→</code>（右移）。第一列是初始狀態 <code>N=000</code>、<code>C=0</code>、<code>A=00000000</code>、<code>B=10100101</code>，之後十八列交替進行累加與移位，直到 <code>N</code> 歸零。最後一列的 <code>{A,B}</code> 被大括號框起並標註 <strong><code>P=151X165=24915</code></strong>。</p>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-31.png" alt="投影片 p.31 畫面：左側是位移相加乘法器的流程圖，由 begin、初始化、B 第 0 位判斷、累加、右移、N 加一、N 等於 0 判斷到 end；右側是逐時脈的位元軌跡表，欄位依序為 N、C、A、B，右緣標示加號或箭頭表示該列的動作，最後標註乘積 P 等於 151 乘 165 等於 24915。">
+        <figcaption>流程圖與 X=151、Y=165 的完整執行軌跡。<span class="srcref" data-slides="31">投影片 p.31</span></figcaption>
+      </figure>
+      <p class="warn">軌跡表的逐格位元值只能由投影片畫面判讀，無法從投影片的 XML 可靠取得，因此本網站沿用原始算繪圖而不重製表格。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-4-20">
+      <h2>4.20 用 C 與組合語言驗證演算法</h2>
+      <p><span class="srcref" data-slides="32,33">投影片 p.32–33</span></p>
+      <p>在畫 ASM 圖、寫 Verilog 之前，先用 C 把演算法跑過一遍 — 這支 C 程式就是 §4.19 流程圖的可執行版本，而且窮舉全部 2<sup>16</sup> 組輸入與 <code>X*Y</code> 比對。</p>
+      <div class="codeblock" data-title="p.32 的 C 驗證程式（照抄原文）">
+<pre><code data-lang="c">#include &lt;stdio.h&gt;
+main()
+{
+  unsigned char X, Y, C, A, B, N, Verified;
+  int      i, P, Q, Acc, S;
+  Verified = 1;
+  for(i=0;i&lt;(1&lt;&lt;16);i++){
+    X=i/(1&lt;&lt;8);
+    Y=i%(1&lt;&lt;8);
+    P=X*Y;	// Golden Circuit
+    // Algorithm Started Here
+    N=0; A=0; B=Y; C=0; // Initialization
+    do {
+// Accumulate 
+      if(B%2) {Acc = A + C*256 + X; A=Acc%256; C=(Acc&gt;&gt;8)%2;}
+// Shift CAB
+      S = C*65536 + A*256 + B; S = S &gt;&gt; 1; B=S%256; A=(S&gt;&gt;8)%256; C=(S&gt;&gt;16)%2;
+      N++;
+    } while(N!=8);
+    Q=(A&lt;&lt;8)+B;
+    if(Q!=P) {
+      Verified=0;
+      printf("Error when X=%d, Y=%d, Q=%d\n", X, Y, Q);
+      break;
+    }
+  }
+  if(Verified) printf("The circuit is exhaustively functionally verified.\n");
+}</code></pre>
+      </div>
+      <p>注意 <code>P=X*Y;</code> 那行的註解是 <code>// Golden Circuit</code> — 用語言內建的乘法當作「黃金標準」，再和自己寫的演算法比對。這和第 01 章 Lab01 的 <code>Formal Verification by Golden Test</code> 是同一個手法。</p>
+
+      <div class="codeblock" data-title="p.33 的組合語言版本（照抄原文，含原始 Tab）">
+<pre><code data-lang="asm">BEGIN:	MOV	N, #States
+		CLR	A
+		CLR	C
+		MOV	B, X
+LOOP:		JE	SHIFT
+		ADC	Y
+SHIFT:	SHR	CAB
+		DEC	N
+		JNZ	LOOP
+		END	</code></pre>
+      </div>
+      <p>投影片的結語照錄：<strong>C and Assembly codes can be the fast logic simulator. </strong>（C 與組合語言可以當作快速的邏輯模擬器。）</p>
+      <div class="supplement">
+        <p>十行組合語言就是整個演算法：載入次數、清空 A 與 C、放入乘數，然後迴圈「判斷最低位 → 需要就累加 → 右移 → 次數減一 → 沒歸零就繼續」。拿它和 §4.19 的流程圖對照，會發現一行組語大致對應一個流程圖方塊。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-4-21">
+      <h2>4.21 流程圖 → ASM 圖對照</h2>
+      <p><span class="srcref" data-slides="34">投影片 p.34</span></p>
+      <p>這一頁是步驟 3 的成果：左邊是 §4.19 的流程圖，右邊是套用 §4.18 三條規則後得到的 <strong>ASM Chart</strong>。</p>
+
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 470 700" role="img" aria-labelledby="asm-title asm-desc">
+          <title id="asm-title">p.34 的 ASM 圖（依投影片重畫）</title>
+          <desc id="asm-desc">由 begin 開始，Initial 狀態做初始化，接著一個 dummy 空狀態，然後判斷 B 第 0 位，選擇值 1 進入 Accumulate 狀態、0 則跳過；之後 Shift 狀態同時做右移與 N 加一，再經過第二個 dummy 狀態，最後判斷 N 是否為 0，選擇值 0 回到 B 第 0 位判斷之前，1 則結束。</desc>
+          <rect class="term" x="165" y="8" width="100" height="30" rx="15"></rect>
+          <text x="215" y="28" text-anchor="middle">begin</text>
+          <path class="edge" d="M215 38 L215 58"></path>
+          <rect class="proc" x="97" y="58" width="236" height="34" rx="2"></rect>
+          <text x="215" y="80" text-anchor="middle">N←0; A←0; B←Y; C←0</text>
+          <text class="lbl-state" x="92" y="78" text-anchor="end">Initial:</text>
+          <path class="edge" d="M215 92 L215 116"></path>
+          <rect class="dummy" x="165" y="116" width="100" height="30" rx="2"></rect>
+          <text x="215" y="136" text-anchor="middle">dummy</text>
+          <path class="edge" d="M215 146 L215 176"></path>
+          <circle cx="215" cy="176" r="3.5" fill="#8a93a3"></circle>
+          <path class="edge" d="M215 176 L215 194"></path>
+          <path class="dec" d="M215 194 L283 230 L215 266 L147 230 Z"></path>
+          <text x="215" y="235" text-anchor="middle">B[0]</text>
+          <text class="lbl-br" x="293" y="224">0</text>
+          <text class="lbl-br" x="223" y="288">1</text>
+          <path class="edge" d="M215 266 L215 296"></path>
+          <rect class="proc" x="123" y="296" width="184" height="34" rx="2"></rect>
+          <text x="215" y="318" text-anchor="middle">{C,A}←A + X</text>
+          <text class="lbl-state" x="118" y="316" text-anchor="end">Accumulate:</text>
+          <path class="edge" d="M215 330 L215 358"></path>
+          <path class="edge" d="M283 230 L360 230 L360 358 L218 358"></path>
+          <circle cx="215" cy="358" r="3.5" fill="#8a93a3"></circle>
+          <path class="edge" d="M215 358 L215 376"></path>
+          <rect class="proc" x="78" y="376" width="274" height="34" rx="2"></rect>
+          <text x="215" y="398" text-anchor="middle">{C,A,B}←{C,A,B}&gt;&gt;1; N←N+1</text>
+          <text class="lbl-state" x="73" y="396" text-anchor="end">Shift:</text>
+          <path class="edge" d="M215 410 L215 436"></path>
+          <rect class="dummy" x="165" y="436" width="100" height="30" rx="2"></rect>
+          <text x="215" y="456" text-anchor="middle">Dummy2</text>
+          <path class="edge" d="M215 466 L215 496"></path>
+          <path class="dec" d="M215 496 L277 530 L215 564 L153 530 Z"></path>
+          <text x="215" y="535" text-anchor="middle">N=0</text>
+          <text class="lbl-br" x="136" y="524">0</text>
+          <text class="lbl-br" x="223" y="586">1</text>
+          <path class="edge accent" d="M153 530 L40 530 L40 176 L212 176"></path>
+          <path class="edge" d="M215 564 L215 594"></path>
+          <rect class="term" x="165" y="594" width="100" height="30" rx="15"></rect>
+          <text x="215" y="614" text-anchor="middle">end</text>
+          <text class="accent-text" x="215" y="660" text-anchor="middle">ASM Chart</text>
+        </svg>
+      </div>
+
+      <h3>四個差異就是三條規則的結果</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>流程圖與 ASM 圖的差異（依 p.34 整理）</caption>
+          <thead><tr><th scope="col">#</th><th scope="col">差異</th><th scope="col">為什麼</th></tr></thead>
+          <tbody>
+            <tr><td>a</td><td>初始化之後插入一個 <code>dummy</code> 狀態</td><td>讓 <code>B[0]</code> 的判斷看到的是已經穩定的值（規則 2）</td></tr>
+            <tr><td>b</td><td><code>{C,A,B}&gt;&gt;1</code> 與 <code>N←N+1</code> <strong>合併成一個 <code>Shift</code> 狀態</strong></td><td>兩者沒有寫後讀相依，可以同一個時脈完成（規則 1 的情況 B）</td></tr>
+            <tr><td>c</td><td><code>N=0</code> 判斷之前插入 <code>Dummy2</code></td><td>同 a：<code>N</code> 剛在 <code>Shift</code> 被寫，判斷要等它穩定</td></tr>
+            <tr><td>d</td><td>分支標籤由 <code>Yes</code>／<code>No</code> 改為 <code>1</code>／<code>0</code></td><td>它們現在是解多工器的選擇值（規則 2）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>最後 ASM 圖共有 <strong>5 個會佔時脈的狀態</strong>：<code>Initial</code>、<code>dummy</code>、<code>Accumulate</code>、<code>Shift</code>、<code>Dummy2</code>（外加 <code>begin</code> 與 <code>end</code>）。這個數字直接決定了 §4.23 定序器要用幾個正反器。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-4-22">
+      <h2>4.22 步驟 4：ASM 元件對應到硬體</h2>
+      <p><span class="srcref" data-slides="35">投影片 p.35</span></p>
+      <p>這一頁是一本「對應字典」：ASM 圖的每一種符號，對應到一種固定的硬體。學會這六條，剩下的工作就是機械式的翻譯。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>ASM 元件 → 一熱碼定序器硬體（照 p.35 的六組對應整理）</caption>
+          <thead><tr><th scope="col">#</th><th scope="col">ASM 元件</th><th scope="col">對應硬體</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><code>( begin )</code> 終端</td><td>一個帶 <code>PRE</code>（預設）的 D 型正反器，其 <code>Q</code> 經由接地／常數 0 繞回輸入 — 重置後由它啟動整條鏈</td></tr>
+            <tr><td>2</td><td><code>State</code> 處理方塊</td><td>一個帶 <code>CLR</code>（清除）的 D 型正反器；<code>Q</code> 往下接到下一格，同時<strong>以虛線往右扇出成該狀態的控制訊號</strong>。<strong>一個狀態 = 一個正反器</strong></td></tr>
+            <tr><td>3</td><td>判斷菱形（條件 <code>C</code> 為 1 位元）</td><td>一個解多工器：狀態符記由上方進入，<code>C</code> 接選擇端，兩條輸出腳標 <code>0</code> 與 <code>1</code></td></tr>
+            <tr><td>4</td><td>判斷菱形（內含 <code>f( )</code>）</td><td>一個組合區塊 <code>f( )</code> 梯形，其輸出 <code>C</code> 去驅動同樣的 <code>0</code>／<code>1</code> 解多工器</td></tr>
+            <tr><td>5</td><td>匯合點（兩條箭頭合流）</td><td>一個 <strong>OR 閘</strong></td></tr>
+            <tr><td>6</td><td><code>( end )</code> 終端</td><td>一個 OR 閘接一個 D 型正反器，<code>Q</code> 再繞回 OR 的輸入 — 形成會自我保持的 done／<code>Ready</code> 旗標</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="supplement">
+        <p>關鍵在第 2 條：<strong>一熱碼 (one-hot) 編碼</strong>。有 5 個狀態就用 5 個正反器，任何時刻只有一個是 1，狀態符記像接力棒一樣沿著鏈往下傳。好處是狀態訊號直接就是控制訊號、不需要解碼器；代價是正反器數量等於狀態數（而不是 log₂）。</p>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-35.png" alt="投影片 p.35 畫面：六組對應關係，每組以洋紅箭頭由左側的 ASM 符號指向右側的硬體。依序為 begin 終端對應帶預設的 D 型正反器、狀態方塊對應帶清除的 D 型正反器並往右扇出控制訊號、判斷菱形對應解多工器、含函數的菱形對應組合區塊加解多工器、匯合點對應 OR 閘、end 終端對應 OR 閘加自我保持的正反器。">
+        <figcaption>ASM 元件到硬體的對應字典。<span class="srcref" data-slides="35">投影片 p.35</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-4-23">
+      <h2>4.23 對應到狀態定序器</h2>
+      <p><span class="srcref" data-slides="36">投影片 p.36</span></p>
+      <p>把 §4.22 的字典套到 §4.21 的 ASM 圖上，就得到<strong>一熱碼狀態定序器</strong>（控制路徑）。投影片左邊再放一次 ASM 圖，右邊是由上而下的正反器鏈：</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.36 定序器由上而下的 11 個元件</caption>
+          <thead><tr><th scope="col">#</th><th scope="col">元件</th><th scope="col">對應的 ASM 元素／輸出</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>DFF（帶 <code>PRE</code>）</td><td><code>begin</code>，由接地三角形繞過上方餵入</td></tr>
+            <tr><td>2</td><td>DFF（帶 <code>CLR</code>）</td><td><code>Initial</code> 狀態 → 控制訊號 <strong>Initial</strong></td></tr>
+            <tr><td>3</td><td>DFF（帶 <code>CLR</code>）</td><td>第一個 <code>dummy</code> 狀態</td></tr>
+            <tr><td>4</td><td>OR 閘</td><td>匯合：dummy 的輸出與鏈尾的回路</td></tr>
+            <tr><td>5</td><td>解多工器 <code>0｜1</code></td><td>由 <code>B[0]</code> 選擇</td></tr>
+            <tr><td>6</td><td>DFF（帶 <code>CLR</code>）</td><td><code>Accumulate</code> 狀態 → 控制訊號 <strong>Accumulate</strong>（<code>0</code> 腳直接繞過它）</td></tr>
+            <tr><td>7</td><td>OR 閘</td><td>匯合：Accumulate 的輸出與繞過的路徑</td></tr>
+            <tr><td>8</td><td>DFF（帶 <code>CLR</code>）</td><td><code>Shift</code> 狀態 → 控制訊號 <strong>Shift</strong></td></tr>
+            <tr><td>9</td><td>DFF（帶 <code>CLR</code>）</td><td>第二個 <code>dummy</code> 狀態</td></tr>
+            <tr><td>10</td><td>解多工器 <code>0｜1</code></td><td>由 <code>N=0</code> 選擇；<code>0</code> 腳沿左側繞回第 4 項的 OR 閘</td></tr>
+            <tr><td>11</td><td>OR 閘 + DFF（帶 <code>CLR</code>）</td><td><code>end</code>／<code>Ready</code> 的自我保持格</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>所有正反器共用 <code>Clk</code> 與一個低態有效的清除訊號。<strong>三條控制訊號 <code>Initial</code>、<code>Accumulate</code>、<code>Shift</code> 就是要送給資料路徑的指令。</strong></p>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-36.png" alt="投影片 p.36 畫面：左側是 ASM 圖，右側以洋紅箭頭連接的一熱碼狀態定序器，由上而下是帶預設的正反器、兩個帶清除的正反器、OR 閘、由 B 第 0 位選擇的解多工器、Accumulate 正反器、OR 閘、Shift 正反器、第二個 dummy 正反器、由 N 等於 0 選擇的解多工器，以及底部的 OR 閘加正反器；三條虛線往右扇出 Initial、Accumulate、Shift 控制訊號。">
+        <figcaption>由 ASM 圖機械式翻譯出的一熱碼定序器。<span class="srcref" data-slides="36">投影片 p.36</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-4-24">
+      <h2>4.24 對應到 ALU / 資料路徑</h2>
+      <p><span class="srcref" data-slides="37">投影片 p.37</span></p>
+      <p>控制路徑做完，換資料路徑。做法是：<strong>每個「會寫入某個暫存器」的狀態，就在那個暫存器前面疊一個多工器</strong> — 這就是 §4.15 警告的「multiplexer stack」。</p>
+
+      <h3>上半：<code>{C,A,B}</code> 暫存器檔</h3>
+      <ul>
+        <li>最上方是 §4.14 的右移平行四邊形符號，輸入 <code>{C,A,B}</code>、輸出移位後的值。</li>
+        <li>一個標 <code>+</code> 的梯形加法器計算 <code>A + X</code>。</li>
+        <li>底部三個暫存器 <code>C</code>（1 位元）、<code>A</code>、<code>B</code>，每個前面都疊著<strong>三個 2 對 1 多工器</strong>，由上而下分別由 <code>Shift</code>、<code>Accumulate</code>、<code>Initial</code> 控制。</li>
+      </ul>
+      <div class="table-wrap">
+        <table>
+          <caption>每個控制訊號在三個暫存器上選到什麼（依 p.37 的接線整理）</caption>
+          <thead><tr><th scope="col">控制訊號</th><th scope="col">C</th><th scope="col">A</th><th scope="col">B</th></tr></thead>
+          <tbody>
+            <tr><th scope="row"><code>Shift</code></th><td>移位後的值</td><td>移位後的值</td><td>移位後的值</td></tr>
+            <tr><th scope="row"><code>Accumulate</code></th><td>加法器的進位輸出</td><td>加法器的和</td><td>保持不變</td></tr>
+            <tr><th scope="row"><code>Initial</code></th><td>常數 <code>0</code></td><td>常數 <code>0</code></td><td><code>Y</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>沒有任何控制訊號有效時，多工器選的是暫存器自己的輸出 — 也就是「保持」。圖上那些繞到區塊外側再回來的線就是這些保持路徑。</p>
+
+      <h3>下半：<code>N</code> 計數器</h3>
+      <p>一個 <code>+</code> 梯形加法器，一邊輸入常數 <code>1</code>、一邊輸入 <code>N</code> 的輸出，結果送進一個兩層多工器堆疊（由 <code>Shift</code> 選遞增、由 <code>Initial</code> 選載入 <code>0</code>），再寫回暫存器 <code>N</code>，<code>N</code> 的輸出又繞回加法器。</p>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-37.png" alt="投影片 p.37 畫面：左側是 ASM 圖，右側是資料路徑。上半部有右移平行四邊形、標示加號的梯形加法器，以及 C、A、B 三個暫存器，每個前面疊著三個由 Shift、Accumulate、Initial 控制的 2 對 1 多工器；下半部是 N 計數器，由加號加法器、常數 1、兩層多工器與暫存器 N 組成。">
+        <figcaption>多工器堆疊式資料路徑。<span class="srcref" data-slides="37">投影片 p.37</span></figcaption>
+      </figure>
+      <div class="supplement">
+        <p>為什麼 ASM 法面積大？因為<strong>每個暫存器前的多工器數量等於會寫它的狀態數</strong>。狀態一多，多工器就疊得又高又慢，訊號要穿過一整疊多工器才進得了暫存器 — 這正是 §4.15 說的「high area overhead and low performance」。§4.27 的計數器型 FSM 就是為了改善這一點。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-4-25">
+      <h2>4.25 完整設計：控制器 + 資料路徑</h2>
+      <p><span class="srcref" data-slides="38">投影片 p.38</span></p>
+      <p>這一頁把 §4.23 的定序器與 §4.24 的資料路徑合成一張完整電路圖。投影片本身<strong>沒有標題文字</strong>，只有左緣一個旋轉的大字 <code>Control</code>。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.38 的三個區塊與介面</caption>
+          <thead><tr><th scope="col">區塊</th><th scope="col">內容</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">左：Control</th><td>與 §4.23 完全相同的一熱碼正反器鏈。<code>Rst</code> 與 <code>Clk</code> 從左下進入，以黃色虛線軌接到每個正反器的清除與時脈腳。</td></tr>
+            <tr><th scope="row">中：控制／狀態訊號</th><td><strong>往右</strong>：<code>Initial</code>、<code>Accumulate</code>、<code>Shift</code> 送進資料路徑的多工器堆疊。<br><strong>往左</strong>：<code>B[0]</code>（從暫存器 <code>B</code> 取出）送進第一個解多工器的選擇端；<code>N=0</code> 的比較結果送進第二個。</td></tr>
+            <tr><th scope="row">右：Datapath</th><td>輸入 <code>Y</code> 與 <code>X</code> 從左上進入；右移平行四邊形、<code>+</code> 加法器、三個多工器堆疊暫存器 <code>C</code>／<code>A</code>／<code>B</code>；乘積匯流排 <code>P</code> 由 <code>{A,B}</code> 往右輸出。右下是 <code>N</code> 計數器與一個標 <code>=</code> 的比較器（輸入為 <code>N</code> 與常數 <code>0</code>），輸出就是回饋給控制器的 <code>N=0</code>。最右邊一條粗白虛線箭頭標 <code>Ready</code>，由最後一個控制正反器驅動。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p><strong>這就是 ASM 設計法的標準成品形狀：左控制、右資料，中間雙向互通。</strong>控制器送命令過去，資料路徑把狀態旗標 (<code>B[0]</code>、<code>N=0</code>) 送回來決定下一步。</p>
+      <figure class="figure">
+        <img src="assets/ch04/fig-slide-38.png" alt="投影片 p.38 畫面：完整電路圖。左側標示 Control 的一熱碼正反器鏈，Rst 與 Clk 由左下進入；中間白色虛線把 Initial、Accumulate、Shift 往右送，並把 B 第 0 位與 N 等於 0 往左回饋；右側是資料路徑，含右移符號、加法器、C、A、B 三個多工器堆疊暫存器、乘積輸出 P、N 計數器與等號比較器；最右側一條粗虛線箭頭標示 Ready。">
+        <figcaption>控制器加資料路徑的完整設計。<span class="srcref" data-slides="38">投影片 p.38</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-4-26">
+      <h2>4.26 回到程式碼：定序器的閘級模型</h2>
+      <p><span class="srcref" data-slides="39">投影片 p.39</span></p>
+      <p>標題 <code>Remapped to Coding / Gate-Level Model for Sequencer</code>。既然 §4.23 的定序器是一條固定的鏈，就可以直接用閘級元件把它寫出來 — 這是 §4.21 的 ASM 圖的文字版。</p>
+      <div class="codeblock" data-title="p.39 的定序器（照抄原文）">
+<pre><code data-lang="verilog">module Sequencer(Rst, Clk, B, E, Initial, Accumulate, Shift, Ready);
+input	Rst, Clk, B, E;
+output 	Initial, Accumulate, Shift, Ready;
+	DFFp	(Clk, Rst, 0, Q1)
+	DFFc	(Clk, Rst, Q1, Initial);
+	DFFc	(Clk, Rst, initial, Q2);
+	or		(A, Q2, E0);
+	mux		(B, A, B1, B0);
+	DFFc	(Clk, Rst, B1, Accumulate);
+	or		(Q3, B0,  Accumulate)
+	DFFc	(Clk, Rst, Q3, Shift);
+	DFFc	(Clk, Rst, Shift, Q4);
+	mux	(E, Q4, E1, E0);
+	or 	(Q5, Ready, E1);
+	DFFc	(Clk, Rst, Q5, Ready);
+endmodule</code></pre>
+      </div>
+      <p>對照表：<code>B</code> 就是 <code>B[0]</code>，<code>E</code> 就是 <code>N=0</code>。一行一行讀下來，正好是 §4.23 表格的 11 個元件。</p>
+      <p class="warn">三處原文瑕疵：<code>DFFp (…Q1)</code> 與 <code>or (Q3, B0, Accumulate)</code> 兩行<strong>少了分號</strong>；第三行的 <code>initial</code> 用了小寫（與 Verilog 關鍵字衝突），應為輸出埠 <code>Initial</code>。照原文保留。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-4-27">
+      <h2>4.27 以計數器為基礎的狀態圖與 FSM 編碼</h2>
+      <p><span class="srcref" data-slides="40,41,42">投影片 p.40–42</span></p>
+
+      <h3>精簡後的狀態圖（p.40）</h3>
+      <p>標題 <code>Minimized Counter-Based State Diagram</code>。把 §4.21 的五個狀態精簡掉 dummy，只留四個節點，並用計數器 <code>N</code> 取代部分狀態：</p>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 420 300" role="img" aria-labelledby="csd-title csd-desc">
+          <title id="csd-title">p.40 的計數器型狀態圖</title>
+          <desc id="csd-desc">四個狀態節點：左上 Init、右上 Acc、右下 Shift、左下為結束狀態。Init 到 Acc，Acc 到 Shift，Shift 回到 Acc 形成迭代迴圈，Shift 也可到左下狀態，左下狀態再回到左上 Init。外部箭頭標示 PowerOn or SysRst 進入左上 Init。中央的 N 計數器由 Init 清除、由 Shift 遞增，決定 Shift 是回到 Acc 還是離開迴圈。</desc>
+          <path class="edge accent" d="M14 60 L68 60"></path>
+          <text class="accent-text" x="14" y="48">PowerOn or SysRst</text>
+          <path class="edge" d="M134 72 L266 72"></path>
+          <text class="lbl-br" x="200" y="62" text-anchor="middle">→</text>
+          <path class="edge" d="M310 110 L310 196"></path>
+          <text class="lbl-br" x="320" y="156">→</text>
+          <path class="edge" d="M272 206 L212 150 L272 104"></path>
+          <text class="lbl-br" x="232" y="130">迴圈</text>
+          <path class="edge" d="M266 236 L134 236"></path>
+          <text class="lbl-br" x="200" y="256" text-anchor="middle">N=0</text>
+          <path class="edge" d="M96 198 L96 112"></path>
+          <circle class="proc" cx="100" cy="72" r="34"></circle>
+          <text x="100" y="77" text-anchor="middle">Init</text>
+          <circle class="proc" cx="310" cy="72" r="34"></circle>
+          <text x="310" y="77" text-anchor="middle">Acc</text>
+          <circle class="proc" cx="310" cy="236" r="34"></circle>
+          <text x="310" y="241" text-anchor="middle">Shift</text>
+          <circle class="proc" cx="100" cy="236" r="34"></circle>
+          <text x="100" y="241" text-anchor="middle">Init</text>
+          <rect class="dec" x="178" y="166" width="58" height="26" rx="3"></rect>
+          <text x="207" y="184" text-anchor="middle">N</text>
+        </svg>
+      </div>
+      <p class="warn">投影片把<strong>兩個圓圈都標成 <code>Init</code></strong>。由 p.41 的狀態常數列表 <code>Init, Acc, Shift, Ready</code> 判斷，左下那個幾乎確定應該是 <code>Ready</code>（結束狀態）。照原文保留並標示。另外 <code>PowerOn or SysRst</code> 的文字框超出投影片左緣，畫面上被裁成 <code>owerOn or SysRst</code>。</p>
+
+      <h3>兩個狀態週期的寫法（p.41）</h3>
+      <div class="codeblock" data-title="p.41 的 2-State-Cycle 乘法器（照抄原文）">
+<pre><code data-lang="verilog">module MUL(Rst, Clk, X, Y, P, Ready);
+	Parameter	n=3;
+	input			Rst, Clk;
+	input	[2^n-1:0]	X, Y;
+	output	[2*2^n-1:0]	P;
+	output			Ready;
+	reg		[n-1:0]		N
+	reg				C;
+	reg		[2*2^n-1:0]	P;
+	reg		[1:0]	State;
+	parameter 	Init=2’b00, Acc=2’b01, Shift=2’b10, Ready=2’b11;
+	always@(posedge Clk)
+	  if(Rst) begin N=0; State=Acc; C=0; P=Y; end
+	  else case(State)
+	         Acc: P=P+X;
+	         Shift: begin 
+	                  N=N+1; P={C, P[15:1]}; C=0; 
+	                  State=N?Acc:Ready;
+	                end
+	         Ready: State=Ready;
+	       endcase
+endmodule</code></pre>
+      </div>
+      <p class="warn">多處原文瑕疵：<code>Parameter</code> 首字母大寫；<code>reg [n-1:0] N</code> 少分號；<code>Ready</code> 同時當輸出埠與狀態常數（名稱衝突）；常數用全形引號 <code>2’b00</code>。照原文保留。</p>
+
+      <h3>一個狀態週期的寫法（p.42）</h3>
+      <div class="codeblock" data-title="p.42 的 1-State-Cycle 乘法器（照抄原文）">
+<pre><code data-lang="verilog">module MUL(Rst, Clk, X, Y, P, Ready);
+	input Clk, Rst;
+	output Ready;
+	input [7:0] A, B;
+	output [15:0] P;
+	reg [15:0] P;
+	reg [2:0] N;
+	reg Ready;
+	wire [8:0] S;
+	wire [16:0] Q;;
+	assign S = P[0]?(P[15:8]+A):P[15:8];  
+	assign Q = {S, P[7:0]};  
+	always@(posedge Clk)
+	    if(Rst) begin N=0; P[15:8]=0; P[7:0]=B; Ready=0; end    	else  if(!Ready)  begin
+	                        P = Q &gt;&gt; 1;
+	                        if(N==7)  Ready = 1; else N = N + 1;                      			   end
+endmodule</code></pre>
+      </div>
+      <p class="warn">原文瑕疵：埠列宣告 <code>X, Y</code> 但本體用的是 <code>A, B</code>；<code>wire [16:0] Q;;</code> 有兩個分號。照原文保留。</p>
+      <p><strong>關鍵改良</strong>：把「累加」寫成連續指定 <code>assign S = P[0]?(P[15:8]+A):P[15:8];</code> — 累加變成組合邏輯，不再佔用一個狀態。於是每個時脈同時完成累加與移位，<strong>8 個時脈就做完，而不是 16 個</strong>。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>三種寫法的時脈數比較</caption>
+          <thead><tr><th scope="col">寫法</th><th scope="col">每位元花幾個時脈</th><th scope="col">8 位元總共</th></tr></thead>
+          <tbody>
+            <tr><td>ASM 一熱碼（§4.21，含 dummy）</td><td>最多</td><td>遠多於 16</td></tr>
+            <tr><td>2-State-Cycle（p.41）</td><td>2（Acc + Shift）</td><td>16</td></tr>
+            <tr><td>1-State-Cycle（p.42）</td><td>1（累加改為組合邏輯）</td><td>8</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-4-28">
+      <h2>4.28 面積與時間的取捨</h2>
+      <p><span class="srcref" data-slides="43">投影片 p.43</span></p>
+      <p>標題 <code>N-Bit Multiplier</code>，副標就一行程式：<strong><code>assign P = A * B;</code></strong></p>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 440 290" role="img" aria-labelledby="at-title at-desc">
+          <title id="at-title">p.43 的面積與執行時間取捨圖</title>
+          <desc id="at-desc">縱軸為面積成本，橫軸為執行時間。左上角是平行乘法器，面積大但時間短；中間是部分平行；右下是 N 位元循序乘法器，面積小但時間長；右下另有一個未標名的點。</desc>
+          <path class="edge" d="M56 250 L56 20"></path>
+          <path class="edge" d="M56 250 L410 250"></path>
+          <text x="20" y="130" transform="rotate(-90 20 130)" text-anchor="middle">Area Cost</text>
+          <text x="236" y="276" text-anchor="middle">Execution Time</text>
+          <circle class="proc" cx="104" cy="56" r="8"></circle>
+          <text x="120" y="50">Parallel Multiplier</text>
+          <text x="120" y="68" style="font-size:11px">(Combinatinal Circuit)</text>
+          <circle class="proc" cx="208" cy="134" r="8"></circle>
+          <text x="224" y="138">Partially Parallel</text>
+          <circle class="proc" cx="306" cy="196" r="8"></circle>
+          <text x="322" y="200">N-bit Sequential</text>
+          <circle class="proc" cx="364" cy="228" r="8"></circle>
+        </svg>
+      </div>
+      <p class="warn">原文把 Combinational 拼成 <code>Combinatinal</code>。照原文保留。</p>
+      <p>這張圖是全章的收束：<strong>同一行 <code>assign P = A * B;</code>，可以被合成到這條曲線上的任何一點。</strong>要快就給面積（§4.6 的平行陣列），要省面積就給時間（§4.27 的循序乘法器），中間還有部分平行的折衷。<strong>選哪一點，是設計者的決定，不是語言的決定。</strong></p>
+    </section>
+
+    <section class="chapter-section" id="sec-4-29">
+      <h2>4.29 範例：最大公因數 GCD</h2>
+      <p><span class="srcref" data-slides="44,45,46">投影片 p.44–46</span></p>
+      <p>這是四步流程的第二個練習題。投影片的開場是兩句話：<em>Actually you have known the algorithm!</em>（其實你早就會這個演算法了！）<em>So, just catch the regularities from observation.</em>（所以只要從觀察中抓出規律。）</p>
+
+      <h3>從觀察找規律（p.44）</h3>
+      <div class="codeblock" data-title="p.44 的歐幾里得推導（照抄原文版面）">
+<pre><code data-lang="text">gcd( 91,  35 ) =   7
+          70
+= gcd( 21,  35 ) ⎫
+= gcd( 35,  21 ) ⎭
+          21
+= gcd( 14,  21 ) ⎫
+= gcd( 21,  14 ) ⎭
+          14
+= gcd(   7,  14 ) ⎫
+= gcd( 14,    7 ) ⎭
+          14
+            0</code></pre>
+      </div>
+      <p>綠色的數字是每一步被減掉的倍數（70 = 2×35、21、14、14），最後的 <code>0</code> 是餘數。大括號標出的是<strong>交換</strong>的動作 — 讓較大的數永遠排在前面。</p>
+
+      <h3>寫成 C 函式（p.45）</h3>
+      <p>投影片的引導句：<em>Then you can write a function in C.</em></p>
+      <div class="codeblock" data-title="p.45 的 C 函式（照抄原文，含 insigned 錯字）">
+<pre><code data-lang="c">unsigned int GCD(unsigned int A, insigned int B)
+{
+	unsigned int C;
+	if(A&lt;B) SWAP(A, B);
+	while(B&gt;0) {
+		C = A % B;
+		A = B;
+		B = C;
+	}
+	return(A);
+}
+void SWAP(unsigned int A, unsigned int B)
+{
+	unsigned int C;
+	C = A;
+	A = B;
+	B = C;
+}</code></pre>
+      </div>
+      <p class="warn">兩處原文問題：<code>insigned int B</code> 應為 <code>unsigned</code>；<code>SWAP</code> 以傳值方式接收參數，在 C 裡<strong>不會真的交換呼叫端的變數</strong>（需要傳指標或參考）。照原文保留。</p>
+      <p>投影片在旁邊加了四個註記：<em>Can be implemented in 1 cycle in hardware!</em>（硬體上可以一個週期做完！）、<em>/ % can be simulated in ModelSim (V2K).</em>（除法與取模在 ModelSim V2K 可以模擬）、<em>Need not be implemented in some synthesizers.</em>（某些合成器不支援實作）。</p>
+      <div class="supplement">
+        <p>這三個註記點出同一個陷阱：<code>%</code> 在模擬時沒問題，但<strong>合成器未必做得出來</strong>（參見第 03 章 §3.5 的不可合成運算子）。真要做硬體，<code>A % B</code> 得自己用連續減法或除法器實作 — 這就是為什麼 p.46 的狀態機要有一個 <code>Mod</code> 狀態。</p>
+      </div>
+
+      <h3>直接改寫成 Verilog（p.46）</h3>
+      <div class="codeblock" data-title="p.46 的 GCD 狀態機（照抄原文）">
+<pre><code data-lang="verilog">module GCD(Clk, Rst, A, B, D, Ready);
+	input  Clk, Rst;
+	input  [31:0] A, B;
+	output [31:0] D;
+	output Ready;
+	parameter Init=0, Mod=1, Out=2;
+	reg	[1:0] PS, NS;
+	always@(posedge Clk)
+		if(Rst) begin NS=Init; PS=Init; Ready=0; end
+		else	begin PS = NS;
+	wire   [31:0] X, Y;
+	always@* case(PS)
+		Init: begin
+			X = (A&lt;B) ? B : A; Y = (A&lt;B) ? A : B; NS = Mod;
+		      end
+		Mod:  begin X &lt;= Y; Y &lt;= X % Y; NS = Y ? Mod : Out; end
+		Out:  begin D = X; NS = Out; Ready=1; end
+	endcase	
+endmodule</code></pre>
+      </div>
+      <p class="warn">這段程式<strong>無法編譯</strong>：<code>else begin PS = NS;</code> 的 <code>begin</code> 從未關閉；<code>X</code>／<code>Y</code> 宣告為 <code>wire</code> 卻在程序式區塊中被指定；<code>wire</code> 宣告夾在兩個 <code>always</code> 之間。照原文保留，教學時請當成「草稿」而非正解。</p>
+      <p>不過結構是對的，值得學：<code>PS</code>／<code>NS</code>（現態／次態）兩個暫存器、三個狀態 <code>Init</code>（排序大小）→ <code>Mod</code>（反覆取模與交換）→ <code>Out</code>（輸出並拉起 <code>Ready</code>），正是第 05 章會正式介紹的標準 FSM 寫法。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-4-30">
+      <h2>4.30 範例：氣泡排序器</h2>
+      <p><span class="srcref" data-slides="47,48">投影片 p.47–48</span></p>
+      <p>第三個練習題，也是最完整的一個：排序器需要和<strong>記憶體</strong>互動，所以多了位址與讀寫控制。</p>
+
+      <div class="cmp-grid">
+        <div>
+          <div class="codeblock" data-title="p.47 的 C 參考程式（照抄原文）">
+<pre><code data-lang="c">int Sort(int M[], N)
+{
+  int a, n;
+  for(n=N-1;n&gt;0;n--)
+    for(a=0;a&lt;n;a++)
+      Swap(M[a], M[a+1]);
+  return(0);
+}</code></pre>
+          </div>
+        </div>
+        <div>
+          <div class="codeblock" data-title="p.47 的記憶體模型（照抄原文，含大寫的 Module）">
+<pre><code data-lang="verilog">Module M(Clk, WE, A, D);
+inout [31:0] D;
+  input [11:0] A;
+  input        Clk, WE;
+reg   [31:0] M [0:4095];
+  always@(posedge Clk)
+    if(WE) M[A]=D;
+    else   D=M[A];
+endmodule</code></pre>
+          </div>
+        </div>
+      </div>
+      <p class="warn">原文 <code>Module</code> 首字母大寫；投影片 XML 中 <code>posedge Clk</code> 的空白遺失（顯示為 <code>posedgeClk</code>），上面照畫面呈現。</p>
+      <p>方塊圖是兩個方塊 <code>Sorter</code> 與 <code>M</code> 共用 <code>Clk</code>，中間有位址線 <code>A</code>（Sorter → M）、雙向資料線 <code>D</code>，以及寫入致能 <code>WE</code>；左側 <code>Start</code> 進入 Sorter、<code>Ready</code> 離開。</p>
+
+      <h3>六個狀態的狀態圖（p.47 右）</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>p.47 的狀態圖（照錄各狀態的內容與去向）</caption>
+          <thead><tr><th scope="col">狀態</th><th scope="col">內容</th><th scope="col">去向</th></tr></thead>
+          <tbody>
+            <tr><th scope="row"><code>Init</code></th><td><code>N=4095</code></td><td>→ <code>Go</code></td></tr>
+            <tr><th scope="row"><code>Go</code></th><td><code>A=0</code>　<code>WE=0</code></td><td>→ <code>R</code></td></tr>
+            <tr><th scope="row"><code>R</code></th><td><code>B=D</code>　<code>A=A+1</code>　<code>WE=0</code></td><td>→ <code>C</code></td></tr>
+            <tr><th scope="row"><code>C</code><br>（比較）</th><td><code>B&lt;D</code>：<code>B=D; A=A+1; WE=0; If(A=N-1) N=N-1</code><br><code>B&gt;=D</code>：<code>A=A-1; WE=1;</code></td><td><code>B&lt;D</code> 時自迴圈；否則 → <code>W</code>；或 → <code>Ok</code></td></tr>
+            <tr><th scope="row"><code>W</code><br>（寫入）</th><td><code>D=B;</code>　<code>A=A+1; WE=1</code>　<code>If(A=N-1)</code>　<code>N=N-1</code></td><td>→ <code>Go</code>（弧線標 <code>N=0</code>）；或 → <code>Ok</code></td></tr>
+            <tr><th scope="row"><code>Ok</code></th><td><code>Ready=1</code></td><td>終止狀態</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>讀法：<code>C</code> 是比較狀態 — 只要 <code>B&lt;D</code>（順序正確）就停在原狀態繼續往前串，不需要交換；一旦 <code>B&gt;=D</code> 就把位址退一格、拉起 <code>WE</code> 進入寫入狀態 <code>W</code>，寫完回到 <code>Go</code> 開始新的一輪。<code>N=0</code> 代表所有輪次跑完，轉去 <code>Ok</code>。</p>
+
+      <div class="codeblock" data-title="p.48 的排序器實作（照抄原文）">
+<pre><code data-lang="verilog">module Sorter(Clk, Init, WE, A, D, Ready);
+  input Clk, Init;
+  inout [31:0] D;
+  output WE, Ready;
+  output [11:0] A;
+  reg [2:0] S;
+  parameter Ok=0, Go=1, R=2, C=3, W=4;
+  reg [11:0] A;
+  reg [31:0] B, D;
+  reg [11:0] N;
+  reg Ok;
+	always@(posedge Clk)
+	  if(Init) begin N=4095; S=Go; end
+	  else case(S)
+	         Go: begin A=0; WE=0; S=R1; end
+	         R: begin B=D; A=A+1; S=C; end
+	         C: if(B&gt;D) begin A=A-1; WE=1; S=W; end
+	            else begin B=D; A=A+1; WE=0; 
+	                       if(A&gt;=N-1) if(N&gt;1) begin N=N-1; S=C; end
+	                                  else S=Ok;
+	                       else S=Go;
+	                 end
+	         W: begin D=B; A=A+1; WE=1;
+	              if(A&gt;=N-1) begin if(N&gt;1) begin N=N-1; S=Go; end
+	                               else S=Ok;
+	                         end
+	            end 
+	         Ok: Ready=1;
+	endcase
+endmodule</code></pre>
+      </div>
+      <p class="warn">四處原文瑕疵：<code>S=R1;</code> 的狀態 <code>R1</code> 從未宣告（應為 <code>R</code>）；<code>reg Ok;</code> 與 <code>parameter Ok=0</code> 名稱衝突；巢狀 <code>if</code> 後面那個 <code>else S=Go;</code> 懸空；<code>endcase</code> 的縮排跑到區塊外。照原文保留。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-4-31">
+      <h2>4.31 範例：質數表</h2>
+      <p><span class="srcref" data-slides="49">投影片 p.49</span></p>
+      <div class="codeblock" data-title="p.49 的質數表 C 程式（照抄原文）">
+<pre><code data-lang="c">void prime()
+{
+	unsigned int M[100], N=0, i, j, yes;
+	M[N++]=2;
+	for(i=3; i&lt;9999; i+=2) {
+		j=0;
+		yes=1;
+		while(M[j]*M[j]&lt;i) if(i%M[j++]) {yes=0; break;}
+		if(yes) M[N++]=i;
+	}
+}</code></pre>
+      </div>
+      <p class="warn">這段的判斷邏輯與一般寫法相反：<code>if(i%M[j++])</code> 為真代表<strong>不能整除</strong>，照理應該繼續試下一個質數，但程式卻在這裡設 <code>yes=0; break;</code>（判定為非質數）。依此邏輯結果會是錯的，正確的條件應為 <code>if(i%M[j++]==0)</code>。照原文保留。</p>
+      <p>其餘結構是標準的試除法：只存質數到 <code>M[]</code>、只試奇數、試除上限為 <code>M[j]*M[j] &lt; i</code>（等價於試到 √i）。這是 §4.32 練習第 1 題的 C 版本。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-4-32">
+      <h2>4.32 練習與再思考</h2>
+      <p><span class="srcref" data-slides="50">投影片 p.50</span></p>
+      <p>投影片列出十題（<code>Exercises and Rethinks</code>），括號裡的反問是重點：</p>
+      <ol>
+        <li>List prime numbers &lt; 9999.</li>
+        <li>Calculate the area of a triangle with edges A, B, and C.</li>
+        <li>Quick Sort in Hardware. (How about parallel sorter?)</li>
+        <li>Sequentially Fourier transform. (How about FFT?)</li>
+        <li>Memory Controller (<strong>Why not SW?</strong>)</li>
+        <li>Traffic Light Controller (<strong>Why not HW?</strong>)</li>
+        <li>Elevator Controller (<strong>Why not HW?</strong>)</li>
+        <li>FIR/IIR Filters (Why not FSM? Datapath)</li>
+        <li>PLC (programmable logic controller) (<strong>Why not HW?</strong>)</li>
+        <li>JTAG TAPC (test access port controller) (<strong>Why not SW?</strong>)</li>
+      </ol>
+      <div class="supplement">
+        <p>這些反問全部指向第 01 章 §1.2 的「軟硬共設計」：記憶體控制器與 JTAG TAPC 必須是硬體（速度與獨立性要求），而紅綠燈、電梯、PLC 其實用軟體（微控制器）更划算。<strong>會寫 Verilog 之後，更重要的判斷是「這件事該不該做成硬體」。</strong>JTAG TAPC 正是第 05 章的主要範例。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-4-33">
+      <h2>4.33 Lab04 計數器</h2>
+      <p><span class="srcref" data-slides="51">投影片 p.51</span></p>
+      <p>Binary Counters with/without properties（有／無下列性質的二進位計數器）：</p>
+      <ul>
+        <li>Loadable: data, LOAD-control（可載入）</li>
+        <li>Resettable: Rst-control（可重置）</li>
+        <li>Up/Down Counting（上數／下數）</li>
+        <li>Stride/Step/Increment（步進量）</li>
+        <li>Start/End（起始／結束值）</li>
+        <li>Recount/Stop at end（到終點後重數或停止）</li>
+        <li>Synchronous/Asynchronous for each control（每個控制訊號可同步或非同步）</li>
+        <li>Johnson, Ring Counters, LFSR Counters（強生、環形、線性反饋移位暫存器計數器）</li>
+        <li>Snake（貪食蛇）</li>
+      </ul>
+      <p><strong>Problem 1.</strong> Complete all the combinations in this lab.（把這個實驗所有的組合都做完。）</p>
+      <div class="supplement">
+        <p>最後三種計數器會在第 05 章 §5 再次出現：環形計數器就是一熱碼（和 §4.23 的定序器同一個原理）、強生計數器是環形的變形、LFSR 則用來產生偽隨機序列。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="takeaways">
+      <h2>重點整理</h2>
+      <div class="takeaways">
+        <ol>
+          <li><strong>同一行 <code>assign P = A * B;</code> 可以合成到面積／時間曲線上的任何一點</strong>：平行陣列快但面積 O(N²)，循序乘法器省面積但要 N 個時脈。選哪一點是設計者的決定。</li>
+          <li><strong>乘法就是「部分積相加」</strong>：每一列部分積要嘛是被乘數本身、要嘛是全零，所以一個 AND 閘就夠；陣列中第 0 列只有 AND 閘，沒有加法器。</li>
+          <li><strong><code>for</code> 在三個地方意思完全不同</strong>：<code>initial</code> 內是模擬時間的迴圈、<code>generate</code> 內是編譯時的空間複製（索引須為 <code>genvar</code>）、<code>always</code> 內是一個時脈內的並行展開。</li>
+          <li><strong>V2K 的 <code>generate</code> 取代了「寫 C 程式產生 Verilog」</strong>：§4.7 的 36 行手工列表，在 §4.11 變成六行雙層迴圈，而且位寬可參數化。</li>
+          <li><strong>ASM 的四步流程</strong>：虛擬碼 → 流程圖 → ASM 圖 → HDL／電路。</li>
+          <li><strong>流程圖轉 ASM 圖的核心規則</strong>：每個狀態都要能在一個時脈內做完；<strong>寫後讀 (WR) 相依必須拆成兩個狀態</strong>；先讀後寫則可以留在同一個狀態。</li>
+          <li><strong>判斷不佔自己的時脈</strong>，它寄生在前一個狀態的尾端；若判斷要讀同一週期剛寫的值，就得插入 <code>dummy</code> 空狀態讓它穩定。</li>
+          <li><strong>ASM 元件到硬體有固定的對應字典</strong>：狀態 → 一個 D 型正反器（一熱碼）、判斷 → 解多工器、匯合 → OR 閘、<code>end</code> → 自我保持的 Ready 格。</li>
+          <li><strong>成品形狀永遠是「左控制、右資料」</strong>：控制器送出 <code>Initial</code>／<code>Accumulate</code>／<code>Shift</code>，資料路徑回傳 <code>B[0]</code>／<code>N=0</code> 等狀態旗標。</li>
+          <li><strong>ASM 法的代價是多工器堆疊</strong>：每個暫存器前的多工器數量等於會寫它的狀態數，所以面積大、速度慢 — 投影片自己就寫明了。</li>
+          <li><strong>改良方向是把工作搬進組合邏輯</strong>：p.42 把累加改成 <code>assign</code>，於是每個時脈同時完成累加與移位，8 位元乘法由 16 個時脈降到 8 個。</li>
+          <li><strong>先用 C 驗證再寫 HDL</strong>：用語言內建運算當「黃金標準」窮舉比對，C 與組合語言就是最快的邏輯模擬器。</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="terms">
+      <h2>關鍵術語</h2>
+      <div class="terms">
+        <dl>
+          <dt>演算法狀態機 <span class="en">ASM, Algorithmic State Machine</span></dt>
+          <dd>由流程圖對應而來的一種 FSM 設計風格，可手工合成。<span class="srcref" data-slides="20">投影片 p.20</span></dd>
+
+          <dt>ASM 圖 <span class="en">ASM chart</span></dt>
+          <dd>每個方塊都能在一個時脈內完成、分支標為選擇值 0／1 的流程圖。<span class="srcref" data-slides="34">投影片 p.34</span></dd>
+
+          <dt>寫後讀相依 <span class="en">WR dependency</span></dt>
+          <dd>後一行要用到前一行剛寫入的值，必須拆成兩個狀態。<span class="srcref" data-slides="27">投影片 p.27</span></dd>
+
+          <dt>空狀態 <span class="en">dummy state</span></dt>
+          <dd>不做任何事、只為了讓剛寫入的值有一個完整時脈穩定下來的狀態。<span class="srcref" data-slides="28">投影片 p.28</span></dd>
+
+          <dt>一熱碼定序器 <span class="en">one-hot sequencer</span></dt>
+          <dd>一個狀態配一個正反器、任何時刻只有一個為 1 的控制鏈；狀態輸出直接就是控制訊號。<span class="srcref" data-slides="35">投影片 p.35</span></dd>
+
+          <dt>資料路徑 <span class="en">datapath</span></dt>
+          <dd>負責實際運算與儲存的部分，由控制器下達的控制訊號驅動。<span class="srcref" data-slides="37">投影片 p.37</span></dd>
+
+          <dt>多工器堆疊 <span class="en">multiplexer stack</span></dt>
+          <dd>每個暫存器前依「會寫它的狀態數」疊起的多工器，是 ASM 法面積大、速度慢的主因。<span class="srcref" data-slides="37">投影片 p.37</span></dd>
+
+          <dt>位移相加乘法器 <span class="en">shift-and-add multiplier</span></dt>
+          <dd>用一個加法器與一組移位暫存器，花 N 個時脈完成乘法。<span class="srcref" data-slides="30">投影片 p.30</span></dd>
+
+          <dt>桶式移位器 <span class="en">barrel / constant shifter</span></dt>
+          <dd>用 log₂N 排多工器（位移 1、2、4…）組出任意位移量的組合電路。<span class="srcref" data-slides="19">投影片 p.19</span></dd>
+
+          <dt>迭代邏輯陣列 <span class="en">ILA, Iterative Logic Array</span></dt>
+          <dd>把 FSM 完全展開成純組合電路的結果，等於零週期的 FSM。<span class="srcref" data-slides="5">投影片 p.5</span></dd>
+
+          <dt>genvar</dt>
+          <dd><code>generate</code> 迴圈專用的索引變數型別，在編譯時展開而非執行時。<span class="srcref" data-slides="14">投影片 p.14</span></dd>
+
+          <dt>黃金標準測試 <span class="en">golden test</span></dt>
+          <dd>用已知正確的參考模型（例如語言內建的 <code>*</code>）窮舉比對待測設計。<span class="srcref" data-slides="32">投影片 p.32</span></dd>
+        </dl>
+        <p>完整詞條見<a href="glossary.html">全站術語表</a>。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="quiz">
+      <h2>自我測驗</h2>
+      <div class="quiz" data-quiz-root></div>
+    </section>
+
+    <div data-progress-panel></div>
+    <nav class="pager" data-pager></nav>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p>內容整理自 2022 秋季「Hardware Description Language -- Logic Design using Verilog」課程投影片（黃宗柱 / Tsung-Chu Huang，彰師大電子系）。本網站僅供個人學習使用。</p>
+  </div>
+</footer>
+
+<script src="js/ch04-quiz.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/code.js"></script>
+</body>
+</html>

@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 Y 圖 — 階層設計與 EDA 流程 ｜ 硬體描述語言 HDL 學習網站</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+/* 本章專屬：互動 Y 圖與結構示意圖 */
+.ychart .ring { fill: none; stroke-width: 2; }
+.ychart .ring-1 { stroke: #c2185b; }
+.ychart .ring-2 { stroke: #c8a200; }
+.ychart .ring-3 { stroke: #1565c0; }
+.ychart .axis { stroke: #2e7d32; stroke-width: 3; }
+.ychart .axis-label { font-size: 15px; font-weight: 700; fill: #1f2430; }
+.ychart .arc { fill: none; stroke: #9aa4b4; stroke-width: 3; opacity: .55; }
+.ychart .arc-label { font-size: 13px; fill: #4a5362; }
+/* 文字加白色描邊，壓在圓環或軸線上時仍然清楚 */
+.ychart .arc-label, .ychart .axis-label { paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+[data-theme="dark"] .ychart .arc-label, [data-theme="dark"] .ychart .axis-label { stroke: #171b23; }
+.ychart .hit { fill: transparent; cursor: pointer; }
+.ychart .arc.is-hl { stroke: #b36b00; stroke-width: 6; opacity: 1; }
+.ychart .arc-label.is-hl { fill: #8a5200; font-weight: 700; font-size: 14px; }
+.ychart .axis.is-hl { stroke: #b36b00; stroke-width: 6; }
+.ychart .axis-label.is-hl { fill: #8a5200; text-decoration: underline; }
+.ychart .ring.is-hl { stroke-width: 6; }
+.ychart .center-dot { fill: #c62828; }
+[data-theme="dark"] .ychart .axis-label { fill: #e7ebf2; }
+[data-theme="dark"] .ychart .arc-label { fill: #b9c2d0; }
+[data-theme="dark"] .ychart .arc.is-hl { stroke: #ffc34d; }
+[data-theme="dark"] .ychart .arc-label.is-hl, [data-theme="dark"] .ychart .axis-label.is-hl { fill: #ffc34d; }
+[data-theme="dark"] .ychart .axis.is-hl { stroke: #ffc34d; }
+.svg-plain .box { fill: #fff; stroke: #5b6472; stroke-width: 2; }
+.svg-plain text { font-size: 13px; fill: #1f2430; }
+.svg-plain .edge { stroke: #8a93a3; stroke-width: 2.5; fill: none; }
+.svg-plain .nest-s { fill: #fff6d8; stroke: #b08b00; stroke-width: 2; }
+.svg-plain .nest-t { fill: #e3f0ff; stroke: #1565c0; stroke-width: 2; }
+.svg-plain .nest-u { fill: #ddf5f2; stroke: #00796b; stroke-width: 2; }
+.svg-plain .nest-v { fill: #fbe3e3; stroke: #a02020; stroke-width: 2; }
+.svg-plain .nest-w { fill: #e8f6e2; stroke: #4a7c2f; stroke-width: 2; }
+.svg-plain .trap { fill: #fff6d8; stroke: #b08b00; stroke-width: 2.5; }
+.svg-plain .accent-text { fill: #8a5200; font-weight: 700; }
+[data-theme="dark"] .svg-plain .box { fill: #222733; stroke: #9aa4b4; }
+[data-theme="dark"] .svg-plain text { fill: #e7ebf2; }
+[data-theme="dark"] .svg-plain .nest-s, [data-theme="dark"] .svg-plain .trap { fill: #3a3312; }
+[data-theme="dark"] .svg-plain .nest-t { fill: #14283d; }
+[data-theme="dark"] .svg-plain .nest-u { fill: #11302c; }
+[data-theme="dark"] .svg-plain .nest-v { fill: #3a1b1b; }
+[data-theme="dark"] .svg-plain .nest-w { fill: #1d3317; }
+[data-theme="dark"] .svg-plain .accent-text { fill: #ffc34d; }
+.y-btns { display: flex; flex-wrap: wrap; gap: .4rem; margin: .8rem 0; }
+.steps-nav { display: flex; flex-wrap: wrap; gap: .4rem; margin: .8rem 0; }
+</style>
+<script src="js/site.js"></script>
+</head>
+<body data-chapter="ch02">
+<a class="skiplink" href="#main">跳到主要內容</a>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="index.html">硬體描述語言 (HDL) 學習網站<span>Logic Design using Verilog ・ 離線版</span></a>
+    <nav class="site-nav" aria-label="主導覽">
+      <ul>
+        <li><a href="index.html">首頁</a></li>
+        <li><a href="ch01-overview.html">01 Overview</a></li>
+        <li><a href="ch02-ychart.html" aria-current="page">02 Y 圖</a></li>
+        <li><a href="ch03-grammar.html">03 基本語法</a></li>
+        <li><a href="ch04-asm.html">04 ASM</a></li>
+        <li><a href="ch05-fsm.html">05 FSM</a></li>
+        <li><a href="glossary.html">術語表</a></li>
+      </ul>
+    </nav>
+    <div class="header-tools">
+      <button type="button" class="btn btn-sm" data-action="toggle-theme" aria-pressed="false">
+        <span data-theme-label>深色模式：關</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc" data-toc aria-labelledby="toc-heading">
+    <h2 id="toc-heading">本章目錄</h2>
+    <div class="toc-tools">
+      <button type="button" class="btn btn-sm" data-toc-action="expand">全部展開</button>
+      <button type="button" class="btn btn-sm" data-toc-action="collapse">全部收起</button>
+    </div>
+    <details class="toc-group" open>
+      <summary>小節（22 張投影片）</summary>
+      <ol class="toc-list">
+        <li><a href="#sec-2-1">2.1 課程導覽與快速教學規劃</a></li>
+        <li><a href="#sec-2-2">2.2 階層、樹與嵌套區塊</a></li>
+        <li><a href="#sec-2-3">2.3 測試平台 Testbench 的概念</a></li>
+        <li><a href="#sec-2-4">2.4 階層設計的方向</a></li>
+        <li><a href="#sec-2-5">2.5 為什麼不能全部攤平：4 位元加法器的真值表</a></li>
+        <li><a href="#sec-2-6">2.6 由上而下分析</a></li>
+        <li><a href="#sec-2-7">2.7 由下而上合成八步</a></li>
+        <li><a href="#sec-2-8">2.8 攤平式合成</a></li>
+        <li><a href="#sec-2-9">2.9 Y 圖與理想 EDA 流程</a></li>
+        <li><a href="#sec-2-10">2.10 EDA 工具地圖的四種切法</a></li>
+        <li><a href="#sec-2-11">2.11 Lab02 正反器</a></li>
+      </ol>
+    </details>
+    <details class="toc-group" open>
+      <summary>本章結尾</summary>
+      <ul class="toc-list">
+        <li><a href="#takeaways">重點整理</a></li>
+        <li><a href="#terms">關鍵術語</a></li>
+        <li><a href="#quiz">自我測驗</a></li>
+      </ul>
+    </details>
+  </nav>
+
+  <main id="main">
+    <h1>02 Y 圖 — 階層設計與 EDA 流程</h1>
+    <p>由上而下分解、由下而上合成，以及 EDA 工具在 Y 圖上的位置。原始投影片 22 張，估計閱讀 35 分鐘。</p>
+
+    <section class="chapter-section" id="objectives">
+      <h2>學習目標</h2>
+      <ul>
+        <li>用「樹」與「嵌套區塊」兩種畫法說明同一個階層關係。</li>
+        <li>說出測試平台 (testbench) 的兩端各做什麼事，以及對應的 Verilog 寫法。</li>
+        <li>比較 <strong>Top-down</strong>、<strong>Bottom-up</strong> 與 Middle-out／Ends-In／Hybrid 的適用場合。</li>
+        <li>解釋為什麼 4 位元加法器不適合用單一真值表實作（2<sup>9</sup> = 512 列）。</li>
+        <li>完整走過 4 位元加法器「由下而上」的八個步驟：佈局 → 標準單元 → 符號 → 閘級 → 半加器 → 全加器 → 漣波進位鏈。</li>
+        <li>在 <strong>Y 圖</strong>上指出三個觀點與抽象層級，並說明 modularization、partitioning、synthesize、library、sim、ver 各自的位置。</li>
+      </ul>
+    </section>
+
+    <section class="chapter-section" id="sec-2-1">
+      <h2>2.1 課程導覽與快速教學規劃</h2>
+      <p><span class="srcref" data-slides="1,2">投影片 p.1–2</span></p>
+      <p>本章封面日期為 2022/09/22，是 Lec. 02「View, Level, Hierarchy」。</p>
+
+      <h3>選用的編譯器與模擬器（p.2）</h3>
+      <p>投影片列出要挑 3 個 Verilog 編譯器做教學 (Select 3 Verilog-Compilers for tutorial)：</p>
+      <ol>
+        <li>SynaptiCAD's Verilogger Pro</li>
+        <li>Candence's VerilogXL or NCSim</li>
+        <li>ModelSim</li>
+        <li>Altera's Quartus II</li>
+      </ol>
+      <p class="warn">原文寫 <code>Candence's</code>，正確廠商名為 <strong>Cadence</strong>。另外標題說「Select 3」但實際列了 4 項，兩處都照原文保留。</p>
+
+      <h3>要練習與體會的三件事</h3>
+      <ol>
+        <li>Hierarchy design orientation（階層設計的方向）</li>
+        <li>Design styles and views（設計風格與觀點）</li>
+        <li>Testfixture (Testbench) Construction（測試平台的建構）</li>
+      </ol>
+      <p>投影片另提供課程網站上的影片連結。</p>
+      <p class="warn">p.2 畫面上的網址寫 <code>HDL2015</code>，但超連結實際指向 <code>HDL2014</code>，兩者不一致且都已失效。本網站為離線版，不放外部連結。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-2-2">
+      <h2>2.2 階層、樹與嵌套區塊</h2>
+      <p><span class="srcref" data-slides="3">投影片 p.3</span></p>
+      <p>這一頁用<strong>同一個階層關係</strong>畫出兩種圖：上面是樹，下面是嵌套的方塊。重點是：<strong>設計樹與嵌套區塊是同一件事的兩種觀看方式</strong>。</p>
+
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 560 300" role="img" aria-labelledby="h2-title h2-desc">
+          <title id="h2-title">p.3 的階層：樹與嵌套區塊兩種畫法</title>
+          <desc id="h2-desc">左側是樹狀圖：根節點 Top Root 之下有 S 與 T 兩個子節點；S 之下有 U；T 之下有 V 與 W。右側是同一關係的嵌套方塊：最外層白框代表 Top，裡面並列一個黃色的 S 方塊（內含青色 U）與一個藍色的 T 方塊（內含深紅 V 與淺綠 W）。</desc>
+          <path class="edge" d="M118 54 L74 104"></path>
+          <path class="edge" d="M118 54 L162 104"></path>
+          <path class="edge" d="M68 142 L68 190"></path>
+          <path class="edge" d="M158 142 L124 190"></path>
+          <path class="edge" d="M166 142 L200 190"></path>
+          <g><circle class="box" cx="118" cy="36" r="24"></circle><text x="118" y="41" text-anchor="middle">Top</text></g>
+          <g><circle class="nest-s" cx="68" cy="122" r="22"></circle><text x="68" y="127" text-anchor="middle">S</text></g>
+          <g><circle class="nest-t" cx="162" cy="122" r="22"></circle><text x="162" y="127" text-anchor="middle">T</text></g>
+          <g><circle class="nest-u" cx="68" cy="212" r="22"></circle><text x="68" y="217" text-anchor="middle">U</text></g>
+          <g><circle class="nest-v" cx="118" cy="212" r="22"></circle><text x="118" y="217" text-anchor="middle">V</text></g>
+          <g><circle class="nest-w" cx="208" cy="212" r="22"></circle><text x="208" y="217" text-anchor="middle">W</text></g>
+          <text x="118" y="272" text-anchor="middle">樹狀圖 Tree</text>
+
+          <rect class="box" x="316" y="28" width="220" height="198" rx="8"></rect>
+          <text x="426" y="48" text-anchor="middle">Top (Root)</text>
+          <rect class="nest-s" x="332" y="62" width="92" height="148" rx="6"></rect>
+          <text x="378" y="82" text-anchor="middle">S</text>
+          <rect class="nest-u" x="344" y="96" width="68" height="100" rx="6"></rect>
+          <text x="378" y="150" text-anchor="middle">U</text>
+          <rect class="nest-t" x="434" y="62" width="88" height="148" rx="6"></rect>
+          <text x="478" y="82" text-anchor="middle">T</text>
+          <rect class="nest-v" x="444" y="96" width="68" height="48" rx="6"></rect>
+          <text x="478" y="126" text-anchor="middle">V</text>
+          <rect class="nest-w" x="444" y="152" width="68" height="46" rx="6"></rect>
+          <text x="478" y="181" text-anchor="middle">W</text>
+          <text x="426" y="272" text-anchor="middle">嵌套區塊 Nested blocks</text>
+        </svg>
+      </div>
+      <div class="supplement">
+        <p>在 Verilog 裡，這個關係就是<strong>模組實體化</strong>：Top 模組內部寫 <code>S s1(...); T t1(...);</code>，S 模組內部再寫 <code>U u1(...);</code>。樹的「父子」等於嵌套的「包含」。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-2-3">
+      <h2>2.3 測試平台 Testbench 的概念</h2>
+      <p><span class="srcref" data-slides="4">投影片 p.4</span></p>
+      <p>整張圖是一個大圓角方框（testbench / testfixture），把待測電路包在裡面。左邊畫一台訊號產生器，右邊畫一台示波器／邏輯分析儀。</p>
+
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 560 240" role="img" aria-labelledby="tb-title tb-desc">
+          <title id="tb-title">p.4 的測試平台概念圖</title>
+          <desc id="tb-desc">最外層方框是測試平台。左側方塊是訊號產生器，對應 initial 區塊；中央方塊是可合成硬體，內含 Top、S、T、U、V、W 的階層；右側方塊是示波器或邏輯分析儀，對應 display 與 monitor 系統函式與波形觀察。箭頭由左至中、再由中至右。</desc>
+          <rect class="box" x="14" y="16" width="532" height="200" rx="14"></rect>
+          <text x="280" y="38" text-anchor="middle">Testbench / Testfixture</text>
+          <rect class="nest-s" x="34" y="78" width="104" height="86" rx="6"></rect>
+          <text x="86" y="108" text-anchor="middle">訊號產生器</text>
+          <text x="86" y="128" text-anchor="middle">initial block</text>
+          <text x="86" y="148" text-anchor="middle">as signal generator</text>
+          <path class="edge" d="M140 120 L186 120"></path>
+          <rect class="nest-u" x="190" y="66" width="168" height="110" rx="8"></rect>
+          <text x="274" y="88" text-anchor="middle">Synthesizable Hardware</text>
+          <text x="274" y="112" text-anchor="middle">Top</text>
+          <text x="238" y="134" text-anchor="middle">S</text>
+          <text x="310" y="134" text-anchor="middle">T</text>
+          <text x="222" y="158" text-anchor="middle">U</text>
+          <text x="290" y="158" text-anchor="middle">V</text>
+          <text x="330" y="158" text-anchor="middle">W</text>
+          <path class="edge" d="M360 120 L406 120"></path>
+          <rect class="nest-t" x="410" y="70" width="116" height="100" rx="6"></rect>
+          <text x="468" y="94" text-anchor="middle">$display</text>
+          <text x="468" y="114" text-anchor="middle">$monitor</text>
+          <text x="468" y="134" text-anchor="middle">waveform</text>
+          <text x="468" y="154" text-anchor="middle">like a scope</text>
+        </svg>
+      </div>
+      <ul>
+        <li><strong>左端（輸入）</strong>：用 <code>initial</code> 區塊當訊號產生器，也兼做邏輯分析（原文：<code>initial block</code> / <code>as signal generator</code> / <code>and logic analyzer</code>）。</li>
+        <li><strong>中央</strong>：<code>Synthesizable Hardware</code> — 真正要合成的電路，就是 §2.2 的那棵階層樹。</li>
+        <li><strong>右端（觀察）</strong>：<code>$display</code>、<code>$monitor</code> 與波形，<code>like a scope or logic analyzer</code>。</li>
+      </ul>
+      <div class="supplement">
+        <p>關鍵分界：testbench 本身<strong>不需要可合成</strong>，可以用 <code>#delay</code>、<code>$display</code> 這些只在模擬有意義的語法；中央那塊才要遵守可合成的限制。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-2-4">
+      <h2>2.4 階層設計的方向</h2>
+      <p><span class="srcref" data-slides="5">投影片 p.5</span></p>
+      <p>投影片上下各畫一棵樹：上面那棵箭頭朝上（<strong>Bottom-up</strong>），下面那棵箭頭朝下（<strong>Top-down</strong>）；中間用一個大括號指向三種折衷策略。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>兩種方向的取捨（照錄 p.5 的三組文字）</caption>
+          <thead><tr><th scope="col">方向</th><th scope="col">投影片列出的特性</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Bottom-up<br>由下而上</th><td>Long-term library construction（長期建立程式庫）<br>Easy modularization（容易模組化）</td></tr>
+            <tr><th scope="row">折衷</th><td>Middle-out（由中間向外）<br>Ends-In（由兩端向內）<br>Hybrid (Greedy) : Human thinking（混合／貪婪，符合人的思考方式）</td></tr>
+            <tr><th scope="row">Top-down<br>由上而下</th><td>Shorten design phase（縮短設計週期）<br>Should be modularized carefully（必須小心模組化）<br>Ideal EDA Flow（理想的 EDA 流程）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="supplement">
+        <p>兩個極端各有代價：由下而上累積的元件庫可以長期重用，但不保證拼得出你要的系統；由上而下最快切出系統架構，但如果模組切得不好，底層會做不出來或效能很差。實務上多半是 Hybrid。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-2-5">
+      <h2>2.5 為什麼不能全部攤平：4 位元加法器的真值表</h2>
+      <p><span class="srcref" data-slides="6">投影片 p.6</span></p>
+      <p>投影片的兩點說明（照錄原文）：</p>
+      <ul>
+        <li>Can designed as a primitive cell optimized to SOP (or POS) forms using McKlusky method (or K-Map)</li>
+        <li>Time Complexity: Incredibly exponentially increasing!</li>
+      </ul>
+      <p>4 位元加法器有 9 個輸入（A3–A0、B3–B0、Ci）與 5 個輸出（Co、S3–S0），所以真值表有 <strong>2<sup>9</sup> = 512 列</strong>。投影片用一條粗黃箭頭從「Time Complexity」掃到表格右上角，強調這個爆炸性成長。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.6 的真值表（照錄，中間以 <code>:</code> 省略；僅為課堂示意）</caption>
+          <thead>
+            <tr><th scope="col">Implicant</th><th scope="col">A3</th><th scope="col">A2</th><th scope="col">A1</th><th scope="col">A0</th><th scope="col">B3</th><th scope="col">B2</th><th scope="col">B1</th><th scope="col">B0</th><th scope="col">Ci</th><th scope="col">Co</th><th scope="col">S3</th><th scope="col">S2</th><th scope="col">S1</th><th scope="col">S0</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+            <tr><td>2</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+            <tr><td>3</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+            <tr><td>4</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><td>5</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+            <tr><td>6</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+            <tr><td>7</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+            <tr><td>:</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>:</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>498</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+            <tr><td>499</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+            <tr><td>500</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+            <tr><td>501</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><td>502</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+            <tr><td>503</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+            <tr><td>504</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+            <tr><td>505</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>506</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+            <tr><td>507</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+            <tr><td>508</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+            <tr><td>509</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><td>510</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+            <tr><td>511</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">這張表是課堂上用來說明「512 列有多可怕」的示意圖，部分位元組合在算術上並不自洽（例如第 498 列 A=1111、B=1001、Ci=0，和卻列成 S=0001；第 505 列 A=1111、B=1100、Ci=1 卻給 Co=1、S=0000）。此處照原文重現，請勿當成正確的加法器真值表使用。</p>
+      <p class="warn">原文 <code>Can designed as</code> 少了 be，<code>McKlusky</code> 的標準拼法是 Quine–McCluskey。照原文保留。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-2-6">
+      <h2>2.6 由上而下分析</h2>
+      <p><span class="srcref" data-slides="7">投影片 p.7</span></p>
+      <p>既然攤平不可行，就改用階層。這一頁示範 <strong>Top-down Analysis</strong>：每一層先寫出「行為觀點」的式子，再用「結構觀點」把它分解成更低層的方塊，一路遞迴到程式庫裡現成的單元為止。</p>
+
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 560 330" role="img" aria-labelledby="td-title td-desc">
+          <title id="td-title">p.7 的由上而下分解樹</title>
+          <desc id="td-desc">最上層是 4 位元加法器的行為式 Co 與 S 等於 A 加 B，經結構觀點分解成四個全加器；全加器的行為式為 Co 與 S 等於 A 加 B 加 Ci，再分解成半加器；半加器的行為式為 C 與 S 等於 A 加 B，最後分解成 AND 與 XOR 兩個程式庫單元。</desc>
+          <rect class="box" x="150" y="14" width="260" height="46" rx="6"></rect>
+          <text x="280" y="34" text-anchor="middle">Behavioral View（4-bit Adder）</text>
+          <text x="280" y="52" text-anchor="middle">{Co, S} = A + B</text>
+          <text class="accent-text" x="280" y="78" text-anchor="middle">── Structure View ──</text>
+          <path class="edge" d="M280 84 L70 112"></path>
+          <path class="edge" d="M280 84 L280 112"></path>
+          <path class="edge" d="M280 84 L420 112"></path>
+          <path class="edge" d="M280 84 L500 112"></path>
+          <rect class="box" x="24" y="114" width="92" height="36" rx="6"></rect>
+          <text x="70" y="137" text-anchor="middle">Full Adder</text>
+          <rect class="box" x="174" y="114" width="212" height="44" rx="6"></rect>
+          <text x="280" y="132" text-anchor="middle">Behavioral View</text>
+          <text x="280" y="150" text-anchor="middle">{Co,S}=A+B+Ci</text>
+          <rect class="box" x="392" y="114" width="80" height="36" rx="6"></rect>
+          <text x="432" y="137" text-anchor="middle">Full Adder</text>
+          <rect class="box" x="478" y="114" width="78" height="36" rx="6"></rect>
+          <text x="517" y="137" text-anchor="middle">Full Adder</text>
+          <text class="accent-text" x="280" y="178" text-anchor="middle">── Structure View ──</text>
+          <path class="edge" d="M280 184 L150 208"></path>
+          <path class="edge" d="M280 184 L330 208"></path>
+          <rect class="box" x="100" y="210" width="100" height="36" rx="6"></rect>
+          <text x="150" y="233" text-anchor="middle">Half Adder</text>
+          <rect class="box" x="224" y="210" width="212" height="44" rx="6"></rect>
+          <text x="330" y="228" text-anchor="middle">Behavioral View</text>
+          <text x="330" y="246" text-anchor="middle">{C,S}=A+B</text>
+          <path class="edge" d="M330 256 L180 288"></path>
+          <path class="edge" d="M330 256 L430 288"></path>
+          <rect class="nest-u" x="104" y="290" width="152" height="34" rx="6"></rect>
+          <text x="180" y="312" text-anchor="middle">AND（程式庫單元）</text>
+          <rect class="nest-u" x="354" y="290" width="152" height="34" rx="6"></rect>
+          <text x="430" y="312" text-anchor="middle">XOR（程式庫單元）</text>
+        </svg>
+      </div>
+      <p>葉節點的 AND 與 XOR 旁邊，投影片都註明 <code>Can be found in physical library</code> — 遞迴到這裡就停了，因為程式庫裡已經有現成的實體單元。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-2-7">
+      <h2>2.7 由下而上合成八步</h2>
+      <p><span class="srcref" data-slides="8,9,10,11,12,13,14,15">投影片 p.8–15</span></p>
+      <p>這八張投影片其實是<strong>同一張圖的動畫分鏡</strong>，從最底層的實體佈局一路包裝成 4 位元漣波進位加法器。請依序瀏覽；每一步都標出它在 Y 圖上屬於哪個觀點。</p>
+
+      <div class="stepper" data-stepper>
+        <div class="stepper-body">
+          <figure class="figure" data-step="1">
+            <img src="assets/ch02/fig-slide-08.png" alt="投影片 p.8 畫面：AND 單元的 VLSI 佈局圖，黑色底上有上下兩條藍色金屬橫條、中間黃色與青綠色的擴散層橫列、垂直的紅色多晶矽閘條，以及作為接點的小方塊，上下邊各有四個接墊。">
+            <figcaption><strong>步驟 1／8 — VLSI Layout（p.8）</strong>：程式庫裡 AND 單元的實體佈局。<code>VLSI Layout → Physical View</code>。<span class="srcref" data-slides="8">投影片 p.8</span></figcaption>
+          </figure>
+          <figure class="figure" data-step="2">
+            <img src="assets/ch02/fig-slide-09.png" alt="投影片 p.9 畫面：上方是把佈局抽象化後的白色標準單元方框，外圍粗黑框與上下各四個接腳方塊，標示 Standard Cell 與 Physical View；下方是 AND 閘符號，標示 Symbol View。">
+            <figcaption><strong>步驟 2／8 — Standard Cell 與 Symbol View（p.9）</strong>：把佈局抽象成一個標準單元，再往上抽象成一個 AND 閘符號。<span class="srcref" data-slides="9">投影片 p.9</span></figcaption>
+          </figure>
+          <figure class="figure" data-step="3">
+            <img src="assets/ch02/fig-slide-10.png" alt="投影片 p.10 畫面：半加器的閘級電路圖，AND 閘與 XOR 閘並列，兩條輸入網線由上方下來並以接點共用 A 與 B，兩個輸出分別由閘底部引出。">
+            <figcaption><strong>步驟 3／8 — Schematics（p.10）</strong>：用 AND 與 XOR 兩個符號接成半加器的閘級電路；AND 給進位、XOR 給和。<span class="srcref" data-slides="10">投影片 p.10</span></figcaption>
+          </figure>
+          <figure class="figure" data-step="4">
+            <img src="assets/ch02/fig-slide-11.png" alt="投影片 p.11 畫面：與前一張相同的 AND 加 XOR 電路，上方覆蓋一個黃色外框的梯形模組符號並標示 Half Adder，梯形上方有兩個輸入接腳、下方有兩個輸出接腳。">
+            <figcaption><strong>步驟 4／8 — 包裝成模組（p.11）</strong>：用一個梯形符號把閘級電路包起來，命名為 Half Adder。<span class="srcref" data-slides="11">投影片 p.11</span></figcaption>
+          </figure>
+          <figure class="figure" data-step="5">
+            <img src="assets/ch02/fig-slide-12.png" alt="投影片 p.12 畫面：只剩下標示 Half Adder 的梯形符號，下方標題為 Symbol View。">
+            <figcaption><strong>步驟 5／8 — Half Adder 的 Symbol View（p.12）</strong>：內部細節隱藏起來，成為可重複使用的區塊。<span class="srcref" data-slides="12">投影片 p.12</span></figcaption>
+          </figure>
+          <figure class="figure" data-step="6">
+            <img src="assets/ch02/fig-slide-13.png" alt="投影片 p.13 畫面：兩個標示 Half Adder 的梯形並列，A 與 B 進入左邊半加器、Ci 進入右邊半加器，左邊的和輸出接到右邊的輸入，兩個進位輸出接到一個 OR 閘產生最終進位 Co，右邊的和輸出向下成為 S。">
+            <figcaption><strong>步驟 6／8 — 用兩個半加器做全加器（p.13）</strong>：<code>FA = HA + HA + OR</code>。<span class="srcref" data-slides="13">投影片 p.13</span></figcaption>
+          </figure>
+          <figure class="figure" data-step="7">
+            <img src="assets/ch02/fig-slide-14.png" alt="投影片 p.14 畫面：一個較大的梯形符號標示 Full Adder，上方三個輸入接腳、下方兩個輸出接腳，覆蓋在前一張的內部結構之上。">
+            <figcaption><strong>步驟 7／8 — Full Adder 的符號（p.14）</strong>：同樣的「把結構收攏成符號」動作，再往上一層。<span class="srcref" data-slides="14">投影片 p.14</span></figcaption>
+          </figure>
+          <figure class="figure" data-step="8">
+            <img src="assets/ch02/fig-slide-15.png" alt="投影片 p.15 畫面：四個標示 Full Adder 的梯形排成一列，上方兩條長橫向匯流排分別是 A 與 B，各取一位元進入每一級；粉紅色線把每一級的進位輸出接到左側下一級的進位輸入，白色線把各級的和往下送出，最左側的粉紅箭頭是最終進位輸出。">
+            <figcaption><strong>步驟 8／8 — 4 位元漣波進位加法器（p.15）</strong>：四個全加器串成一列，進位由最右（bit 0）往左傳遞。這就是 §2.6 由上而下那棵樹的「由下而上」對應版本。<span class="srcref" data-slides="15">投影片 p.15</span></figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <p class="warn">p.9 在投影片本身就有圖層重疊問題：AND 閘符號壓在 <code>Can be found in physical library</code> 文字上。p.11 與 p.14 的新符號也會蓋住前一步的內容，因為它們原本是動畫的後續分鏡。</p>
+      <div class="supplement">
+        <p>這八步正好把 Y 圖的三個觀點走了一輪：實體 (p.8 佈局) → 結構 (p.10、p.13、p.15 的接線) → 符號／行為 (p.9、p.12、p.14 的抽象)。每一次「包裝成符號」，就是在 Y 圖上往外跳一個抽象層級。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-2-8">
+      <h2>2.8 攤平式合成</h2>
+      <p><span class="srcref" data-slides="16">投影片 p.16</span></p>
+      <p>標題為 <code>Flattened Synthesis / For Some example</code>，標註 <code>Physical View</code>。圖是三排緊靠在一起的標準單元，排與排之間是橫向的金屬繞線通道，通道上有短的垂直接腳連到各單元。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.16 攤平後的單元排列（照錄各列的單元名稱）</caption>
+          <thead><tr><th scope="col">列</th><th scope="col">單元（由左至右）</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">第 1 列</th><td>NAND、NOR、XOR、NOT、AOI、NOT、NAND、NAND</td></tr>
+            <tr><th scope="row">第 2 列</th><td>NAND、NOR、XOR、AOI、NOT、NOT、NAND、NAND</td></tr>
+            <tr><th scope="row">第 3 列</th><td>NAND、NAND、NAND、NOR、XOR、AOI、NOT、NOT</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>教學重點：<strong>攤平 (flatten) 會把 §2.7 辛苦建立的階層全部丟掉</strong>，剩下的是一片沒有層次的程式庫單元海，照列擺放。</p>
+      <figure class="figure">
+        <img src="assets/ch02/fig-slide-16.png" alt="投影片 p.16 畫面：三排白色標準單元方塊緊靠排列，每個方塊標示 NAND、NOR、XOR、NOT、AOI 等單元名稱；排與排之間是橫向黃色繞線通道，通道上有短的紅色垂直接腳。">
+        <figcaption>攤平式合成後的標準單元排。<span class="srcref" data-slides="16">投影片 p.16</span></figcaption>
+      </figure>
+      <div class="supplement">
+        <p>攤平不是壞事，而是取捨：丟掉階層後，合成器可以跨模組邊界做最佳化，常能得到更小更快的電路；代價是結果難以閱讀、難以除錯，也失去模組重用的好處。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-2-9">
+      <h2>2.9 Y 圖與理想 EDA 流程</h2>
+      <p><span class="srcref" data-slides="17">投影片 p.17</span></p>
+      <p>這是本章的核心圖：<strong>Ideal EDA Flow along Y-Chart</strong>。三條軸是三個觀點，同心圓是抽象層級，畫在圓環上的弧線就是 EDA 工作。</p>
+      <p>下面是依投影片結構重畫的互動版。點選按鈕可以高亮對應的軸或流程弧線，並在下方看到說明。</p>
+
+      <div class="svgfig ychart">
+        <svg viewBox="0 0 560 470" role="img" aria-labelledby="yc-title yc-desc">
+          <title id="yc-title">Y 圖與理想 EDA 流程（依投影片 p.17 重畫）</title>
+          <desc id="yc-desc">三條綠色軸線由同一圓心發散：左上為 Behavioral 行為觀點，右上為 Structural 結構觀點，正下方為 Physical 實體觀點。三個同心圓環代表抽象層級，離圓心越遠越抽象，圓心是程式庫所在。圓環之間畫著六段流程弧線：最外圈的 modularization、往內一層的 partitioning、右側由結構往實體的 synthesize、圓心附近的 library 與 sim，以及左側外圈的 ver。</desc>
+
+          <circle class="ring ring-1" id="ring-1" cx="280" cy="215" r="160"></circle>
+          <circle class="ring ring-2" id="ring-2" cx="280" cy="215" r="105"></circle>
+          <circle class="ring ring-3" id="ring-3" cx="280" cy="215" r="55"></circle>
+
+          <line class="axis" id="axis-b" x1="280" y1="215" x2="123" y2="100"></line>
+          <line class="axis" id="axis-s" x1="280" y1="215" x2="437" y2="100"></line>
+          <line class="axis" id="axis-p" x1="280" y1="215" x2="280" y2="410"></line>
+
+          <text class="axis-label" id="lbl-b" x="118" y="86" text-anchor="middle">Behavioral</text>
+          <text class="axis-label" id="lbl-s" x="442" y="86" text-anchor="middle">Structural</text>
+          <text class="axis-label" id="lbl-p" x="280" y="436" text-anchor="middle">Physical</text>
+
+          <path class="arc" id="arc-mod" d="M424 110 A178 178 0 0 0 136 110"></path>
+          <text class="arc-label" id="lbl-mod" x="280" y="30" text-anchor="middle">modularization</text>
+
+          <path class="arc" id="arc-part" d="M386 137 A132 132 0 0 0 174 137"></path>
+          <text class="arc-label" id="lbl-part" x="280" y="78" text-anchor="middle">partitioning</text>
+
+          <path class="arc" id="arc-syn" d="M386 137 A132 132 0 0 1 280 347"></path>
+          <text class="arc-label" id="lbl-syn" x="468" y="316" text-anchor="middle">synthesize</text>
+
+          <path class="arc" id="arc-lib" d="M250 210 A30 30 0 0 1 270 187"></path>
+          <text class="arc-label" id="lbl-lib" x="200" y="226" text-anchor="middle">library</text>
+
+          <path class="arc" id="arc-sim" d="M319 148 A78 78 0 0 1 355 195"></path>
+          <text class="arc-label" id="lbl-sim" x="338" y="122" text-anchor="middle">sim</text>
+
+          <path class="arc" id="arc-ver" d="M136 110 A178 178 0 0 0 106 252"></path>
+          <text class="arc-label" id="lbl-ver" x="64" y="196" text-anchor="middle">ver</text>
+
+          <circle class="center-dot" cx="280" cy="215" r="5"></circle>
+        </svg>
+      </div>
+
+      <div class="y-btns" data-y-btns role="group" aria-label="Y 圖元素（點選後在上圖高亮）"></div>
+      <p data-y-note>請點選上方任一按鈕，圖上會高亮對應的軸、圓環或流程弧線。</p>
+
+      <h3>投影片上出現的九個標籤</h3>
+      <p>這張圖在投影片上只有九個字串：<code>Behavioral</code>、<code>Structural</code>、<code>Physical</code>、<code>modularization</code>、<code>partitioning</code>、<code>library</code>、<code>synthesize</code>、<code>sim</code>、<code>ver</code>。</p>
+      <p class="warn">投影片<strong>沒有</strong>為三個圓環命名（沒有寫「系統／演算法／RTL／邏輯／電路」之類的名稱），因此本網站也不替它們取名，只說明「離圓心越遠越抽象」。</p>
+      <div class="supplement">
+        <p>整張圖的讀法：理想的 EDA 流程是<strong>螺旋向內</strong>的 — 先把行為描述模組化 (modularization)、分割 (partitioning)，再合成出結構 (synthesize)，接著落到實體，最後碰到圓心的程式庫 (library)；而 <code>sim</code> 與 <code>ver</code> 則是在每一步回頭驗證。這也解釋了為什麼第 01 章說「EDA 工具就是 Y 圖上的弧線」。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-2-10">
+      <h2>2.10 EDA 工具地圖的四種切法</h2>
+      <p><span class="srcref" data-slides="18,19,20,21">投影片 p.18–21</span></p>
+      <p>這四張投影片用<strong>完全相同的 13 個工具方塊與 15 條箭頭</strong>，只換背景的分區方式，從四個角度解讀同一張 EDA 工具地圖。標題都是 <code>VLSI Design Tools Supported by TSRI (CIC)</code>。</p>
+
+      <h3>13 個工具方塊</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>工具方塊與其代表軟體（照錄 p.18–21）</caption>
+          <thead><tr><th scope="col">方塊</th><th scope="col">工具</th></tr></thead>
+          <tbody>
+            <tr><td>Schematic</td><td>Composer</td></tr>
+            <tr><td>Logic Simulator</td><td>VHDL, Verilog</td></tr>
+            <tr><td>Debugger</td><td>Debussy</td></tr>
+            <tr><td>FPGA Synthesis</td><td>ISE, Quartus</td></tr>
+            <tr><td>Synthesizer</td><td>Design Compiler</td></tr>
+            <tr><td>DFT</td><td>SynTest, Mentor</td></tr>
+            <tr><td>Place &amp; Route</td><td>SE, Apollo, Astro</td></tr>
+            <tr><td>Layout Editor</td><td>Laker, Virtuoso</td></tr>
+            <tr><td>Physical Verify</td><td>Dracula, Calibre</td></tr>
+            <tr><td>Physical Extract</td><td>Calibre</td></tr>
+            <tr><td>STA</td><td>PrimeTime/Power</td></tr>
+            <tr><td>Circuit Simulator</td><td>SPICE, Spectre</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">這些工具名稱是 2022 年的教材內容，其中 Debussy、Dracula、Apollo/Astro、Composer、ISE 多已是舊版或已更名。請當成歷史脈絡，不是現在的選型建議。</p>
+
+      <h3>切法 1：依用途 — Syntheses 與 Analyses（p.18）</h3>
+      <p>背景左右分區：左側棕色為 <strong>Syntheses</strong>（做出東西），右側藍色為 <strong>Analyses</strong>（檢查東西）。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>依用途分區（p.18）</caption>
+          <thead><tr><th scope="col">Syntheses（黃色方塊）</th><th scope="col">Analyses（粉紅方塊）</th></tr></thead>
+          <tbody>
+            <tr><td>Schematic/Composer、FPGA Synthesis、Synthesizer、DFT、Place &amp; Route、Layout Editor</td><td>Logic Simulator、Debugger、Physical Verify、Physical Extract、STA、Circuit Simulator</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>主要流向（15 條連接線的整理）：Schematic → Synthesizer，也 → FPGA Synthesis（FPGA Synthesis 再回饋 Synthesizer）；主脊是 <strong>Synthesizer → DFT → Place &amp; Route → Layout Editor</strong>；Logic Simulator ↔ Debugger 雙向，且 Logic Simulator 回到 Schematic 層並往下接 Synthesizer 與 DFT；Layout Editor → Physical Extract → STA；Physical Extract → Physical Verify；Circuit Simulator → 回到 Layout Editor。</p>
+      <figure class="figure">
+        <img src="assets/ch02/fig-slide-18.png" alt="投影片 p.18 畫面：EDA 工具流程圖，背景左右分成棕色與藍色兩區，左側為黃色的合成類工具方塊，右側為粉紅色的分析類工具方塊，方塊之間以箭頭連接。">
+        <figcaption>依用途切：合成與分析。<span class="srcref" data-slides="18">投影片 p.18</span></figcaption>
+      </figure>
+
+      <h3>切法 2：前段與後段（p.19）</h3>
+      <p>同樣的方塊與箭頭，背景改成一條由右上到左下的<strong>對角線</strong>：上／左為 <strong>Front-end</strong>，下／右為 <strong>Back-end</strong>。Schematic、Logic Simulator、Debugger、FPGA Synthesis、Synthesizer、DFT 落在前段；Place &amp; Route、Layout Editor、Physical Verify、Physical Extract、STA、Circuit Simulator 落在後段，靠近對角線的方塊則跨在界線上。</p>
+      <figure class="figure">
+        <img src="assets/ch02/fig-slide-19.png" alt="投影片 p.19 畫面：與前一張相同的工具流程圖，背景改以一條由右上到左下的對角線分成棕色的前段區與藍色的後段區。">
+        <figcaption>依前段／後段切。<span class="srcref" data-slides="19">投影片 p.19</span></figcaption>
+      </figure>
+
+      <h3>切法 3：依抽象層級（p.20）</h3>
+      <p>背景改成三條由淺到深的綠色橫帶，代表抽象層級，<strong>這正是 §2.9 Y 圖的圓環那個座標</strong>。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>依層級分帶（p.20；投影片未為各帶命名）</caption>
+          <thead><tr><th scope="col">帶</th><th scope="col">工具</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">上帶</th><td>Schematic/Composer、Logic Simulator、Debugger、FPGA Synthesis、Synthesizer</td></tr>
+            <tr><th scope="row">中帶</th><td>DFT、Place &amp; Route、Physical Verify</td></tr>
+            <tr><th scope="row">下帶</th><td>Layout Editor、Physical Extract、STA、Circuit Simulator</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch02/fig-slide-20.png" alt="投影片 p.20 畫面：與前兩張相同的工具流程圖，背景改成三條由上而下、由淺綠到深綠的橫帶，代表抽象層級。">
+        <figcaption>依抽象層級切。<span class="srcref" data-slides="20">投影片 p.20</span></figcaption>
+      </figure>
+
+      <h3>切法 4：依觀點（p.21）</h3>
+      <p>這是收尾的一頁：背景不分區，改在工具地圖上疊三條虛線箭頭，從上方同一點散開，分別指向 <code>S</code>（Structural）、<code>B</code>（Behavioral）、<code>P</code>（Physical）。<strong>把 p.18–20 的具體工具流程，接回 §2.9 Y 圖的三個觀點。</strong></p>
+      <figure class="figure">
+        <img src="assets/ch02/fig-slide-21.png" alt="投影片 p.21 畫面：工具流程圖上疊著三條虛線箭頭，由上方同一點分別指向左下的 S、右下的 B 與正下方的 P，代表結構、行為與實體三個觀點。">
+        <figcaption>依觀點切：接回 Y 圖的三軸。<span class="srcref" data-slides="21">投影片 p.21</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-2-11">
+      <h2>2.11 Lab02 正反器</h2>
+      <p><span class="srcref" data-slides="22">投影片 p.22</span></p>
+      <ul>
+        <li>Latches and Flip-Flops（閂鎖器與正反器）</li>
+        <li>Gate-Level and Behavioral Models（閘級模型與行為模型）</li>
+        <li>Implement blocking ( = ) by latches and non-blocking ( &lt;= ) by FFs in Quartus II.</li>
+        <li>Simulated Clock Generator（模擬用的時脈產生器）</li>
+      </ul>
+      <div class="codeblock" data-title="p.22 的時脈產生器（照抄原文，含原本的 Tab）">
+<pre><code data-lang="verilog">reg Clk;
+initial Clk = 0;
+always	#half_period Clk = !Clk;</code></pre>
+      </div>
+      <p>兩道練習題：</p>
+      <ul>
+        <li><strong>Problem 1:</strong> How to Convert btw DFF, JK-FF, RS-FF, and TFF?（四種正反器之間如何互換？）</li>
+        <li><strong>Problem 2:</strong> Complete all possible combinations for this lab.（把這個實驗所有可能的組合都做完。）</li>
+      </ul>
+      <div class="supplement">
+        <p>這個實驗的核心觀念是：在 <code>always</code> 區塊裡用阻塞指定 <code>=</code> 會合成出閂鎖器行為，用非阻塞指定 <code>&lt;=</code> 才會合成出正反器。第 03 章 §3 會詳細討論兩者差別。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="takeaways">
+      <h2>重點整理</h2>
+      <div class="takeaways">
+        <ol>
+          <li><strong>樹與嵌套區塊是同一個階層關係的兩種畫法</strong>，對應 Verilog 的模組實體化。</li>
+          <li><strong>Testbench 不需要可合成</strong>：左端用 <code>initial</code> 產生訊號，右端用 <code>$display</code>／<code>$monitor</code>／波形觀察，中間才是要合成的硬體。</li>
+          <li><strong>Bottom-up 累積可重用的程式庫，Top-down 縮短設計週期</strong>（投影片稱 Top-down 為 Ideal EDA Flow）；實務上多採 Middle-out／Ends-In／Hybrid。</li>
+          <li><strong>攤平會爆炸</strong>：4 位元加法器有 9 個輸入，真值表就有 2<sup>9</sup> = 512 列，所以必須用階層。</li>
+          <li><strong>由上而下是「行為式 → 結構分解」的遞迴</strong>，一直展到程式庫單元 (AND、XOR) 才停。</li>
+          <li><strong>由下而上的八步示範了抽象的累積</strong>：佈局 → 標準單元 → 符號 → 閘級電路 → 半加器 → 全加器 → 漣波進位鏈；每次「包裝成符號」就往外跳一個抽象層級。</li>
+          <li><strong>Y 圖的兩個座標</strong>：三條軸是觀點 (Behavioral／Structural／Physical)，同心圓是抽象層級，離圓心越遠越抽象，圓心是 library。</li>
+          <li><strong>理想 EDA 流程是螺旋向內</strong>：modularization → partitioning → synthesize → 實體 → library，而 sim 與 ver 在每一步回頭檢查。</li>
+          <li><strong>同一張工具地圖可以切四次</strong>：依用途（合成／分析）、依前後段、依層級、依觀點 — 最後一刀正好接回 Y 圖。</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="terms">
+      <h2>關鍵術語</h2>
+      <div class="terms">
+        <dl>
+          <dt>階層 <span class="en">hierarchy</span></dt>
+          <dd>把設計分層包裝的關係，可畫成樹或嵌套區塊。<span class="srcref" data-slides="3">投影片 p.3</span></dd>
+
+          <dt>測試平台 <span class="en">testbench / testfixture</span></dt>
+          <dd>包住待測電路、負責產生刺激並觀察輸出的模擬環境，本身不需可合成。<span class="srcref" data-slides="4">投影片 p.4</span></dd>
+
+          <dt>由上而下 <span class="en">top-down</span></dt>
+          <dd>先定系統行為再逐層分解；縮短設計週期，但模組要切得好。<span class="srcref" data-slides="5">投影片 p.5</span></dd>
+
+          <dt>由下而上 <span class="en">bottom-up</span></dt>
+          <dd>先建底層元件再往上組裝；有利長期累積程式庫。<span class="srcref" data-slides="5">投影片 p.5</span></dd>
+
+          <dt>標準單元 <span class="en">standard cell</span></dt>
+          <dd>程式庫中已完成實體佈局、可直接擺放繞線的基本單元。<span class="srcref" data-slides="9">投影片 p.9</span></dd>
+
+          <dt>符號觀點 <span class="en">symbol view</span></dt>
+          <dd>把內部結構隱藏起來、只留介面的表示法。<span class="srcref" data-slides="12">投影片 p.12</span></dd>
+
+          <dt>漣波進位加法器 <span class="en">ripple-carry adder</span></dt>
+          <dd>把全加器串成一列、進位逐級傳遞的加法器。<span class="srcref" data-slides="15">投影片 p.15</span></dd>
+
+          <dt>攤平 <span class="en">flatten</span></dt>
+          <dd>丟棄階層、把整個設計化為單一層的程式庫單元集合。<span class="srcref" data-slides="16">投影片 p.16</span></dd>
+
+          <dt>Y 圖 <span class="en">Y-chart</span></dt>
+          <dd>以三軸表示觀點、同心圓表示抽象層級的設計空間圖。<span class="srcref" data-slides="17">投影片 p.17</span></dd>
+
+          <dt>合成 <span class="en">synthesize</span></dt>
+          <dd>把較抽象的描述轉成較低層結構的 EDA 工作，在 Y 圖上由結構軸往實體軸移動。<span class="srcref" data-slides="17">投影片 p.17</span></dd>
+
+          <dt>靜態時序分析 <span class="en">STA</span></dt>
+          <dd>不做模擬、直接分析電路路徑延遲是否滿足時序的工具（PrimeTime）。<span class="srcref" data-slides="18">投影片 p.18</span></dd>
+
+          <dt>可測試性設計 <span class="en">DFT</span></dt>
+          <dd>為了讓晶片容易測試而加入電路結構的設計階段。<span class="srcref" data-slides="18">投影片 p.18</span></dd>
+        </dl>
+        <p>完整詞條見<a href="glossary.html">全站術語表</a>。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="quiz">
+      <h2>自我測驗</h2>
+      <div class="quiz" data-quiz-root></div>
+    </section>
+
+    <div data-progress-panel></div>
+    <nav class="pager" data-pager></nav>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p>內容整理自 2022 秋季「Hardware Description Language -- Logic Design using Verilog」課程投影片（黃宗柱 / Tsung-Chu Huang，彰師大電子系）。本網站僅供個人學習使用。</p>
+  </div>
+</footer>
+
+<script src="js/ch02-ychart.js"></script>
+<script src="js/ch02-quiz.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/code.js"></script>
+</body>
+</html>

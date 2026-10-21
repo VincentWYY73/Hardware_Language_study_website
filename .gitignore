@@ -1,0 +1,11 @@
+# 課程原始投影片 — 授課教師的教材，不隨網站一起散布
+*.pptx
+
+# 本機工作筆記（含 177 張投影片的逐字轉錄）與驗證腳本
+.agents/
+
+# Windows / OneDrive 產生的檔案
+desktop.ini
+Thumbs.db
+~$*
+*.tmp

@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 Overview — HDL 的全貌 ｜ 硬體描述語言 HDL 學習網站</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+/* 本章專屬：互動結構圖的高亮樣式（文字說明同步變化，不只靠顏色） */
+.fig-struct .node circle { fill: #fff; stroke: #5b6472; stroke-width: 2; }
+.fig-struct .node text { font-size: 15px; fill: #1f2430; }
+.fig-struct .edge { stroke: #8a93a3; stroke-width: 2.5; fill: none; }
+.fig-struct .pi text, .fig-struct .po text { font-size: 13px; fill: #4a5362; }
+.fig-struct .node.is-hl circle { fill: #ffe9b8; stroke: #b36b00; stroke-width: 4; }
+.fig-struct .node.is-hl text { font-weight: 700; }
+.fig-struct .edge.is-hl { stroke: #b36b00; stroke-width: 5; }
+[data-theme="dark"] .fig-struct .node circle { fill: #222733; stroke: #9aa4b4; }
+[data-theme="dark"] .fig-struct .node text { fill: #e7ebf2; }
+[data-theme="dark"] .fig-struct .pi text, [data-theme="dark"] .fig-struct .po text { fill: #b9c2d0; }
+[data-theme="dark"] .fig-struct .node.is-hl circle { fill: #5a4412; stroke: #ffc34d; }
+[data-theme="dark"] .fig-struct .edge.is-hl { stroke: #ffc34d; }
+.svg-plain .box { fill: #fff; stroke: #5b6472; stroke-width: 2; }
+.svg-plain text { font-size: 14px; fill: #1f2430; }
+.svg-plain .edge { stroke: #8a93a3; stroke-width: 2.5; fill: none; }
+.svg-plain .accent { stroke: #b36b00; stroke-width: 3.5; }
+.svg-plain .accent-text { fill: #8a5200; font-weight: 700; }
+[data-theme="dark"] .svg-plain .box { fill: #222733; stroke: #9aa4b4; }
+[data-theme="dark"] .svg-plain text { fill: #e7ebf2; }
+[data-theme="dark"] .svg-plain .accent { stroke: #ffc34d; }
+[data-theme="dark"] .svg-plain .accent-text { fill: #ffc34d; }
+.prop-btns { display: flex; flex-wrap: wrap; gap: .4rem; margin: .8rem 0; }
+.prop-note { margin-top: .6rem; }
+</style>
+<script src="js/site.js"></script>
+</head>
+<body data-chapter="ch01">
+<a class="skiplink" href="#main">跳到主要內容</a>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="index.html">硬體描述語言 (HDL) 學習網站<span>Logic Design using Verilog ・ 離線版</span></a>
+    <nav class="site-nav" aria-label="主導覽">
+      <ul>
+        <li><a href="index.html">首頁</a></li>
+        <li><a href="ch01-overview.html" aria-current="page">01 Overview</a></li>
+        <li><a href="ch02-ychart.html">02 Y 圖</a></li>
+        <li><a href="ch03-grammar.html">03 基本語法</a></li>
+        <li><a href="ch04-asm.html">04 ASM</a></li>
+        <li><a href="ch05-fsm.html">05 FSM</a></li>
+        <li><a href="glossary.html">術語表</a></li>
+      </ul>
+    </nav>
+    <div class="header-tools">
+      <button type="button" class="btn btn-sm" data-action="toggle-theme" aria-pressed="false">
+        <span data-theme-label>深色模式：關</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc" data-toc aria-labelledby="toc-heading">
+    <h2 id="toc-heading">本章目錄</h2>
+    <div class="toc-tools">
+      <button type="button" class="btn btn-sm" data-toc-action="expand">全部展開</button>
+      <button type="button" class="btn btn-sm" data-toc-action="collapse">全部收起</button>
+    </div>
+    <details class="toc-group" open>
+      <summary>小節（42 張投影片）</summary>
+      <ol class="toc-list">
+        <li><a href="#sec-1-1">1.1 課程資訊與教材</a></li>
+        <li><a href="#sec-1-2">1.2 為什麼要學硬體描述語言</a></li>
+        <li><a href="#sec-1-3">1.3 廣義的 HDL：示意圖與文字、HDL 與 NETLIST</a></li>
+        <li><a href="#sec-1-4">1.4 主要 HDL 的定位與發展史</a></li>
+        <li><a href="#sec-1-5">1.5 下週準備與評分方式</a></li>
+        <li><a href="#sec-1-6">1.6 層級與觀點、Y 圖</a></li>
+        <li><a href="#sec-1-7">1.7 內部模型與外部模型</a></li>
+        <li><a href="#sec-1-8">1.8 結構模型</a></li>
+        <li><a href="#sec-1-9">1.9 邏輯層的功能模型</a></li>
+        <li><a href="#sec-1-10">1.10 暫存器層的功能模型 RTL</a></li>
+        <li><a href="#sec-1-11">1.11 工具安裝與本課程工具</a></li>
+        <li><a href="#sec-1-12">1.12 Verilog 檔案與模組的外觀</a></li>
+        <li><a href="#sec-1-13">1.13 Lab01 加法器</a></li>
+      </ol>
+    </details>
+    <details class="toc-group" open>
+      <summary>本章結尾</summary>
+      <ul class="toc-list">
+        <li><a href="#takeaways">重點整理</a></li>
+        <li><a href="#terms">關鍵術語</a></li>
+        <li><a href="#quiz">自我測驗</a></li>
+      </ul>
+    </details>
+  </nav>
+
+  <main id="main">
+    <h1>01 Overview — HDL 的全貌</h1>
+    <p>示意圖與文字、Y 圖的層級與觀點、結構模型與功能模型。原始投影片 42 張，估計閱讀 60 分鐘。</p>
+
+    <section class="chapter-section" id="objectives">
+      <h2>學習目標</h2>
+      <ul>
+        <li>說明廣義的 HDL 是什麼，並區分 <strong>HDL</strong> 與 <strong>NETLIST</strong> 的差別。</li>
+        <li>在 <strong>Y 圖</strong>上指出「層級 (level)」與「觀點 (view)」兩個座標，並說明 EDA 工具在圖上扮演的角色。</li>
+        <li>分辨<strong>結構模型</strong>與<strong>功能模型</strong>，並說出各自常用的表示法。</li>
+        <li>讀懂邏輯層的四種功能模型：真值表與基本立方體、狀態表、BDD、程式。</li>
+        <li>認識 <strong>Huffman 模型</strong>，並能把狀態圖轉成狀態表。</li>
+        <li>說出 Verilog 檔案與模組的基本外觀，以及 Verilog 裡「block」這個詞的各種用法。</li>
+      </ul>
+    </section>
+
+    <section class="chapter-section" id="sec-1-1">
+      <h2>1.1 課程資訊與教材</h2>
+      <p><span class="srcref" data-slides="1,2,3,4">投影片 p.1–4</span></p>
+
+      <h3>課程基本資料</h3>
+      <p>本課程全名為 <strong>Hardware Description Language -- Logic Design using Verilog</strong>，授課者為彰化師範大學電子工程系黃宗柱老師 (Tsung-Chu Huang)，封面日期 2022/09/15。</p>
+
+      <h3>參考書與評分（p.2）</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>課程資訊（照錄投影片 p.2）</caption>
+          <tbody>
+            <tr><th scope="row">參考書</th><td>Mark Gordon Arnold, <em>Verilog Digital Computer Design: Algorithms into HardwareI</em>, ISBN: 0136392539, Prentice Hall PTR, 1999.</td></tr>
+            <tr><th scope="row">課程網站</th><td>dlearn.ncue.edu.tw；testlab.ncue.edu.tw/tch [lecture]</td></tr>
+            <tr><th scope="row">工具</th><td>ModelSim-Altera, Quartus II, EP3C16K</td></tr>
+            <tr><th scope="row">時數</th><td>2W 9:05-12:00、15W 8:30am-12:00（可能因會議請假一次）</td></tr>
+            <tr><th scope="row">評分</th><td>HW+Quiz 5% × 4；Practice Test 20% × 2；Paper Exam 20% × 2；Bonus Project 20% × 1（選擇性）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>開發板：Terasic Altera DE0 Cyclone III Design Kit（p.3）</h3>
+      <p>課程使用的元件是 <strong>SoPC</strong> (System-on-a-Programmable-Chip)，型號 <code>EP3C16F484C6N</code>。投影片用引線把型號每一段的意義標出來：</p>
+      <div class="table-wrap">
+        <table>
+          <caption>料號 <code>EP3C16F484C6N</code> 的欄位意義（照錄 p.3）</caption>
+          <thead><tr><th scope="col">欄位</th><th scope="col">意義</th></tr></thead>
+          <tbody>
+            <tr><td><code>EP</code></td><td>EPROM ➜ Flash</td></tr>
+            <tr><td><code>3C</code></td><td>Cyclone III</td></tr>
+            <tr><td><code>16</code></td><td>#LEs = 16k（邏輯單元數）</td></tr>
+            <tr><td><code>F</code></td><td>Flip-chip package</td></tr>
+            <tr><td><code>484</code></td><td>#pins = 22x22</td></tr>
+            <tr><td><code>C6</code></td><td>speed（速度等級）</td></tr>
+            <tr><td><code>N</code></td><td>e<strong>N</strong>gineering sample</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>軟體端為 <strong>Quartus II 9.0~13.1 Web Edition</strong>（免費）。投影片要求「Install by next week!」。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-03.png" alt="投影片 p.3 畫面：DE0 開發板照片，旁邊以放射狀引線標示料號 EP3C16F484C6N 中 EP、3C、16、F、484、C6、N 各欄位的意義。">
+        <figcaption>DE0 設計套件與料號解讀。<span class="srcref" data-slides="3">投影片 p.3</span></figcaption>
+      </figure>
+
+      <h3>課程進度表（p.4）</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>Syllabus（照錄 p.4；原投影片沒有 W12 這一列，直接從 W11 跳到 W13）</caption>
+          <thead>
+            <tr><th scope="col">Mn</th><th scope="col">Topics</th><th scope="col">W</th><th scope="col">Lec.</th><th scope="col">Content</th><th scope="col">Lab</th><th scope="col">Content</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1st</td><td>Verilog / Language / ModelSim / I/O</td><td>1</td><td>01</td><td>Overview</td><td>01</td><td>N-bit Adder</td></tr>
+            <tr><td></td><td></td><td>2</td><td>02</td><td>View, Level, Hierarchy</td><td>02</td><td>FFs, Cnt, fDiv</td></tr>
+            <tr><td></td><td></td><td>3</td><td>03</td><td>Type, Op, 4Mdl,8Blks</td><td>03</td><td>7Seg, BCD_Timer</td></tr>
+            <tr><td></td><td></td><td>4</td><td>04</td><td>ASM, Serial Multipliers</td><td>04</td><td>Scroll Snake</td></tr>
+            <tr><td>2nd</td><td>Quartus II / Design Flow / CU</td><td>5</td><td>05</td><td>Exam, FSM</td><td>05</td><td>Button-press time</td></tr>
+            <tr><td></td><td></td><td>6</td><td>06</td><td>Morse Codes</td><td>06</td><td>Morse Codes</td></tr>
+            <tr><td></td><td></td><td>7</td><td>07</td><td>UART</td><td>07</td><td>UART</td></tr>
+            <tr><td></td><td></td><td>8</td><td>08</td><td>Setup-Hold Timing</td><td>08</td><td>Multiplication timing closure</td></tr>
+            <tr><td>3rd</td><td>EDA Scripting / ALU, MU</td><td>9</td><td>09</td><td>Exam, Fixed-Point</td><td>09</td><td>Practice</td></tr>
+            <tr><td></td><td></td><td>10</td><td>10</td><td>Booth Multipliers, IEEE754</td><td>10</td><td>Booth EDA Scripts</td></tr>
+            <tr><td></td><td></td><td>11</td><td>11</td><td>CORDIC, ROM</td><td>11</td><td>CORDIC EDA Scripts</td></tr>
+            <tr><td></td><td></td><td>13</td><td>12</td><td>ROM &amp;RAM</td><td>12</td><td>Memory Controller</td></tr>
+            <tr><td>4th</td><td>CPU design / in Verilog</td><td>14</td><td>13</td><td>Intro CPU Design, SAP3x5</td><td>13</td><td>SAP3x5</td></tr>
+            <tr><td></td><td></td><td>15</td><td>14</td><td>SAP444</td><td>14</td><td>SAP444</td></tr>
+            <tr><td></td><td></td><td>16</td><td>15</td><td>Introduction to MIPS</td><td>15</td><td>Tiny MIPS</td></tr>
+            <tr><td></td><td></td><td>17</td><td>16</td><td>SPIM and Implementation</td><td>16</td><td>SPIM Assembly</td></tr>
+            <tr><td></td><td></td><td>18</td><td>-</td><td>Bonus Proj.</td><td>Exam</td><td>Practice</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>表格註腳照錄：<code>W3, 7, 11, 16 8:30am quiz; W5, 14 paper exam; W9, 18 practice exam</code></p>
+      <p class="warn">p.4 的註腳與 p.12 的評分列出的週次不一致（p.4 寫小考 W3/7/11/<strong>16</strong>、筆試 W5/<strong>14</strong>；p.12 寫小考 W3/7/11/<strong>15</strong>、筆試 W5/<strong>13</strong>）。兩處都照原文保留，沒有擅自統一。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-1-2">
+      <h2>1.2 為什麼要學硬體描述語言</h2>
+      <p><span class="srcref" data-slides="5,6,7">投影片 p.5–7</span></p>
+
+      <h3>軟硬體的三種關係（p.5）</h3>
+      <ul>
+        <li><strong>軟硬有別</strong>：Speed, Power, (Chip) Area, Cost, EZ。</li>
+        <li><strong>軟硬不分</strong>：軟硬體在一定前提下可以互換。</li>
+        <li><strong>軟硬共設計</strong>：考慮前提決定軟硬架構比例最佳化。</li>
+      </ul>
+      <p>投影片列出本課程 (This Course) 要走的路線：</p>
+      <ul>
+        <li>Logic Design 硬體基礎（電子二）</li>
+        <li>描述硬體的軟體</li>
+        <li>設計 CPU、指令及其組合語言</li>
+        <li>設計組合語言軟體</li>
+        <li>由 C 語言演算法轉換成 Verilog 硬體有限狀態機</li>
+        <li>(甄戰 !!!)</li>
+      </ul>
+
+      <h3>本章大綱（p.6）</h3>
+      <ul>
+        <li>Introduction to General HDL including NETLIST</li>
+        <li>Competition btw VHDL and Verilog</li>
+        <li>HDL Tools</li>
+        <li>Application of VLSI HDL</li>
+        <li>Y-Chart: Level and Views</li>
+        <li>Modeling</li>
+        <li>Quick Tutorial using 1 or 2 Tools（Gate-Level、Behavioral Mode）</li>
+        <li>Preparation for Next Course</li>
+      </ul>
+
+      <h3>HDL 的常見應用（p.7）</h3>
+      <ul>
+        <li>邏輯模擬與驗證 (Logic Simulation and Verification)</li>
+        <li>合成到 FPGA/SoPC 做原型 (Synthesis for FPGA/SoPC Prototyping)</li>
+        <li>合成到標準單元式 VLSI 設計 (Synthesis for Cell-base VLSI Design)</li>
+        <li>軟性智財設計 (Soft Intellectual Property (IP) Design)</li>
+        <li>為同層或更低層的電路建模 (Modeling Low or Equal Level Circuit)</li>
+      </ul>
+    </section>
+
+    <section class="chapter-section" id="sec-1-3">
+      <h2>1.3 廣義的 HDL：示意圖與文字、HDL 與 NETLIST</h2>
+      <p><span class="srcref" data-slides="8">投影片 p.8</span></p>
+
+      <p>這一頁是全章的關鍵觀念。投影片畫成一個 2×2 矩陣：橫軸是<strong>表示形式</strong>，縱軸是<strong>抽象層級</strong>。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>廣義 HDL 的 2×2 分類（依 p.8 的圖重排成表）</caption>
+          <thead>
+            <tr><td></td><th scope="col">Schematic/Graph（示意圖）</th><th scope="col">Text Language（文字語言）</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Gate-Level Above（閘級以上）</th><td>SCHEMATICS</td><td><strong>HDL</strong></td></tr>
+            <tr><th scope="row">Transistor-Level（電晶體級）</th><td>SCHEMATICS</td><td><strong>NETLIST</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>同一列的左右兩格描述的是<strong>同一件事、同一個層級</strong>，只差在「圖」或「文字」。而同樣是文字，閘級以上叫 <strong>HDL</strong>，到了電晶體級就叫 <strong>NETLIST</strong>。</p>
+
+      <div class="codeblock" data-title="p.8 右上格：HDL（Verilog 片段，照抄原文）">
+<pre><code data-lang="verilog">module adder(A, B, C, S);
+input [31:0] A, B;
+output [31:0] S;
+output C;
+…
+ends</code></pre>
+      </div>
+      <p class="warn">原文最後一行是 <code>ends</code>，正確的 Verilog 關鍵字應為 <code>endmodule</code>。此處照抄投影片，不修正。</p>
+
+      <div class="codeblock" data-title="p.8 右下格：NETLIST（SPICE，照抄原文）">
+<pre><code data-lang="spice">VDD  V  0  3V
+M1  Z   IN  0  0   NCH
+M2  Z   IN  V  V  PCH
+R1  A  IN  15
+C1  Z  0  1P
+VIN  A  0  PWL(0 0 1N 3V)</code></pre>
+      </div>
+
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-08.png" alt="投影片 p.8 畫面：2×2 矩陣。左欄為示意圖，上格是一個邏輯閘接到帶時脈三角形的暫存器，下格是 CMOS 反相器電路；右欄為文字，上格是 Verilog 模組片段，下格是 SPICE 網表。紅字 SCHEMATICS 橫跨左欄，HDL 與 NETLIST 分別標在右欄上下。">
+        <figcaption>示意圖與文字、HDL 與 NETLIST 的對應關係。<span class="srcref" data-slides="8">投影片 p.8</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-1-4">
+      <h2>1.4 主要 HDL 的定位與發展史</h2>
+      <p><span class="srcref" data-slides="9,10,11">投影片 p.9–11</span></p>
+
+      <h3>各語言的定位（p.9）</h3>
+      <p>投影片用一張定位圖安排各語言：縱軸是抽象層級（由下往上為 Transistor Level、Gate Level、RTL、System Level），橫軸由左至右是 Digital、Mixed-Signal、Analog。每個語言畫成一條色帶，涵蓋它所能描述的層級範圍。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.9 定位圖的色帶整理</caption>
+          <thead><tr><th scope="col">語言</th><th scope="col">涵蓋層級</th><th scope="col">領域</th></tr></thead>
+          <tbody>
+            <tr><td>VHDL (1980)</td><td>Gate Level → System Level 以上</td><td>Digital</td></tr>
+            <tr><td>Verilog (1990)</td><td>Transistor Level → RTL 以上</td><td>Digital</td></tr>
+            <tr><td>Verilog-A</td><td>Verilog 色帶底部的薄帶</td><td>Mixed-Signal / Analog 介面</td></tr>
+            <tr><td>SPICE (1970)</td><td>Transistor Level 及以下</td><td>Analog</td></tr>
+            <tr><td>SystemVerilog (2000)</td><td>Gate Level → System Level</td><td>Digital</td></tr>
+            <tr><td>SystemC (2000)</td><td>RTL → System Level 以上</td><td>Digital</td></tr>
+            <tr><td>HLS C++ (2010)</td><td>RTL 以上 → 最高抽象層</td><td>Digital</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>圖上另有一組註記 <code>engine {</code> 與 <code>} format</code> 夾住 SPICE 與 Verilog-A，意思是 <strong>SPICE 是引擎、Verilog-A 是格式</strong>。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-09.png" alt="投影片 p.9 畫面：主要 HDL 的定位圖。縱軸為抽象層級，由下而上是電晶體級、閘級、RTL、系統級；橫軸由數位到混合訊號到類比。各語言以彩色長條標示涵蓋範圍，SPICE 在最底層，HLS C++ 在最上層。">
+        <figcaption>主要 HDL 在層級與訊號類型上的定位。<span class="srcref" data-slides="9">投影片 p.9</span></figcaption>
+      </figure>
+
+      <h3>發展史（p.10）</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>History of Major HDLs（照錄 p.10，空格保留）</caption>
+          <thead><tr><th scope="col">Year</th><th scope="col">VHDL</th><th scope="col">Verilog</th><th scope="col">SystemC</th></tr></thead>
+          <tbody>
+            <tr><td>1971</td><td></td><td>Paul Huang (黃炎松), NCTU-E59</td><td></td></tr>
+            <tr><td>1981</td><td>US Defense, Spec of ASIC</td><td></td><td></td></tr>
+            <tr><td>1982</td><td></td><td>Paul founding Cadnece</td><td></td></tr>
+            <tr><td>1983</td><td></td><td>Prabhu Goel, Automated Integrated Design Systems</td><td></td></tr>
+            <tr><td>1984</td><td></td><td>Phil Moorby, renamed to "Gateway Design Automation"</td><td></td></tr>
+            <tr><td>1987</td><td>IEEE S1076</td><td></td><td></td></tr>
+            <tr><td>1990</td><td></td><td>purchased by Cadence →Verilog XL</td><td></td></tr>
+            <tr><td>1990</td><td></td><td>Open Verilog International (OVI) →Accellera</td><td></td></tr>
+            <tr><td>1992</td><td></td><td>IEEE Grouping</td><td></td></tr>
+            <tr><td>1995</td><td></td><td>IEEE S1364</td><td></td></tr>
+            <tr><td>2001</td><td></td><td>IEEE S1364-2001:Scalability</td><td></td></tr>
+            <tr><td>2005</td><td></td><td>IEEE S1364-AMS, 1800 System-Verilog</td><td></td></tr>
+            <tr><td>2008</td><td>IEEE S1076-2008</td><td></td><td></td></tr>
+            <tr><td>2011</td><td></td><td></td><td>IEEE S1666</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">表中 1982 年的 <code>Cadnece</code> 是投影片本身的錯字，正確公司名為 <strong>Cadence</strong>。此處照原文保留。</p>
+      <div class="supplement">
+        <p>兩條主線值得記住：VHDL 源自 1981 年美國國防部的 ASIC 規格需求，1987 年成為 IEEE S1076；Verilog 源自業界模擬器，1990 年被 Cadence 買下成為 Verilog XL，1995 年成為 IEEE S1364。本課程使用 Verilog。</p>
+      </div>
+
+      <h3>模擬器清單（p.11）</h3>
+      <p>投影片上另有一個浮動方框標著 <code>IEEE Standard 1364-2001</code>。清單照錄：</p>
+      <ul>
+        <li>VerilogXL, LeapForm, LDV, NCV /Cadence</li>
+        <li>ModelSim /Mentor（Download ModelSim-Altera Starter Edition）</li>
+        <li>VSS /Synopsys</li>
+        <li>Vantage /ViewLogic</li>
+        <li>Silos /SimuCAD</li>
+        <li>Verilogger Pro /SynaptiCAD (http://www.syncad.com)</li>
+        <li>ActiveHDL /Aldec</li>
+        <li>VeriBest /VeriBest</li>
+        <li>VeriWell /VeriWell</li>
+        <li>Debussy /SpringSoft</li>
+        <li>VCS /Chronologic</li>
+        <li>FrontLine /FrontLine</li>
+        <li>Silos /SimuCAD</li>
+        <li>HDL Entry in FPGA Co., e.g., Max/Quartus(Altera), ISE(Xilinx)</li>
+      </ul>
+      <p class="warn"><code>Silos /SimuCAD</code> 在原投影片中出現兩次（第 5 項與第 13 項），此處照原文保留重複項。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-1-5">
+      <h2>1.5 下週準備與評分方式</h2>
+      <p><span class="srcref" data-slides="12">投影片 p.12</span></p>
+      <ul>
+        <li>安裝 Intel-Altera <strong>Quartus II 13.1</strong>，含 Cyclone III 與 ModelSim。</li>
+        <li>線上試玩一次 Verilog (Try a Verilog Online)。</li>
+        <li>自行練習示意圖工具；投影片舉例 OrCAD/Schematic 是最普及也最基本的工具。</li>
+        <li>本課程每週四 8:30am 開始。</li>
+      </ul>
+      <p>評分 (Scores) 照錄：</p>
+      <ul>
+        <li>Quiz or Practice：8:30am Week 3, 7, 11, 15，每次 5%</li>
+        <li>Paper Exam：Week 5, 13，每次 20%</li>
+        <li>Practice Exam：Week 9, 18，每次 20%</li>
+        <li>Bonus Project：「Tiny MIPS on Cyclone III」，以 SPIM demo，20%</li>
+      </ul>
+      <p class="warn">此處週次與 p.4 註腳不同（p.4：小考 W3/7/11/16、筆試 W5/14）。兩份都照原文呈現，實際以授課公告為準。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-1-6">
+      <h2>1.6 層級與觀點、Y 圖</h2>
+      <p><span class="srcref" data-slides="13,14,15,16">投影片 p.13–16</span></p>
+
+      <h3>7 層 × 3 觀點（p.13）</h3>
+      <p>這張表格的格子<strong>刻意留空</strong>，因為表格本身就是教學重點：7 個層級乘上 3 個觀點，共有 <strong>21 種表示法</strong>。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Levels &amp; Views：7 × 3 = 21 種表示法（依 p.13 重排）</caption>
+          <thead>
+            <tr><td></td><th scope="col">Functional-View<br>功能觀點</th><th scope="col">Structural-View<br>結構觀點</th><th scope="col">Physical-View<br>實體觀點</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">System-Level 系統層</th><td></td><td></td><td></td></tr>
+            <tr><th scope="row">Board-Level 電路板層</th><td></td><td></td><td></td></tr>
+            <tr><th scope="row">Register-Level 暫存器層</th><td></td><td></td><td></td></tr>
+            <tr><th scope="row">Logic-Level 邏輯層</th><td></td><td></td><td></td></tr>
+            <tr><th scope="row">Circuit-Level 電路層</th><td></td><td></td><td></td></tr>
+            <tr><th scope="row">Transistor-Level 電晶體層</th><td></td><td></td><td></td></tr>
+            <tr><th scope="row">Physics-Level 物理層</th><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">投影片的 XML 中，第一欄同時存在 <code>Functional-View</code> 與 <code>Behavioral-View</code> 兩個標籤（動畫的替代文字），畫面最終顯示的是 <strong>Functional-View</strong>。到了 p.16 同一欄則標為 <strong>Behavioral-View</strong>。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-13.png" alt="投影片 p.13 畫面：7 列 3 欄的層級與觀點表格，格子為空白的黃色方塊，並有一條斜向高亮帶。">
+        <figcaption>層級與觀點的空白格陣。<span class="srcref" data-slides="13">投影片 p.13</span></figcaption>
+      </figure>
+
+      <h3>Y 圖（p.14）</h3>
+      <p>投影片的說明文字是：<em>Gajski transferred the level-view table into a sphere chart:</em>（Gajski 把層級／觀點表格改畫成放射狀的圖。）三個軸由同一圓心向外發散，<strong>同心圓環代表抽象層級，每個扇形代表該層級的某一個觀點</strong>。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Y 圖三軸由內而外的內容（依 p.14 的圖整理）</caption>
+          <thead><tr><th scope="col">軸</th><th scope="col">由內而外</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Behavioral View<br>行為觀點</th><td>UDP Symbol 方塊 → 狀態轉移圖 → <code>if(c) then p&lt;=a*b;</code> 程式碼 → Spec（最外環）</td></tr>
+            <tr><th scope="row">Structural View<br>結構觀點</th><td>閘符號 (NOR / NAND / 反相器) → 暫存器與字組方塊 → MUX 加暫存器的方塊圖</td></tr>
+            <tr><th scope="row">Physical View<br>實體觀點</th><td>單元佈局 → 封裝好的 DIP 晶片 → 含打線的電路板／晶粒</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-14.png" alt="投影片 p.14 畫面：Gajski 的 Y 圖。三條軸由圓心往外發散，左上為行為觀點、右上為結構觀點、下方為實體觀點；同心圓環代表抽象層級，最外環標示 Spec。">
+        <figcaption>Gajski 的 Y 圖。此圖在投影片中是 Visio OLE 物件，只能以投影片算繪圖呈現。<span class="srcref" data-slides="14">投影片 p.14</span></figcaption>
+      </figure>
+
+      <h3>EDA 工具在 Y 圖上的位置（p.15）</h3>
+      <p>這一頁把 Y 圖改畫成三條直軸加圓弧，<strong>每一條弧線就是一個 EDA 工作</strong>：弧線標著 <code>modularization</code>（模組化）、<code>partitioning</code>（分割）、<code>synthesize</code>（合成）、<code>library</code>（程式庫，在圓心的實體軸上）、<code>sim</code>（模擬，圓心附近的短雙箭頭）、<code>ver</code>（驗證，行為側外環）。</p>
+      <p>教學重點：<strong>EDA 工具就是那些弧線</strong>，每個工具負責把設計從一個觀點／層級搬到另一個觀點／層級。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-15.png" alt="投影片 p.15 畫面：Y 圖改畫成三條直軸加三層同心圓環，軸之間以弧形箭頭相連，弧線分別標示 modularization、partitioning、synthesize、library、sim、ver 等 EDA 工作。">
+        <figcaption>SoC EDA：工具是 Y 圖上的弧線。<span class="srcref" data-slides="15">投影片 p.15</span></figcaption>
+      </figure>
+
+      <h3>實務上常用的 3×3 與三種 coding 模式（p.16）</h3>
+      <p>把 p.13 的大表縮成 3×3，再用三個斜向的橢圓圈出 Verilog 使用者實際工作的三種模式：</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Usual Levels &amp; Views 與三種模式的對應（依 p.16 整理）</caption>
+          <thead>
+            <tr><td></td><th scope="col">Behavioral-View</th><th scope="col">Structural-View</th><th scope="col">Physical-View</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">System-Level</th><td>Behavioral Mode</td><td></td><td></td></tr>
+            <tr><th scope="row">Register-Level</th><td>Behavioral Mode ／ RTL Mode</td><td>RTL Mode</td><td></td></tr>
+            <tr><th scope="row">Logic-Level</th><td></td><td>Gate-Level</td><td>Gate-Level</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul>
+        <li><strong>"Behavioral Mode"</strong>：從系統層／行為觀點，延伸到暫存器層的行為─結構之間。</li>
+        <li><strong>"RTL Mode"</strong>：在暫存器層，橫跨行為觀點與結構觀點。</li>
+        <li><strong>"Gate-Level"</strong>：在邏輯層，橫跨結構觀點與實體觀點。</li>
+      </ul>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-16.png" alt="投影片 p.16 畫面：3 列 3 欄的層級與觀點表格，三個斜向橢圓分別圈出 Behavioral Mode、RTL Mode、Gate-Level 三個區帶。">
+        <figcaption>三種 coding 模式落在層級／觀點格的三條斜帶上。<span class="srcref" data-slides="16">投影片 p.16</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-1-7">
+      <h2>1.7 內部模型與外部模型</h2>
+      <p><span class="srcref" data-slides="17,18">投影片 p.17–18</span></p>
+
+      <p>p.17 畫了一台電腦，螢幕上寫著 <code>Program</code> <code>||</code> <code>Algorithm</code> <code>+</code> <code>Data Structure</code>，而從螢幕冒出的思想泡泡裡是一個 NAND 閘符號與一張三個狀態的轉移圖。</p>
+      <p>教學重點：<strong>程式（演算法 + 資料結構）是內部模型</strong>；<strong>工程師腦中想像的閘與狀態機是外部模型</strong>。工具內部怎麼存，和人怎麼理解，是兩回事。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-17.png" alt="投影片 p.17 畫面：一台桌上電腦，螢幕上寫著 Program 等於 Algorithm 加 Data Structure；由螢幕冒出的思想泡泡中畫著一個 NAND 閘與三個狀態的轉移圖。">
+        <figcaption>內部模型（程式）與外部模型（閘與狀態機）。<span class="srcref" data-slides="17">投影片 p.17</span></figcaption>
+      </figure>
+
+      <p>p.18 再次使用 p.14 的同一張 Y 圖，但加上左右兩個大型弧形箭頭，指出本章接下來要走的兩個方向：<strong>結構模型</strong>（右側）與<strong>功能／行為模型</strong>（左側）。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-18.png" alt="投影片 p.18 畫面：與 p.14 相同的 Y 圖，左右各加上一個大型青色弧形箭頭向外上方指，代表結構模型與功能模型兩個探討方向。">
+        <figcaption>本章接下來的兩條路線：結構模型與功能模型。<span class="srcref" data-slides="18">投影片 p.18</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-1-8">
+      <h2>1.8 結構模型</h2>
+      <p><span class="srcref" data-slides="19,20,21,22,23,24,25,26">投影片 p.19–26</span></p>
+
+      <h3>結構模型的遞迴定義（p.19）</h3>
+      <ul>
+        <li><strong>Symbol View</strong>：一個系統或電路可以用一個帶有其功能的符號來表示。</li>
+        <li><strong>Structural View</strong>：一個系統（或電路）的結構觀點，是一種由「節點」與「弧」組成的表示法或模型 — 節點是子系統（或子電路）與元件，各以某個 symbol view 表示；弧則是它們的輸入／輸出關係。</li>
+        <li>通常是<strong>階層式</strong>的 (Usually hierarchical)。</li>
+        <li>最底層的方塊（元件）稱為 <strong>primitive elements</strong>，其功能模型被視為已知，例如 and、nand、or、nor、not 等。</li>
+      </ul>
+      <div class="supplement">
+        <p>這個定義是遞迴的：結構觀點的節點本身又是一個 symbol view，可以再往下展開成另一層結構觀點，一路展到 primitive 才停。這就是階層設計的理論基礎，第 02 章會接著談。</p>
+      </div>
+
+      <h3>本節大綱（p.20）</h3>
+      <ul>
+        <li>External Representation（外部表示法）</li>
+        <li>Structural Properties（結構性質）</li>
+        <li>Hardware Descriptive Languages</li>
+        <li>Internal Representation（內部表示法）</li>
+        <li>Example: A Simple Verilog Parser in C Language.</li>
+      </ul>
+
+      <h3>外部表示法（p.21）</h3>
+      <ul>
+        <li>給人看的文字或示意圖；連接性 (connectivity) 指定了 I/O 與元件之間的訊號。</li>
+        <li><strong>文字或語言</strong>：
+          <ul>
+            <li>HDL：VHDL, Verilog, C, etc.</li>
+            <li>Netlist：SPICE, gat, tdl, etc.</li>
+          </ul>
+        </li>
+        <li><strong>示意圖</strong>：Cadence Schedmatics、OrCAD Schedmatics, ..etc.</li>
+      </ul>
+      <p class="warn"><code>Schedmatics</code> 是投影片的錯字，正確拼法為 <strong>Schematics</strong>。照原文保留。</p>
+
+      <h3>邏輯層的結構性質（p.22–23）</h3>
+      <p>投影片列出 8 個結構性質。下方的互動圖以 p.23 的 7 節點閘圖為底，點選性質即在圖上高亮對應的節點或邊。</p>
+
+      <div class="svgfig fig-struct">
+        <svg viewBox="0 0 560 300" role="img" aria-labelledby="struct-title struct-desc">
+          <title id="struct-title">p.23 的 7 節點閘電路圖</title>
+          <desc id="struct-desc">四個主要輸入分別進入 G1 與 G2；G1 與 G2 都接到 G3；G3 扇出到 G4、G5、G6 三個閘；G5 與 G6 再匯合到 G7；G4 直接成為主要輸出。</desc>
+          <g class="pi">
+            <text x="6" y="64">PI</text><text x="6" y="116">PI</text>
+            <text x="6" y="196">PI</text><text x="6" y="248">PI</text>
+          </g>
+          <path class="edge" id="e-pi1-g1" d="M30 60 L128 85"></path>
+          <path class="edge" id="e-pi2-g1" d="M30 112 L128 85"></path>
+          <path class="edge" id="e-pi3-g2" d="M30 192 L128 215"></path>
+          <path class="edge" id="e-pi4-g2" d="M30 244 L128 215"></path>
+          <path class="edge" id="e-g1-g3" d="M172 85 L238 150"></path>
+          <path class="edge" id="e-g2-g3" d="M172 215 L238 150"></path>
+          <path class="edge" id="e-g3-g4" d="M282 150 L358 65"></path>
+          <path class="edge" id="e-g3-g5" d="M282 150 L358 150"></path>
+          <path class="edge" id="e-g3-g6" d="M282 150 L358 240"></path>
+          <path class="edge" id="e-g5-g7" d="M402 150 L468 195"></path>
+          <path class="edge" id="e-g6-g7" d="M402 240 L468 195"></path>
+          <path class="edge" id="e-g4-po" d="M402 65 L470 65"></path>
+          <g class="node" id="n-g1"><circle cx="150" cy="85" r="22"></circle><text x="150" y="91" text-anchor="middle">G1</text></g>
+          <g class="node" id="n-g2"><circle cx="150" cy="215" r="22"></circle><text x="150" y="221" text-anchor="middle">G2</text></g>
+          <g class="node" id="n-g3"><circle cx="260" cy="150" r="22"></circle><text x="260" y="156" text-anchor="middle">G3</text></g>
+          <g class="node" id="n-g4"><circle cx="380" cy="65" r="22"></circle><text x="380" y="71" text-anchor="middle">G4</text></g>
+          <g class="node" id="n-g5"><circle cx="380" cy="150" r="22"></circle><text x="380" y="156" text-anchor="middle">G5</text></g>
+          <g class="node" id="n-g6"><circle cx="380" cy="240" r="22"></circle><text x="380" y="246" text-anchor="middle">G6</text></g>
+          <g class="node" id="n-g7"><circle cx="490" cy="195" r="22"></circle><text x="490" y="201" text-anchor="middle">G7</text></g>
+          <g class="po"><text x="474" y="58">PO</text></g>
+        </svg>
+      </div>
+
+      <div class="prop-btns" data-struct-btns role="group" aria-label="結構性質（點選後在上圖高亮）"></div>
+      <p class="prop-note" data-struct-note>請點選上方任一性質，圖上會高亮對應的節點或邊。</p>
+
+      <p>投影片 p.22 的 8 個性質原文為：Branches/Fanout、Stem、Fanout-free、Reconvergent Fanout、Gate Type、Inversion、Inversion Parity、Level of a Gate in Circuit。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-23.png" alt="投影片 p.23 畫面：7 個白色圓形節點 G1 到 G7 以黃色箭頭相連的有向圖，用來說明扇出、主幹、重匯合扇出等結構性質。">
+        <figcaption>p.23 的原始圖（上方互動圖即依此重畫）。<span class="srcref" data-slides="23">投影片 p.23</span></figcaption>
+      </figure>
+
+      <h3>實例：ISCAS89 benchmark 的 s27（p.24）</h3>
+      <p>這是一張較密集的實際電路：左側有 4 個主要輸入 <code>0</code>、<code>1</code>、<code>2</code>、<code>3</code>，下方 <code>5</code>、<code>6</code>、<code>7</code> 是正反器輸出的狀態節點（由右側回授）。閘以訊號編號標示：<code>14</code>、<code>8</code>、<code>12</code>、<code>16</code>、<code>15</code>、<code>13</code>、<code>9</code>、<code>11</code>、<code>17</code>、<code>10</code>。圖上以不同顏色的線追蹤個別輸入的扇出。</p>
+      <p>大致流向：<code>0 → 14 → 8</code>；<code>1</code>、<code>7</code> → <code>12</code>；<code>8</code> 與 <code>12</code> 扇出到 <code>16</code>、<code>15</code>、<code>13</code>；<code>16</code>、<code>15</code> → <code>9</code>；<code>9</code> 與 <code>3</code> → <code>11</code>；<code>11</code> → <code>10</code> → 主要輸出；<code>11</code>、<code>6</code> → <code>17</code>；<code>13</code>、<code>7</code> 與 <code>5</code> 構成回授迴路。</p>
+      <p class="warn">這張手繪示意圖的接腳級連接關係無法從圖形座標可靠還原，因此本網站直接沿用投影片算繪圖，不以 HTML 重畫。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-24.png" alt="投影片 p.24 畫面：ISCAS89 benchmark 電路 s27 的示意圖，左側四個主要輸入、下方三個狀態節點，中間十個以編號標示的邏輯閘，並以綠紅藍等顏色追蹤個別輸入的扇出路徑。">
+        <figcaption>s27 benchmark 電路。<span class="srcref" data-slides="24">投影片 p.24</span></figcaption>
+      </figure>
+
+      <h3>內部表示法：一個簡單的 Verilog 解析器（p.25）</h3>
+      <p>投影片畫出解析器在記憶體中的資料結構：左側是模組階層的 DAG，根節點 <code>Top module</code>，下面掛著五個 <code>module</code> 節點，而且下層節點被多個上層共用（所以是 DAG 不是樹）。模組節點旁掛著 <code>Instance</code> 記錄（模組 → Instance 用綠色箭頭，Instance → 它所實體化的模組用黃色箭頭）。右側是一朵標著 <code>Net List</code> 的雲，裡面有兩個星形（一條網線連接多個接腳）；右下是層層嵌套的 <code>Pin List</code>、<code>Port List</code> 方框。</p>
+      <p>教學重點：解析器把<strong>模組（森林／DAG）、實體、埠清單、接腳清單與網線</strong>存成互相交叉連結的串列。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-25.png" alt="投影片 p.25 畫面：Verilog 解析器的記憶體資料結構圖。左側是模組階層的有向無環圖與 Instance 方塊，右側是標示 Net List 的雲形與嵌套的 Pin List、Port List 方框，彼此以箭頭與曲線連結。">
+        <figcaption>解析器的內部表示法。<span class="srcref" data-slides="25">投影片 p.25</span></figcaption>
+      </figure>
+
+      <h3>結構導向的設計方法（p.26）</h3>
+      <p>左側是一張階層 DAG：<code>Top</code> 直接連到 <code>A</code>、<code>B</code>、<code>D</code>；<code>A</code> 連到 <code>C</code>、<code>D</code>；<code>B</code> 連到 <code>D</code>、<code>E</code>。注意 <code>D</code> 同時被 <code>Top</code>、<code>A</code>、<code>B</code> 使用 — 這就是重複使用。</p>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 500 270" role="img" aria-labelledby="dag-title dag-desc">
+          <title id="dag-title">p.26 的階層 DAG</title>
+          <desc id="dag-desc">Top 連到 A、B、D；A 連到 C 與 D；B 連到 D 與 E。D 同時被 Top、A、B 三者共用。</desc>
+          <path class="edge" d="M240 62 L130 112"></path>
+          <path class="edge" d="M240 62 L350 112"></path>
+          <path class="edge" d="M240 62 L240 198"></path>
+          <path class="edge" d="M110 152 L70 198"></path>
+          <path class="edge" d="M130 152 L225 200"></path>
+          <path class="edge" d="M350 152 L255 200"></path>
+          <path class="edge" d="M370 152 L412 198"></path>
+          <g><rect class="box" x="208" y="28" width="64" height="34" rx="6"></rect><text x="240" y="50" text-anchor="middle">Top</text></g>
+          <g><rect class="box" x="98" y="118" width="54" height="34" rx="6"></rect><text x="125" y="140" text-anchor="middle">A</text></g>
+          <g><rect class="box" x="338" y="118" width="54" height="34" rx="6"></rect><text x="365" y="140" text-anchor="middle">B</text></g>
+          <g><rect class="box" x="42" y="204" width="54" height="34" rx="6"></rect><text x="69" y="226" text-anchor="middle">C</text></g>
+          <g><rect class="box" x="213" y="204" width="54" height="34" rx="6"></rect><text x="240" y="226" text-anchor="middle">D</text></g>
+          <g><rect class="box" x="385" y="204" width="54" height="34" rx="6"></rect><text x="412" y="226" text-anchor="middle">E</text></g>
+        </svg>
+      </div>
+      <p>右側的方法清單（原文自動編號 1–5）：</p>
+      <ol>
+        <li>Top-Down Design（由上而下）</li>
+        <li>Bottom-Up（由下而上）</li>
+        <li>Middle-Out（由中間向外）</li>
+        <li>Ends-In（由兩端向內）</li>
+        <li>Hybrid (Greedy)（混合／貪婪）</li>
+      </ol>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-26.png" alt="投影片 p.26 畫面：左側為 Top、A、B、C、D、E 構成的階層有向無環圖，右側為 Top-Down、Bottom-Up、Middle-Out、Ends-In、Hybrid 五種設計方法的編號清單。">
+        <figcaption>結構導向的五種設計方法。<span class="srcref" data-slides="26">投影片 p.26</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-1-9">
+      <h2>1.9 邏輯層的功能模型</h2>
+      <p><span class="srcref" data-slides="27,28,29,30,31,32,33">投影片 p.27–33</span></p>
+
+      <h3>本節大綱（p.27）</h3>
+      <ul>
+        <li>Truth Table &amp; Primitive Cubes.（真值表與基本立方體）</li>
+        <li>State Table &amp; Flow Table.（狀態表與流程表）</li>
+        <li>Binary Decision Diagrams.（二元決策圖）</li>
+        <li>Programs as Functional Models.（以程式作為功能模型）</li>
+      </ul>
+
+      <h3>真值表與基本立方體（p.28）</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>完整真值表（照錄 p.28 左表）</caption>
+          <thead><tr><th scope="col">A</th><th scope="col">B</th><th scope="col">C</th><th scope="col">F</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+            <tr><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+            <tr><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+            <tr><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+            <tr><td>1</td><td>0</td><td>1</td><td>1</td></tr>
+            <tr><td>1</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>基本立方體 Primitive Cubes（照錄 p.28 右表，X 為 don't care）</caption>
+          <thead><tr><th scope="col">A</th><th scope="col">B</th><th scope="col">C</th><th scope="col">F</th></tr></thead>
+          <tbody>
+            <tr><td>X</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><td>1</td><td>1</td><td>X</td><td>0</td></tr>
+            <tr><td>X</td><td>0</td><td>X</td><td>1</td></tr>
+            <tr><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>投影片在立方體表下方印出的式子為：<strong>F = B̄ + ĀBC</strong>（已與真值表核對一致）。</p>
+      <div class="supplement">
+        <p>基本立方體的用途是壓縮：真值表要列 2<sup>3</sup> = 8 列，立方體只用 4 列就表達同一個函數，因為 X 代表「這一位不影響結果」。這也是測試向量產生與邏輯化簡的基礎表示法。</p>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-28.png" alt="投影片 p.28 畫面：左側為 A、B、C、F 的八列完整真值表，右側為含 X 無關項的四列基本立方體表，下方印出邏輯式 F 等於 B 反相加上 A 反相乘 B 乘 C。">
+        <figcaption>真值表與基本立方體。<span class="srcref" data-slides="28">投影片 p.28</span></figcaption>
+      </figure>
+
+      <h3>Huffman 模型（p.29）</h3>
+      <p>這是同步、單一時脈、以 D 型正反器為基礎的有限狀態機標準分解方式：把電路切成「一塊組合邏輯」加「一排正反器」。</p>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 520 320" role="img" aria-labelledby="huff-title huff-desc">
+          <title id="huff-title">p.29 的 Huffman 模型</title>
+          <desc id="huff-desc">中間是組合邏輯電路，左側主要輸入 X 寬度 L 進入，右側主要輸出 Z 寬度 N 離開；下方一排 D 型正反器由 Clk 驅動，組合邏輯輸出經寬度 M 的次態 Y 進入正反器 D 端，正反器 Q 端以寬度 M 的現態 y 回授到組合邏輯。狀態數 S 小於或等於 2 的 M 次方。</desc>
+          <rect class="box" x="140" y="40" width="240" height="96" rx="36"></rect>
+          <text x="260" y="94" text-anchor="middle">組合邏輯電路 Combinational</text>
+          <path class="edge" d="M40 88 L138 88"></path>
+          <text x="34" y="74" text-anchor="middle">X /L</text>
+          <text x="34" y="112" text-anchor="middle">PI</text>
+          <path class="edge" d="M382 88 L480 88"></path>
+          <text x="486" y="74" text-anchor="end">Z /N</text>
+          <text x="486" y="112" text-anchor="end">PO</text>
+          <rect class="box" x="190" y="216" width="140" height="56" rx="6"></rect>
+          <text x="260" y="250" text-anchor="middle">4 × DFF</text>
+          <path class="edge" d="M260 300 L260 274"></path>
+          <text x="268" y="300">Clk</text>
+          <path class="edge accent" d="M356 138 L356 190 L318 190 L318 214"></path>
+          <text x="364" y="178">Y / NS</text>
+          <text x="364" y="198">PPO /M</text>
+          <path class="edge accent" d="M202 214 L202 190 L164 190 L164 138"></path>
+          <text x="156" y="178" text-anchor="end">y / PS</text>
+          <text x="156" y="198" text-anchor="end">PPI /M</text>
+          <text class="accent-text" x="400" y="258">S ≤ 2^M</text>
+        </svg>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>Huffman 模型的訊號名稱（照錄 p.29）</caption>
+          <thead><tr><th scope="col">符號</th><th scope="col">全名</th><th scope="col">寬度</th></tr></thead>
+          <tbody>
+            <tr><td>X</td><td>PI: Primary Inputs（主要輸入）</td><td>L</td></tr>
+            <tr><td>Z</td><td>PO: Primary Outputs（主要輸出）</td><td>N</td></tr>
+            <tr><td>Y</td><td>PPO: Pseudo PO / NS: Next State（次態）</td><td>M</td></tr>
+            <tr><td>y</td><td>PPI: Pseudo PI / PS: Present State（現態）</td><td>M</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>投影片右下的方程式為 <strong>State Count S ≤ 2<sup>M</sup></strong>：M 個正反器最多只能編出 2<sup>M</sup> 個狀態。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-29.png" alt="投影片 p.29 畫面：Huffman 模型。中央雲形標示組合邏輯電路，左側 X 主要輸入進入、右側 Z 主要輸出離開，下方四個 D 型正反器由 Clk 驅動，次態與現態以兩條回授線連接。">
+        <figcaption>Huffman 模型：組合邏輯加正反器。<span class="srcref" data-slides="29">投影片 p.29</span></figcaption>
+      </figure>
+
+      <h3>狀態圖：密碼 1011 的序列偵測器（p.30）</h3>
+      <p>這是一個 Mealy 機，邊上標示 <code>輸入/輸出</code>。四個狀態的名稱描述「還在等什麼」：</p>
+      <div class="table-wrap">
+        <table>
+          <caption>狀態編碼與名稱（照錄 p.30）</caption>
+          <thead><tr><th scope="col">編碼</th><th scope="col">狀態名稱</th></tr></thead>
+          <tbody>
+            <tr><td>00</td><td>Waiting for 1011</td></tr>
+            <tr><td>01</td><td>Waiting for 011</td></tr>
+            <tr><td>10</td><td>Waiting for 11</td></tr>
+            <tr><td>11</td><td>Waiting for 1</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 520 300" role="img" aria-labelledby="mealy-title mealy-desc">
+          <title id="mealy-title">p.30 的 1011 Mealy 狀態圖</title>
+          <desc id="mealy-desc">四個狀態 00、01、10、11。00 輸入 0 自迴圈輸出 0，輸入 1 到 01；01 輸入 1 自迴圈輸出 0，輸入 0 到 10；10 輸入 1 到 11，輸入 0 回到 00；11 輸入 0 到 10，輸入 1 到 01 並輸出 1，這是唯一輸出 1 的轉移。</desc>
+          <path class="edge" d="M90 112 C 60 60, 20 90, 54 128"></path>
+          <text x="22" y="74">0/0</text>
+          <path class="edge" d="M126 128 L212 86"></path>
+          <text x="150" y="96">1/0</text>
+          <path class="edge" d="M286 50 C 330 16, 352 56, 300 76"></path>
+          <text x="330" y="26">1/0</text>
+          <path class="edge" d="M248 102 L248 196"></path>
+          <text x="256" y="156">0/0</text>
+          <path class="edge" d="M286 232 L374 186"></path>
+          <text x="310" y="226">1/0</text>
+          <path class="edge" d="M376 176 L288 216"></path>
+          <text x="352" y="208">0/0</text>
+          <path class="edge accent" d="M384 128 C 344 92, 300 70, 286 66"></path>
+          <text class="accent-text" x="352" y="112">1/1</text>
+          <path class="edge" d="M212 228 L126 148"></path>
+          <text x="152" y="206">0/0</text>
+          <g><circle class="box" cx="90" cy="140" r="36"></circle><text x="90" y="136" text-anchor="middle">00</text><text x="90" y="156" text-anchor="middle">等 1011</text></g>
+          <g><circle class="box" cx="248" cy="66" r="36"></circle><text x="248" y="62" text-anchor="middle">01</text><text x="248" y="82" text-anchor="middle">等 011</text></g>
+          <g><circle class="box" cx="248" cy="232" r="36"></circle><text x="248" y="228" text-anchor="middle">10</text><text x="248" y="248" text-anchor="middle">等 11</text></g>
+          <g><circle class="box" cx="410" cy="160" r="36"></circle><text x="410" y="156" text-anchor="middle">11</text><text x="410" y="176" text-anchor="middle">等 1</text></g>
+        </svg>
+      </div>
+      <p>轉移照錄：<code>00 -0/0→ 00</code>（自迴圈）、<code>00 -1/0→ 01</code>、<code>01 -1/0→ 01</code>（自迴圈）、<code>01 -0/0→ 10</code>、<code>10 -1/0→ 11</code>、<code>11 -0/0→ 10</code>、<code>11 -1/1→ 01</code>、<code>10 -0/0→ 00</code>。其中 <strong><code>11 -1/1→ 01</code> 是唯一輸出 1 的邊</strong>，代表密碼比對成功。</p>
+      <p>想一步一步餵輸入看狀態怎麼走，可以到 <a href="ch05-fsm.html#sec-5-4">第 05 章 §5.4 的互動步進器</a>。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-30.png" alt="投影片 p.30 畫面：1011 序列偵測器的 Mealy 狀態圖，四個圓形狀態下方標著 00、01、10、11 的二進位編碼，邊上以輸入斜線輸出的格式標示，其中一條標示 1 斜線 1。">
+        <figcaption>密碼 1011 的 Mealy 狀態圖。<span class="srcref" data-slides="30">投影片 p.30</span></figcaption>
+      </figure>
+
+      <h3>狀態表與流程表（p.31）</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>狀態表（照錄 p.31）</caption>
+          <thead><tr><th scope="col">Q1</th><th scope="col">Q0</th><th scope="col">X0</th><th scope="col">D1</th><th scope="col">D0</th><th scope="col">Z0</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+            <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+            <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+            <tr><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>1</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>投影片標題寫 <code>K-map or McKlusky Method:</code>，並印出三個式子：</p>
+      <div class="codeblock" data-title="p.31 印出的式子（照抄原文）">
+<pre><code data-lang="text">D1 = Q̄1·X + Q1·Q0·X̄ + Q1·Q̄0·X
+D0 = X
+Z  = Q1·Q0·X</code></pre>
+      </div>
+      <p class="warn">投影片印出的 <code>D1</code> 第一項 <code>Q̄1·X</code> 與同頁狀態表矛盾：<code>Q̄1·X</code> 會讓 <code>001</code> 與 <code>011</code> 兩列的 <code>D1=1</code>，但表上這兩列是 <code>D1=0</code>。<code>D0</code> 與 <code>Z</code> 與表一致。此處照原文呈現，不修改投影片。</p>
+      <div class="supplement">
+        <p>由表反推：<code>D1=1</code> 只出現在 <code>Q1Q0X = 010、101、110</code> 三列，因此<br>
+        <code>D1 = Q̄1·Q0·X̄ + Q1·Q0·X̄ + Q1·Q̄0·X = Q0·X̄ + Q1·Q̄0·X</code><br>
+        推測投影片第一項原本要寫的是 <code>Q̄1·Q0·X̄</code>（漏掉了 <code>Q0</code> 與 <code>X</code> 的反相）。</p>
+      </div>
+      <p>頁面右下另有一張 PLA 式的 AND 平面／OR 平面電路圖：<code>X</code> 經左上的反相器進入，垂直線分別承載 <code>X</code>、<code>X̄</code>、<code>Q0</code>、<code>Q̄0</code>、<code>Q1</code>、<code>Q̄1</code>；點代表連線，一個 AND 閘驅動 <code>Z</code>，另三個 AND 閘匯入 OR 閘，OR 閘輸出送到兩個標為 <code>0</code>、<code>1</code> 的 D 型正反器，其輸出再回授到垂直線上。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-31.png" alt="投影片 p.31 畫面：左上為 Q1、Q0、X0 對應 D1、D0、Z0 的八列狀態表，中間印出 D1、D0、Z 三個邏輯式，右下為 PLA 形式的 AND 平面與 OR 平面電路圖，含兩個 D 型正反器與回授線。">
+        <figcaption>狀態表、化簡後的式子與 PLA 實作。<span class="srcref" data-slides="31">投影片 p.31</span></figcaption>
+      </figure>
+
+      <h3>二元決策圖 BDD（p.32）</h3>
+      <p>原文定義：<em>A Binary Decision Diagram (BDD) is a graph model of the function of a circuit.</em>（BDD 是電路功能的圖模型。）</p>
+      <p>左圖是未化簡的版本，函數為 <strong>F = AC + BC̄</strong>：根節點是 <code>A</code>，兩側各分支到一個 <code>B</code> 節點，<code>B</code> 再分支到 <code>C</code> 節點或直接到終端 <code>0</code>／<code>1</code>，邊上標 <code>0</code>／<code>1</code>。右圖標著 <strong>Reduced Ordered BDD</strong>：<code>F</code> 指向 <code>C</code>，<code>C</code> 以 <code>0</code> 邊到 <code>B</code>、以 <code>1</code> 邊到 <code>A</code>，只剩三個節點。</p>
+      <p>教學重點：<strong>排序 (ordered) 加上化簡 (reduced)</strong>，可以把左邊那張雜亂的圖收斂成右邊的 ROBDD。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-32.png" alt="投影片 p.32 畫面：左側為函數 F 等於 AC 加 B C 反相的未化簡二元決策圖，節點由 A 到 B 到 C 再到 0 與 1 終端，邊上標 0 與 1；右側為化簡排序後的 ROBDD，只有 C、B、A 三個節點。">
+        <figcaption>由 BDD 化簡為 ROBDD。<span class="srcref" data-slides="32">投影片 p.32</span></figcaption>
+      </figure>
+
+      <h3>以程式作為功能模型（p.33）</h3>
+      <p>投影片用三欄（原文自動編號 1–3）說明同一個函數可以寫成不同抽象層的程式。</p>
+      <div class="codeblock" data-title="p.33 第 1 欄：Assembly-Like（照抄原文，含原本的 Tab）">
+<pre><code data-lang="asm">LDA	A
+AND	B
+INV
+OR		C
+STA	F</code></pre>
+      </div>
+      <div class="codeblock" data-title="p.33 第 2 欄：C-Like（照抄原文）">
+<pre><code data-lang="c">main(F, A, B, C)
+{ 	int F, A, B, C;
+	F =  ~ ( A &amp;&amp; B ) || C;
+}</code></pre>
+      </div>
+      <p>第 3 欄的標題是 <code>C-Code is the direct and fast simulator.</code>（C 程式就是最直接也最快的模擬器。）附帶的片段：</p>
+      <div class="codeblock" data-title="p.33 第 3 欄：C-Code 片段（照抄原文）">
+<pre><code data-lang="c">C=A+B;
+A=R1*R2;
+B=~B;</code></pre>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-1-10">
+      <h2>1.10 暫存器層的功能模型 RTL</h2>
+      <p><span class="srcref" data-slides="34,35,36">投影片 p.34–36</span></p>
+
+      <h3>本節大綱（p.34）</h3>
+      <ul>
+        <li>Basic RTL Constructs</li>
+        <li>Timing Modeling in RTLs</li>
+        <li>Internal RTL Models（See Internal structural model）</li>
+      </ul>
+
+      <h3>基本 RTL 結構（p.35）</h3>
+      <p><strong>RTL</strong> = Register-Transfer Language in Register-Transfer Level（暫存器轉移層的暫存器轉移語言）。投影片的例子：</p>
+      <ul>
+        <li><code>PC←PC+1;　A←A+B+C</code></li>
+        <li><code>PC←PC+1; if C=1 PC←#FA07</code></li>
+        <li><code>R3←A – R4; A←0</code></li>
+      </ul>
+      <p>接著是 <code>C or Verilog-like Language:</code> 的寫法：</p>
+      <div class="codeblock" data-title="p.35 的 Adder（照抄原文，含大寫的 Input）">
+<pre><code data-lang="verilog">module Adder(Co, Sum, A, B, Ci);
+	Input 	[15:0] 	A, B;
+	Input 	Ci;
+	output 	Co;
+	output 	[15:0] 	Sum; 
+	assign  {Co, Sum} = A + B + Ci;
+endmodule</code></pre>
+      </div>
+      <p class="warn">原文把 <code>input</code> 寫成大寫的 <code>Input</code>，Verilog 區分大小寫，這段程式無法直接編譯。此處照抄投影片，不修正。</p>
+
+      <h3>RTL 的時序建模（p.36）</h3>
+      <div class="codeblock" data-title="p.36 的時序模型（照抄原文）">
+<pre><code data-lang="verilog">Sum = #20 A+B;
+initial
+	begin
+		A=1; B=0;
+		#10 B=1; A=0;
+		#40 B=0;
+		#10 $stop;
+	end</code></pre>
+      </div>
+      <div class="supplement">
+        <p><code>#20</code> 這類延遲只在<strong>模擬</strong>時有意義，合成工具會忽略它。<code>initial</code> 區塊從 t=0 開始依序執行，常用來寫測試平台 (testbench) 的輸入波形。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-1-11">
+      <h2>1.11 工具安裝與本課程工具</h2>
+      <p><span class="srcref" data-slides="37,38">投影片 p.37–38</span></p>
+
+      <div class="table-wrap">
+        <table>
+          <caption>Tool Installation（照錄 p.37）</caption>
+          <thead><tr><th scope="col">No.</th><th scope="col">Envir.</th><th scope="col">Verilog</th><th scope="col">Link or Installation</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Online</td><td>CodingGround</td><td>tutorialspoint.com/compile_verilog_online.php</td></tr>
+            <tr><td>2</td><td>Online</td><td>JDoodle</td><td>jdoodle.com/execute-verilog-online/</td></tr>
+            <tr><td>3</td><td>Windows</td><td>SynaptiCAD (old)</td><td>testlab.ncue.edu.tw/tch/download/download.htm</td></tr>
+            <tr><td>4</td><td>Windows</td><td>SynaptiCAD</td><td>syncad.com/syn_down.htm</td></tr>
+            <tr><td>5</td><td>Windows</td><td>ModelSim-Altera</td><td>Intel Quartus II Web Edition 13.1 下載頁</td></tr>
+            <tr><td>6</td><td>Linux</td><td>ModelSim</td><td>Usually for cell-based design, ask Administrator</td></tr>
+            <tr><td>7</td><td>Linux</td><td>VerilogXL</td><td>Usually for cell-based design, ask Administrator</td></tr>
+            <tr><td>8</td><td>Linux</td><td>VNC</td><td>Usually for cell-based design, ask Administrator</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="supplement">
+        <p>表格中的網址在原投影片是可點擊的連結。本網站為離線使用，只保留網域與路徑文字，不放外部連結。</p>
+      </div>
+
+      <h3>本課程主要工具（p.38）</h3>
+      <ul>
+        <li>Intel-Altera Quartus II 9.0~13.1
+          <ul>
+            <li>Cyclon III</li>
+            <li>ModelSim-Altera</li>
+          </ul>
+        </li>
+      </ul>
+      <p class="warn">投影片文字寫 <code>Cyclon III</code>（少一個 e，且依 p.2、p.3 課程目標元件為 Cyclone III / EP3C16），但圖中的實體板子絲印為 <strong>DE0-CV / Cyclone V</strong>。文字與照片不一致，兩者都照原樣呈現。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-38.png" alt="投影片 p.38 畫面：一台筆記型電腦以手繪的黃色線纜連接到 Terasic DE0-CV FPGA 開發板照片，板上絲印可見 DE0-CV、Cyclone V 與 terasic 字樣。">
+        <figcaption>本課程的工具與開發板。<span class="srcref" data-slides="38">投影片 p.38</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-1-12">
+      <h2>1.12 Verilog 檔案與模組的外觀</h2>
+      <p><span class="srcref" data-slides="39,40,41">投影片 p.39–41</span></p>
+
+      <h3>檔案與模組的關係（p.39）</h3>
+      <ul>
+        <li>1 design can have ≥ 1 files.（一個設計可以有一個以上的檔案。）</li>
+        <li>1 file can have ≥ modules.（一個檔案可以有一個以上的模組。）</li>
+        <li>Outlook of a module（模組的外觀如下）</li>
+      </ul>
+      <div class="codeblock" data-title="p.39 的模組骨架（照抄原文）">
+<pre><code data-lang="verilog">module #(parameters) Name (ports);
+	parameter/port declaration;
+	reg/wire/integer declaration;
+	gate netlist;
+	hierarchical instances;
+	blocks (always, initial, …)
+endmodule</code></pre>
+      </div>
+      <p>投影片在模組本體旁加了一個旋轉的大括號，標著 <strong><code>parallel statements</code></strong> — 模組本體內的這些敘述是<strong>並行</strong>的，不是由上往下依序執行。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-39.png" alt="投影片 p.39 畫面：模組骨架圖。黑色外框代表模組，內部黃色面板是模組本體，依序列出參數與埠宣告、reg wire integer 宣告、閘級網表、階層實體、always 與 initial 等 block，右側旋轉的大括號標示 parallel statements。">
+        <figcaption>Verilog 模組的外觀。<span class="srcref" data-slides="39">投影片 p.39</span></figcaption>
+      </figure>
+
+      <h3>程式庫是一座森林（p.40）</h3>
+      <p>左側是標著 <strong>File System</strong> 的磁碟符號，內含四個檔案圖示；右側是標著 <strong>Module Forest</strong> 的面板，裡面是四層的 DAG：最上一列 <code>Top module1</code>、<code>Top module2</code>、<code>Top module3</code>，第二列四個 <code>module</code>，第三列兩個 <code>module</code>，最下一列六個 <code>gate</code>。數個子節點被多個上層共用，所以是「多棵樹重疊」的森林。三條虛線從左側個別檔案跨到右側的模組方塊 — <strong>同一個檔案可以提供任何層級的模組</strong>。</p>
+      <p>投影片頁尾附上 V2K 快速參考文件的連結（Verilog 2001 reference guide）。</p>
+      <figure class="figure">
+        <img src="assets/ch01/fig-slide-40.png" alt="投影片 p.40 畫面：左側綠色磁碟符號標示 File System，內含四個文件圖示；右側黑色面板標示 Module Forest，由上而下是三個 Top module、四個 module、兩個 module 與六個 gate 構成的有向無環圖，三條虛線由左側檔案連到右側模組。">
+        <figcaption>檔案系統與模組森林的對應。<span class="srcref" data-slides="40">投影片 p.40</span></figcaption>
+      </figure>
+
+      <h3>Verilog 裡的「block」（p.41）</h3>
+      <p>投影片先區分詞性：</p>
+      <ul>
+        <li><strong>動詞</strong>：stopping the movement（阻擋），對應 <code>non-blocking assignment</code>（非阻塞指定）。</li>
+        <li><strong>名詞</strong>：a cuboid or a rectangle area（一個方塊或矩形區域）。</li>
+      </ul>
+      <p>名詞用法共 13 種（原文自動編號 1–13）：</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Verilog 的 13 種 block（照錄 p.41）</caption>
+          <thead><tr><th scope="col">類別</th><th scope="col">語法</th><th scope="col">說明</th></tr></thead>
+          <tbody>
+            <tr><td>Statements</td><td><code>begin (: name) … end</code></td><td>grouping（群組）</td></tr>
+            <tr><td>Module</td><td><code>module … endmodule</code></td><td>parallel statements</td></tr>
+            <tr><td>Sequential</td><td><code>initial (begin … end)</code></td><td>sequential statements from t = 0</td></tr>
+            <tr><td>Procedural</td><td><code>always (begin … end)</code></td><td>activated at time 0 then always</td></tr>
+            <tr><td>Procedural</td><td><code>always @ (events) … </code></td><td>triggled upon the events</td></tr>
+            <tr><td>Generate</td><td><code>generate … endgenerate</code></td><td>create at time 0</td></tr>
+            <tr><td>Case</td><td><code>case … endcase</code></td><td>switching</td></tr>
+            <tr><td>Specification</td><td><code>specify … endspecify</code></td><td></td></tr>
+            <tr><td>Function</td><td><code>function … endfunction</code></td><td></td></tr>
+            <tr><td>Task</td><td><code>task … endtask</code></td><td></td></tr>
+            <tr><td>UDP</td><td><code>primitive … table … endtable endprimitive</code></td><td>user defined primitive</td></tr>
+            <tr><td>Configuration</td><td><code>config … endconfig</code></td><td>version and library control</td></tr>
+            <tr><td>For-loops</td><td><code>for begin (: name) … end</code></td><td></td></tr>
+            <tr><td>Repeat</td><td><code>repeat (times) begin … end</code></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">原文 <code>triggled</code> 是 <code>triggered</code> 的錯字，照原樣保留。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-1-13">
+      <h2>1.13 Lab01 加法器</h2>
+      <p><span class="srcref" data-slides="42">投影片 p.42</span></p>
+      <p>這一頁在投影片中整頁都是圖片，沒有可選取的文字。以下是從圖面轉錄的內容。</p>
+      <ol>
+        <li><strong>Hierarchically design</strong>（階層式設計）
+          <ol>
+            <li>Half Adder (HA) 半加器</li>
+            <li>Full Adder (FA) 全加器</li>
+            <li>N-bit Adder N 位元加法器</li>
+          </ol>
+        </li>
+        <li><strong>Formal Verification by Golden Test</strong>（以黃金測試做形式驗證）
+          <ol>
+            <li>Exhautively（窮舉）</li>
+            <li>Using a Flag, say, OK = 1（用一個旗標，例如 OK = 1）</li>
+            <li><code>if (OK) $display("Pass!"); else $display("Failed!");</code></li>
+          </ol>
+        </li>
+      </ol>
+      <p>三道練習題：</p>
+      <ul>
+        <li><strong>Problem 1.</strong> Redo Subtractor by substituting：Carry (C) ➔ Borrow (B)、HA ➔ HS、FA ➔ FS、N-bit Adder ➔ N-bit Subtractor。</li>
+        <li><strong>Problem 2.</strong> Implement a Subtractor by Rule <code>−N = N̄ + 1</code>（二補數）。</li>
+        <li><strong>Problem 3.</strong> Implement a Adder/Subtractor Controlled by <code>C_in</code>。</li>
+      </ul>
+      <p class="warn">原文 <code>Exhautively</code> 是 <code>Exhaustively</code> 的錯字，照原樣保留。</p>
+      <figure class="figure">
+        <img src="assets/ch01/img-lab01-adder.png" alt="投影片 p.42 畫面：Lab01 加法器的作業說明圖，內容包含階層式設計半加器、全加器、N 位元加法器，以黃金測試做窮舉驗證，以及三道減法器與加減法器的練習題。">
+        <figcaption>Lab01 Adder 作業說明（整頁為圖片）。<span class="srcref" data-slides="42">投影片 p.42</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="takeaways">
+      <h2>重點整理</h2>
+      <div class="takeaways">
+        <ol>
+          <li><strong>示意圖與文字是同一件事的兩種表示法。</strong>同一層級既可以畫成 schematic，也可以寫成文字；閘級以上的文字叫 <strong>HDL</strong>，電晶體級的文字叫 <strong>NETLIST</strong>。</li>
+          <li><strong>層級 (level) 與觀點 (view) 是兩個獨立座標。</strong>7 個層級 × 3 個觀點 = 21 種表示法；Y 圖只是把這張表改畫成放射狀，同心圓是層級、扇形是觀點。</li>
+          <li><strong>EDA 工具是 Y 圖上的弧線。</strong>modularization、partitioning、synthesize、sim、ver 各自負責把設計從一個觀點／層級搬到另一個。</li>
+          <li><strong>實務上只常用三種模式</strong>：Behavioral Mode（系統層行為）、RTL Mode（暫存器層）、Gate-Level（邏輯層結構／實體）。</li>
+          <li><strong>結構模型是遞迴定義的</strong>：節點是元件的 symbol view、弧是 I/O 關係，一路展開到 primitive（and/nand/or/nor/not）才停。</li>
+          <li><strong>邏輯層的功能模型有四種</strong>：真值表與基本立方體、狀態表與流程表、BDD、程式。立方體用 X 壓縮真值表；ROBDD 靠排序加化簡收斂。</li>
+          <li><strong>Huffman 模型是同步 FSM 的標準切法</strong>：一塊組合邏輯 + 一排 DFF，以 PPI/PPO（現態 y／次態 Y）回授，狀態數 S ≤ 2<sup>M</sup>。</li>
+          <li><strong>Verilog 的模組本體是並行的</strong>，不是由上往下依序執行；而「block」在 Verilog 裡有 13 種名詞用法，外加 non-blocking assignment 的動詞用法。</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="terms">
+      <h2>關鍵術語</h2>
+      <div class="terms">
+        <dl>
+          <dt>硬體描述語言 <span class="en">HDL, Hardware Description Language</span></dt>
+          <dd>閘級以上、以文字描述硬體的語言。<span class="srcref" data-slides="8">投影片 p.8</span></dd>
+
+          <dt>網表 <span class="en">netlist</span></dt>
+          <dd>電晶體級的文字描述，例如 SPICE。<span class="srcref" data-slides="8">投影片 p.8</span></dd>
+
+          <dt>抽象層級 <span class="en">level</span></dt>
+          <dd>系統、板、暫存器、邏輯、電路、電晶體、物理共 7 層。<span class="srcref" data-slides="13">投影片 p.13</span></dd>
+
+          <dt>觀點 <span class="en">view</span></dt>
+          <dd>功能／行為、結構、實體三種看待同一設計的角度。<span class="srcref" data-slides="13">投影片 p.13</span></dd>
+
+          <dt>Y 圖 <span class="en">Y-chart</span></dt>
+          <dd>Gajski 把層級／觀點表改畫成的放射狀圖。<span class="srcref" data-slides="14">投影片 p.14</span></dd>
+
+          <dt>primitive element</dt>
+          <dd>結構階層最底層的元件，功能視為已知（and、nand、or、nor、not）。<span class="srcref" data-slides="19">投影片 p.19</span></dd>
+
+          <dt>主幹與分支 <span class="en">stem / branches</span></dt>
+          <dd>一個閘扇出到多處時，該閘是 stem，扇出的各條線是 branches。<span class="srcref" data-slides="22">投影片 p.22</span></dd>
+
+          <dt>重匯合扇出 <span class="en">reconvergent fanout</span></dt>
+          <dd>從同一 stem 分出的訊號，之後又在某個閘上重新匯合。<span class="srcref" data-slides="22">投影片 p.22</span></dd>
+
+          <dt>基本立方體 <span class="en">primitive cube</span></dt>
+          <dd>用 X（無關項）壓縮真值表的表示法。<span class="srcref" data-slides="28">投影片 p.28</span></dd>
+
+          <dt>Huffman 模型 <span class="en">Huffman model</span></dt>
+          <dd>把同步 FSM 分解成組合邏輯加正反器的標準模型。<span class="srcref" data-slides="29">投影片 p.29</span></dd>
+
+          <dt>現態與次態 <span class="en">PS / NS</span></dt>
+          <dd>正反器目前輸出的狀態 y，與組合邏輯算出要存回去的狀態 Y。<span class="srcref" data-slides="29">投影片 p.29</span></dd>
+
+          <dt>二元決策圖 <span class="en">BDD / ROBDD</span></dt>
+          <dd>電路功能的圖模型；經排序與化簡後成為 ROBDD。<span class="srcref" data-slides="32">投影片 p.32</span></dd>
+
+          <dt>RTL <span class="en">Register-Transfer Level / Language</span></dt>
+          <dd>以暫存器之間的資料轉移來描述電路的層級與語言。<span class="srcref" data-slides="35">投影片 p.35</span></dd>
+        </dl>
+        <p>完整詞條見<a href="glossary.html">全站術語表</a>。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="quiz">
+      <h2>自我測驗</h2>
+      <div class="quiz" data-quiz-root></div>
+    </section>
+
+    <div data-progress-panel></div>
+    <nav class="pager" data-pager></nav>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p>內容整理自 2022 秋季「Hardware Description Language -- Logic Design using Verilog」課程投影片（黃宗柱 / Tsung-Chu Huang，彰師大電子系）。本網站僅供個人學習使用。</p>
+  </div>
+</footer>
+
+<script src="js/ch01-figs.js"></script>
+<script src="js/ch01-quiz.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/code.js"></script>
+</body>
+</html>

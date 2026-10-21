@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>全站術語表 ｜ 硬體描述語言 HDL 學習網站</title>
+<link rel="stylesheet" href="css/site.css">
+<script src="js/site.js"></script>
+</head>
+<body>
+<a class="skiplink" href="#main">跳到主要內容</a>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="index.html">硬體描述語言 (HDL) 學習網站<span>Logic Design using Verilog ・ 離線版</span></a>
+    <nav class="site-nav" aria-label="主導覽">
+      <ul>
+        <li><a href="index.html">首頁</a></li>
+        <li><a href="ch01-overview.html">01 Overview</a></li>
+        <li><a href="ch02-ychart.html">02 Y 圖</a></li>
+        <li><a href="ch03-grammar.html">03 基本語法</a></li>
+        <li><a href="ch04-asm.html">04 ASM</a></li>
+        <li><a href="ch05-fsm.html">05 FSM</a></li>
+        <li><a href="glossary.html" aria-current="page">術語表</a></li>
+      </ul>
+    </nav>
+    <div class="header-tools">
+      <button type="button" class="btn btn-sm" data-action="toggle-theme" aria-pressed="false">
+        <span data-theme-label>深色模式：關</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="layout layout-wide">
+  <main id="main">
+    <h1>全站術語表</h1>
+    <p>
+      五章出現的中英術語彙整。每個詞條都附一句話定義與「出現於」連結，可直接跳到講到它的小節。
+      技術名詞一律中英並列；定義是為了快速回想而寫的摘要，詳細說明請看對應章節。
+    </p>
+
+    <div class="glossary-tools">
+      <div class="group" role="group" aria-label="依章節篩選">
+        <span class="group-label">依章節：</span>
+        <button type="button" class="btn btn-sm" data-filter="all" aria-pressed="true">全部</button>
+        <button type="button" class="btn btn-sm" data-filter="ch01" aria-pressed="false">01 Overview</button>
+        <button type="button" class="btn btn-sm" data-filter="ch02" aria-pressed="false">02 Y 圖</button>
+        <button type="button" class="btn btn-sm" data-filter="ch03" aria-pressed="false">03 基本語法</button>
+        <button type="button" class="btn btn-sm" data-filter="ch04" aria-pressed="false">04 ASM</button>
+        <button type="button" class="btn btn-sm" data-filter="ch05" aria-pressed="false">05 FSM</button>
+      </div>
+      <div class="group" role="group" aria-label="排序方式">
+        <span class="group-label">排序：</span>
+        <button type="button" class="btn btn-sm" data-sort="doc" aria-pressed="true">依主題</button>
+        <button type="button" class="btn btn-sm" data-sort="zh" aria-pressed="false">依中文</button>
+        <button type="button" class="btn btn-sm" data-sort="en" aria-pressed="false">依英文 A→Z</button>
+      </div>
+      <p class="glossary-count" id="glossary-count" role="status" aria-live="polite">顯示 63 / 63 個詞條</p>
+    </div>
+
+    <ul class="glossary-list" id="glossary-list">
+
+      <li data-chapters="ch01 ch02 ch03" data-zh="硬體描述語言" data-en="hardware description language">
+        <p><span class="term-zh">硬體描述語言</span><span class="term-en">hardware description language, HDL</span></p>
+        <p class="term-def">用文字描述硬體的結構與行為的語言，同一份描述既可用來模擬驗證，也可用來合成成實際電路。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-2">01 §1.2 為什麼要學硬體描述語言</a><a href="ch01-overview.html#sec-1-3">01 §1.3 廣義的 HDL</a></p>
+      </li>
+
+      <li data-chapters="ch01" data-zh="網表" data-en="netlist">
+        <p><span class="term-zh">網表</span><span class="term-en">netlist</span></p>
+        <p class="term-def">列出元件與其接線關係的文字檔；投影片的用法是閘級以上的文字描述叫 HDL，電晶體級的連接描述叫 NETLIST。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-3">01 §1.3 廣義的 HDL</a><a href="ch01-overview.html#sec-1-8">01 §1.8 結構模型</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch03" data-zh="模組" data-en="module">
+        <p><span class="term-zh">模組</span><span class="term-en">module</span></p>
+        <p class="term-def">Verilog 的基本設計單位，用 <code>module</code> / <code>endmodule</code> 包住埠宣告與內容，可以被其他模組實體化。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-12">01 §1.12 Verilog 檔案與模組的外觀</a><a href="ch03-grammar.html#sec-3-6">03 §3.6 模組與實體</a></p>
+      </li>
+
+      <li data-chapters="ch02 ch03" data-zh="實體" data-en="instance">
+        <p><span class="term-zh">實體</span><span class="term-en">instance</span></p>
+        <p class="term-def">某個模組在另一個模組內實際擺放的一份複本；實體化造出設計階層，一個模組可以被實體化多次。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-6">03 §3.6 模組與實體</a><a href="ch02-ychart.html#sec-2-2">02 §2.2 階層、樹與嵌套區塊</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch03" data-zh="埠" data-en="port">
+        <p><span class="term-zh">埠</span><span class="term-en">port</span></p>
+        <p class="term-def">模組對外的接腳，方向分為 <code>input</code>、<code>output</code>、<code>inout</code>；實體化時以位置或名稱與外部接線對應。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-7">03 §3.7 埠與接線的對應</a><a href="ch01-overview.html#sec-1-12">01 §1.12 Verilog 檔案與模組的外觀</a></p>
+      </li>
+
+      <li data-chapters="ch03" data-zh="接線" data-en="net / wire">
+        <p><span class="term-zh">接線</span><span class="term-en">net / wire</span></p>
+        <p class="term-def">連接元件輸出與輸入的導線型別，值完全由驅動源決定，只能用連續指定驅動，不能在程序區塊內被指定。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-4">03 §3.4 資料型別與常數</a><a href="ch03-grammar.html#sec-3-17">03 §3.17 左值與 reg</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch03" data-zh="暫存器" data-en="register">
+        <p><span class="term-zh">暫存器</span><span class="term-en">register</span></p>
+        <p class="term-def">保存一組位元的儲存元件。注意 Verilog 的 <code>reg</code> 只是「可被程序指定的變數」，不保證合成出實體暫存器。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-10">01 §1.10 暫存器層的功能模型 RTL</a><a href="ch03-grammar.html#sec-3-17">03 §3.17 左值與 reg</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch03" data-zh="正反器" data-en="flip-flop">
+        <p><span class="term-zh">正反器</span><span class="term-en">flip-flop, FF</span></p>
+        <p class="term-def">邊緣觸發的一位元儲存元件，是循序電路保存狀態的單位；Huffman 模型中 M 個正反器最多表示 2<sup>M</sup> 個狀態。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-25">03 §3.25 範例：正反器</a><a href="ch01-overview.html#sec-1-9">01 §1.9 邏輯層的功能模型</a></p>
+      </li>
+
+      <li data-chapters="ch03" data-zh="閂鎖器" data-en="latch">
+        <p><span class="term-zh">閂鎖器</span><span class="term-en">latch</span></p>
+        <p class="term-def">準位觸發的一位元儲存元件：控制訊號為真的期間輸出跟著輸入變化，為假時保持住值。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-25">03 §3.25 範例：正反器</a><a href="ch03-grammar.html#sec-3-18">03 §3.18 Verilog 的八種 Block</a></p>
+      </li>
+
+      <li data-chapters="ch03 ch04" data-zh="多工器" data-en="multiplexer">
+        <p><span class="term-zh">多工器</span><span class="term-en">multiplexer, MUX</span></p>
+        <p class="term-def">用選擇訊號從多個輸入中挑一個送到輸出的組合元件；ASM 圖裡的判斷分支就對應到多工器類的選擇電路。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-11">03 §3.11 RTL 由程式庫合成</a><a href="ch04-asm.html#sec-4-22">04 §4.22 ASM 元件對應到硬體</a></p>
+      </li>
+
+      <li data-chapters="ch04" data-zh="解多工器" data-en="demultiplexer">
+        <p><span class="term-zh">解多工器</span><span class="term-en">demultiplexer</span></p>
+        <p class="term-def">把一個輸入依選擇訊號送到多個輸出之一的組合元件；ASM 圖的判斷菱形在硬體上就是解多工器的角色。</p>
+        <p class="term-links">出現於：<a href="ch04-asm.html#sec-4-18">04 §4.18 流程圖對應到 ASM 圖的三條規則</a><a href="ch04-asm.html#sec-4-22">04 §4.22 ASM 元件對應到硬體</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch03" data-zh="組合邏輯" data-en="combinational logic">
+        <p><span class="term-zh">組合邏輯</span><span class="term-en">combinational logic</span></p>
+        <p class="term-def">輸出只由當前輸入決定、不含記憶的邏輯；可用真值表、布林式或卡諾圖完整描述。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-9">01 §1.9 邏輯層的功能模型</a><a href="ch03-grammar.html#sec-3-14">03 §3.14 內容順序與時序、可合成的範圍</a></p>
+      </li>
+
+      <li data-chapters="ch04 ch05" data-zh="循序邏輯" data-en="sequential logic">
+        <p><span class="term-zh">循序邏輯</span><span class="term-en">sequential logic</span></p>
+        <p class="term-def">輸出同時取決於輸入與內部狀態的邏輯；由組合邏輯加上儲存元件組成，可用狀態圖或狀態表描述。</p>
+        <p class="term-links">出現於：<a href="ch04-asm.html#sec-4-4">04 §4.4 循序電路的四種看法</a><a href="ch05-fsm.html#sec-5-1">05 §5.1 Huffman 模型</a></p>
+      </li>
+
+      <li data-chapters="ch03 ch05" data-zh="時脈" data-en="clock">
+        <p><span class="term-zh">時脈</span><span class="term-en">clock</span></p>
+        <p class="term-def">驅動同步電路前進的週期性訊號；Verilog 以 <code>posedge</code> / <code>negedge</code> 指定在哪個邊緣觸發。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-25">03 §3.25 範例：正反器</a><a href="ch05-fsm.html#sec-5-1">05 §5.1 Huffman 模型</a></p>
+      </li>
+
+      <li data-chapters="ch03 ch05" data-zh="同步與非同步" data-en="synchronous / asynchronous">
+        <p><span class="term-zh">同步與非同步</span><span class="term-en">synchronous / asynchronous</span></p>
+        <p class="term-def">同步是所有狀態改變都發生在時脈邊緣；非同步則不等時脈，訊號一到就作用（例如非同步重設）。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-26">03 §3.26 範例：計數器</a><a href="ch05-fsm.html#sec-5-15">05 §5.15 計數器型狀態機</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch02" data-zh="抽象層級" data-en="abstraction level">
+        <p><span class="term-zh">抽象層級</span><span class="term-en">abstraction level</span></p>
+        <p class="term-def">描述設計時的粗細程度，由高到低例如系統、演算法、暫存器、邏輯、開關、電路層；在 Y 圖上以同心圈表示，越外圈越抽象。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-6">01 §1.6 層級與觀點、Y 圖</a><a href="ch02-ychart.html#sec-2-9">02 §2.9 Y 圖與理想 EDA 流程</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch02" data-zh="觀點" data-en="view">
+        <p><span class="term-zh">觀點</span><span class="term-en">view</span></p>
+        <p class="term-def">看同一個設計的三種角度：行為、結構、實體；在 Y 圖上是三條軸。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-6">01 §1.6 層級與觀點、Y 圖</a><a href="ch02-ychart.html#sec-2-9">02 §2.9 Y 圖與理想 EDA 流程</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch02" data-zh="Y 圖" data-en="Y-chart">
+        <p><span class="term-zh">Y 圖</span><span class="term-en">Y-chart</span></p>
+        <p class="term-def">Gajski 提出的圖：三條軸是行為／結構／實體三種觀點，同心圈是抽象層級，EDA 工作則是在軸與圈之間移動的弧線。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-6">01 §1.6 層級與觀點、Y 圖</a><a href="ch02-ychart.html#sec-2-9">02 §2.9 Y 圖與理想 EDA 流程</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch02" data-zh="行為觀點" data-en="behavioral view">
+        <p><span class="term-zh">行為觀點</span><span class="term-en">behavioral view</span></p>
+        <p class="term-def">只描述「做什麼」：輸入到輸出的功能與時序關係，不指定用哪些元件實現。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-6">01 §1.6 層級與觀點、Y 圖</a><a href="ch03-grammar.html#sec-3-13">03 §3.13 什麼是「行為」</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch02" data-zh="結構觀點" data-en="structural view">
+        <p><span class="term-zh">結構觀點</span><span class="term-en">structural view</span></p>
+        <p class="term-def">描述「由什麼組成」：有哪些元件實體、它們之間怎麼接線，遞迴下去直到視為已知的基本元件。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-8">01 §1.8 結構模型</a><a href="ch02-ychart.html#sec-2-9">02 §2.9 Y 圖與理想 EDA 流程</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch02" data-zh="實體觀點" data-en="physical view">
+        <p><span class="term-zh">實體觀點</span><span class="term-en">physical view</span></p>
+        <p class="term-def">描述「長什麼樣、擺在哪」：幾何形狀、面積、位置與佈局繞線的結果。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-6">01 §1.6 層級與觀點、Y 圖</a><a href="ch02-ychart.html#sec-2-7">02 §2.7 由下而上合成八步</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch03" data-zh="暫存器轉移層" data-en="register transfer level">
+        <p><span class="term-zh">暫存器轉移層</span><span class="term-en">register transfer level, RTL</span></p>
+        <p class="term-def">以「在哪個時脈邊緣、把哪個運算結果搬進哪個暫存器」來描述設計的層級，是目前合成流程的主要輸入。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-10">01 §1.10 暫存器層的功能模型 RTL</a><a href="ch03-grammar.html#sec-3-11">03 §3.11 RTL 由程式庫合成</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch03" data-zh="閘級" data-en="gate level">
+        <p><span class="term-zh">閘級</span><span class="term-en">gate level</span></p>
+        <p class="term-def">以邏輯閘與接線描述電路的層級；Verilog 直接提供 <code>and</code>、<code>or</code>、<code>not</code> 等基本閘。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-8">01 §1.8 結構模型</a><a href="ch03-grammar.html#sec-3-10">03 §3.10 閘級設計範例與突波消除</a></p>
+      </li>
+
+      <li data-chapters="ch03" data-zh="開關級" data-en="switch level">
+        <p><span class="term-zh">開關級</span><span class="term-en">switch level</span></p>
+        <p class="term-def">以電晶體開關（<code>nmos</code>、<code>pmos</code>、<code>tranif1</code> 等）描述電路的層級，是 Verilog 四種模型中最接近實作的一種。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-9">03 §3.9 Verilog 的四種模型</a><a href="ch03-grammar.html#sec-3-8">03 §3.8 數位 IC 設計自動化的四個層次</a></p>
+      </li>
+
+      <li data-chapters="ch03 ch04" data-zh="行為模型" data-en="behavioral model">
+        <p><span class="term-zh">行為模型</span><span class="term-en">behavioral model</span></p>
+        <p class="term-def">用程序敘述（<code>always</code>、<code>initial</code>、迴圈、條件）直接寫出功能的模型，抽象度最高，不保證每一行都可合成。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-13">03 §3.13 什麼是「行為」</a><a href="ch04-asm.html#sec-4-2">04 §4.2 RTL 還是行為模型？</a></p>
+      </li>
+
+      <li data-chapters="ch02 ch03" data-zh="合成" data-en="synthesis">
+        <p><span class="term-zh">合成</span><span class="term-en">synthesis</span></p>
+        <p class="term-def">把較抽象的描述自動轉成較具體的結構，例如把 RTL 轉成程式庫裡的閘與正反器；在 Y 圖上是由行為軸走向結構軸的弧。</p>
+        <p class="term-links">出現於：<a href="ch02-ychart.html#sec-2-9">02 §2.9 Y 圖與理想 EDA 流程</a><a href="ch03-grammar.html#sec-3-11">03 §3.11 RTL 由程式庫合成</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch03" data-zh="模擬" data-en="simulation">
+        <p><span class="term-zh">模擬</span><span class="term-en">simulation</span></p>
+        <p class="term-def">在電腦上依事件推進時間、算出電路對一組輸入的反應，用來驗證設計是否符合預期。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-4">01 §1.4 主要 HDL 的定位與發展史</a><a href="ch03-grammar.html#sec-3-16">03 §3.16 電路時間與 CPU 時間、時間輪</a></p>
+      </li>
+
+      <li data-chapters="ch02 ch03" data-zh="測試平台" data-en="testbench / testfixture">
+        <p><span class="term-zh">測試平台</span><span class="term-en">testbench / testfixture</span></p>
+        <p class="term-def">只為模擬而寫、不必可合成的外圍模組：產生輸入訊號、實體化待測設計、觀察並檢查輸出。</p>
+        <p class="term-links">出現於：<a href="ch02-ychart.html#sec-2-3">02 §2.3 測試平台 Testbench 的概念</a><a href="ch03-grammar.html#sec-3-20">03 §3.20 命令列與監看輸出</a></p>
+      </li>
+
+      <li data-chapters="ch03" data-zh="敏感度列表" data-en="sensitivity list">
+        <p><span class="term-zh">敏感度列表</span><span class="term-en">sensitivity list</span></p>
+        <p class="term-def"><code>always @(…)</code> 括號裡的事件清單，列出哪些訊號變化（或哪個時脈邊緣）會觸發這個區塊重新執行。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-15">03 §3.15 Verilog 的事件</a><a href="ch03-grammar.html#sec-3-18">03 §3.18 Verilog 的八種 Block</a></p>
+      </li>
+
+      <li data-chapters="ch03" data-zh="阻塞指定" data-en="blocking assignment">
+        <p><span class="term-zh">阻塞指定</span><span class="term-en">blocking assignment</span></p>
+        <p class="term-def">寫成 <code>=</code> 的程序指定：立刻算出並立刻寫入，後面的敘述會看到新值，順序會影響結果。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-23">03 §3.23 阻塞與非阻塞的逐步比較</a><a href="ch03-grammar.html#sec-3-21">03 §3.21 三種指定敘述</a></p>
+      </li>
+
+      <li data-chapters="ch03" data-zh="非阻塞指定" data-en="non-blocking assignment">
+        <p><span class="term-zh">非阻塞指定</span><span class="term-en">non-blocking assignment</span></p>
+        <p class="term-def">寫成 <code>&lt;=</code> 的程序指定：先用舊值全部求值，到該時間點結束才全部寫入，所以同一個區塊內的敘述順序不影響結果。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-23">03 §3.23 阻塞與非阻塞的逐步比較</a><a href="ch03-grammar.html#sec-3-21">03 §3.21 三種指定敘述</a></p>
+      </li>
+
+      <li data-chapters="ch03" data-zh="連續指定" data-en="continuous assignment">
+        <p><span class="term-zh">連續指定</span><span class="term-en">continuous assignment</span></p>
+        <p class="term-def"><code>assign</code> 敘述：右式任一訊號變動就重算並持續驅動左邊的接線，相當於一塊永遠通電的組合邏輯。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-21">03 §3.21 三種指定敘述</a><a href="ch03-grammar.html#sec-3-10">03 §3.10 閘級設計範例與突波消除</a></p>
+      </li>
+
+      <li data-chapters="ch03" data-zh="事件驅動" data-en="event-driven">
+        <p><span class="term-zh">事件驅動</span><span class="term-en">event-driven</span></p>
+        <p class="term-def">模擬器的運作方式：只在有訊號變動（事件）時才計算受影響的部分，而不是每個時間點都重算全電路。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-15">03 §3.15 Verilog 的事件</a><a href="ch03-grammar.html#sec-3-16">03 §3.16 電路時間與 CPU 時間、時間輪</a></p>
+      </li>
+
+      <li data-chapters="ch03" data-zh="時間輪" data-en="time wheel">
+        <p><span class="term-zh">時間輪</span><span class="term-en">time wheel</span></p>
+        <p class="term-def">模擬器用來排程未來事件的環狀佇列：每個時間槽掛著該時刻要處理的事件，處理完就轉到下一槽。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-16">03 §3.16 電路時間與 CPU 時間、時間輪</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch05" data-zh="Huffman 模型" data-en="Huffman model">
+        <p><span class="term-zh">Huffman 模型</span><span class="term-en">Huffman model</span></p>
+        <p class="term-def">循序電路的標準結構：一塊組合邏輯加上回授的狀態儲存元件；M 個正反器最多給出 2<sup>M</sup> 個狀態。</p>
+        <p class="term-links">出現於：<a href="ch05-fsm.html#sec-5-1">05 §5.1 Huffman 模型</a><a href="ch01-overview.html#sec-1-9">01 §1.9 邏輯層的功能模型</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch05" data-zh="現在狀態與下一狀態" data-en="present state / next state">
+        <p><span class="term-zh">現在狀態與下一狀態</span><span class="term-en">present state / next state, PS/NS</span></p>
+        <p class="term-def">狀態表的兩個欄位：PS 是目前存在正反器裡的狀態，NS 是在這組輸入下、下個時脈邊緣要進入的狀態。</p>
+        <p class="term-links">出現於：<a href="ch05-fsm.html#sec-5-5">05 §5.5 轉移表、布林式與閘級實作</a><a href="ch01-overview.html#sec-1-9">01 §1.9 邏輯層的功能模型</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch05" data-zh="有限狀態機" data-en="finite state machine">
+        <p><span class="term-zh">有限狀態機</span><span class="term-en">finite state machine, FSM</span></p>
+        <p class="term-def">狀態數目有限的循序機器，用狀態、轉移條件與輸出三者描述；是控制電路最常用的模型。</p>
+        <p class="term-links">出現於：<a href="ch05-fsm.html#sec-5-2">05 §5.2 常見的有限狀態機</a><a href="ch01-overview.html#sec-1-9">01 §1.9 邏輯層的功能模型</a></p>
+      </li>
+
+      <li data-chapters="ch05" data-zh="Mealy 機" data-en="Mealy machine">
+        <p><span class="term-zh">Mealy 機</span><span class="term-en">Mealy machine</span></p>
+        <p class="term-def">輸出同時取決於現在狀態與當前輸入的狀態機；狀態圖上輸出標在轉移邊上。</p>
+        <p class="term-links">出現於：<a href="ch05-fsm.html#sec-5-3">05 §5.3 Mealy 與 Moore 的分類</a><a href="ch05-fsm.html#sec-5-4">05 §5.4 Mealy 範例：密碼鎖 1011</a></p>
+      </li>
+
+      <li data-chapters="ch05" data-zh="Moore 機" data-en="Moore machine">
+        <p><span class="term-zh">Moore 機</span><span class="term-en">Moore machine</span></p>
+        <p class="term-def">輸出只取決於現在狀態的狀態機；狀態圖上輸出標在狀態圈內。</p>
+        <p class="term-links">出現於：<a href="ch05-fsm.html#sec-5-3">05 §5.3 Mealy 與 Moore 的分類</a><a href="ch05-fsm.html#sec-5-7">05 §5.7 Moore 範例：Recent Ones</a></p>
+      </li>
+
+      <li data-chapters="ch04" data-zh="演算法狀態機" data-en="algorithmic state machine">
+        <p><span class="term-zh">演算法狀態機</span><span class="term-en">algorithmic state machine, ASM</span></p>
+        <p class="term-def">把演算法直接對應成硬體的設計法：虛擬碼 → 流程圖 → ASM 圖 → 定序器加資料路徑，共四個步驟。</p>
+        <p class="term-links">出現於：<a href="ch04-asm.html#sec-4-15">04 §4.15 演算法狀態機 (ASM) 與四步設計流程</a></p>
+      </li>
+
+      <li data-chapters="ch04" data-zh="ASM 圖" data-en="ASM chart">
+        <p><span class="term-zh">ASM 圖</span><span class="term-en">ASM chart</span></p>
+        <p class="term-def">由流程圖轉換而來、每個狀態剛好佔一個時脈週期的圖；轉換時要處理寫後讀相依、合併狀態與插入虛擬狀態。</p>
+        <p class="term-links">出現於：<a href="ch04-asm.html#sec-4-18">04 §4.18 流程圖對應到 ASM 圖的三條規則</a><a href="ch04-asm.html#sec-4-21">04 §4.21 流程圖 → ASM 圖對照</a></p>
+      </li>
+
+      <li data-chapters="ch04" data-zh="一熱碼定序器" data-en="one-hot sequencer">
+        <p><span class="term-zh">一熱碼定序器</span><span class="term-en">one-hot sequencer</span></p>
+        <p class="term-def">每個狀態配一個正反器、同時只有一個為 1 的控制器；ASM 圖的狀態方塊可以一對一直接對應過來。</p>
+        <p class="term-links">出現於：<a href="ch04-asm.html#sec-4-23">04 §4.23 對應到狀態定序器</a><a href="ch04-asm.html#sec-4-22">04 §4.22 ASM 元件對應到硬體</a></p>
+      </li>
+
+      <li data-chapters="ch04" data-zh="資料路徑" data-en="datapath">
+        <p><span class="term-zh">資料路徑</span><span class="term-en">datapath</span></p>
+        <p class="term-def">負責真正搬資料與做運算的部分（暫存器、加法器、移位器、多工器），由控制器發出的控制訊號指揮。</p>
+        <p class="term-links">出現於：<a href="ch04-asm.html#sec-4-24">04 §4.24 對應到 ALU / 資料路徑</a><a href="ch04-asm.html#sec-4-25">04 §4.25 完整設計：控制器 + 資料路徑</a></p>
+      </li>
+
+      <li data-chapters="ch04" data-zh="關鍵路徑" data-en="critical path">
+        <p><span class="term-zh">關鍵路徑</span><span class="term-en">critical path</span></p>
+        <p class="term-def">組合邏輯中延遲最長的那條路徑，決定了電路能跑多快（最短的時脈週期）。</p>
+        <p class="term-links">出現於：<a href="ch04-asm.html#sec-4-28">04 §4.28 面積與時間的取捨</a></p>
+      </li>
+
+      <li data-chapters="ch01" data-zh="扇出" data-en="fanout">
+        <p><span class="term-zh">扇出</span><span class="term-en">fanout</span></p>
+        <p class="term-def">一個閘的輸出同時接到幾個後級輸入；扇出數影響負載與延遲，也是結構性質之一。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-8">01 §1.8 結構模型</a></p>
+      </li>
+
+      <li data-chapters="ch01" data-zh="主幹" data-en="stem">
+        <p><span class="term-zh">主幹</span><span class="term-en">stem</span></p>
+        <p class="term-def">扇出到多個後級的那條輸出線（分枝的源頭）；投影片以 G3 同時餵給三個閘為例。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-8">01 §1.8 結構模型</a></p>
+      </li>
+
+      <li data-chapters="ch01" data-zh="重匯合扇出" data-en="reconvergent fanout">
+        <p><span class="term-zh">重匯合扇出</span><span class="term-en">reconvergent fanout</span></p>
+        <p class="term-def">從同一個主幹分出去的多條路徑，在後面又匯回同一個閘；這種結構會造成突波，也讓測試與分析變困難。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-8">01 §1.8 結構模型</a></p>
+      </li>
+
+      <li data-chapters="ch03" data-zh="突波" data-en="hazard / glitch">
+        <p><span class="term-zh">突波</span><span class="term-en">hazard / glitch</span></p>
+        <p class="term-def">輸入轉態瞬間因路徑延遲不同而出現的短暫錯誤脈衝；補上一致項（例如 <code>B&amp;C</code>）可以消掉它。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-10">03 §3.10 閘級設計範例與突波消除</a></p>
+      </li>
+
+      <li data-chapters="ch01" data-zh="二元決策圖" data-en="binary decision diagram">
+        <p><span class="term-zh">二元決策圖</span><span class="term-en">BDD / ROBDD</span></p>
+        <p class="term-def">用一連串變數分枝表示布林函數的有向圖；化簡並固定變數順序後得到 ROBDD，可當成函數的標準表示法。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-9">01 §1.9 邏輯層的功能模型</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch02" data-zh="真值表" data-en="truth table">
+        <p><span class="term-zh">真值表</span><span class="term-en">truth table</span></p>
+        <p class="term-def">把所有輸入組合與對應輸出逐列列出的表；n 個輸入就有 2<sup>n</sup> 列，所以大電路無法用它描述。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-9">01 §1.9 邏輯層的功能模型</a><a href="ch02-ychart.html#sec-2-5">02 §2.5 為什麼不能全部攤平</a></p>
+      </li>
+
+      <li data-chapters="ch01" data-zh="基本立方體" data-en="primitive cube">
+        <p><span class="term-zh">基本立方體</span><span class="term-en">primitive cube</span></p>
+        <p class="term-def">把真值表壓縮後的表示法：用「不在意 (x)」合併多列，一列代表一群輸入組合。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-9">01 §1.9 邏輯層的功能模型</a></p>
+      </li>
+
+      <li data-chapters="ch03" data-zh="卡諾圖" data-en="Karnaugh map">
+        <p><span class="term-zh">卡諾圖</span><span class="term-en">Karnaugh map</span></p>
+        <p class="term-def">把真值表排成相鄰格只差一個位元的方格圖，用圈選相鄰格的方式化簡布林式、看出突波來源。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-10">03 §3.10 閘級設計範例與突波消除</a></p>
+      </li>
+
+      <li data-chapters="ch05" data-zh="邊界掃描" data-en="boundary scan">
+        <p><span class="term-zh">邊界掃描</span><span class="term-en">boundary scan</span></p>
+        <p class="term-def">在晶片每個接腳旁加一個掃描單元串成一條鏈，讓外部可以經由少數接腳觀察與驅動接腳狀態，用於板級測試。</p>
+        <p class="term-links">出現於：<a href="ch05-fsm.html#sec-5-9">05 §5.9 JTAG 與邊界掃描</a><a href="ch05-fsm.html#sec-5-11">05 §5.11 基本邊界掃描單元</a></p>
+      </li>
+
+      <li data-chapters="ch05" data-zh="JTAG / IEEE 1149.1" data-en="JTAG / IEEE 1149.1">
+        <p><span class="term-zh">JTAG / IEEE 1149.1</span><span class="term-en">JTAG / IEEE 1149.1</span></p>
+        <p class="term-def">邊界掃描的標準介面，額外用四支接腳 TMS、TCK、TDI、TDO 控制測試流程。</p>
+        <p class="term-links">出現於：<a href="ch05-fsm.html#sec-5-9">05 §5.9 JTAG 與邊界掃描</a><a href="ch05-fsm.html#sec-5-10">05 §5.10 晶片層的 1149.1 架構</a></p>
+      </li>
+
+      <li data-chapters="ch05" data-zh="TAP 控制器" data-en="TAP controller">
+        <p><span class="term-zh">TAP 控制器</span><span class="term-en">TAP controller, TAPC</span></p>
+        <p class="term-def">IEEE 1149.1 的 16 狀態控制器，只看 TMS 決定轉移；連續五個 1 一定回到 TestReset。</p>
+        <p class="term-links">出現於：<a href="ch05-fsm.html#sec-5-12">05 §5.12 TAP 控制器：抽象狀態圖</a><a href="ch05-fsm.html#sec-5-13">05 §5.13 TAP 控制器：完整 16 狀態</a></p>
+      </li>
+
+      <li data-chapters="ch05" data-zh="環形計數器" data-en="ring counter">
+        <p><span class="term-zh">環形計數器</span><span class="term-en">ring counter</span></p>
+        <p class="term-def">把移位暫存器的輸出接回輸入、只有一個 1 在環上繞的計數器；N 級給 N 個狀態，天然是一熱碼。</p>
+        <p class="term-links">出現於：<a href="ch05-fsm.html#sec-5-15">05 §5.15 計數器型狀態機</a></p>
+      </li>
+
+      <li data-chapters="ch05" data-zh="Johnson 計數器" data-en="Johnson counter">
+        <p><span class="term-zh">Johnson 計數器</span><span class="term-en">Johnson counter</span></p>
+        <p class="term-def">回授時先反相的環形計數器（扭環計數器）；N 級可以得到 2N 個狀態。</p>
+        <p class="term-links">出現於：<a href="ch05-fsm.html#sec-5-15">05 §5.15 計數器型狀態機</a></p>
+      </li>
+
+      <li data-chapters="ch05" data-zh="線性反饋移位暫存器" data-en="linear feedback shift register">
+        <p><span class="term-zh">線性反饋移位暫存器</span><span class="term-en">linear feedback shift register, LFSR</span></p>
+        <p class="term-def">以 XOR 回授的移位暫存器，能用很少的硬體產生近似隨機的長循環序列，常用於測試圖樣產生。</p>
+        <p class="term-links">出現於：<a href="ch05-fsm.html#sec-5-15">05 §5.15 計數器型狀態機</a></p>
+      </li>
+
+      <li data-chapters="ch03 ch05" data-zh="除頻器" data-en="frequency divider">
+        <p><span class="term-zh">除頻器</span><span class="term-en">frequency divider</span></p>
+        <p class="term-def">用計數器把高頻時脈分出低頻訊號的電路，例如把開發板的 50 MHz 時脈降成人眼看得見的閃爍頻率。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-27">03 §3.27 Lab03 七段顯示器與除頻器</a><a href="ch05-fsm.html#sec-5-18">05 §5.18 Lab05 按鈕計時器</a></p>
+      </li>
+
+      <li data-chapters="ch03" data-zh="七段顯示器" data-en="7-segment display">
+        <p><span class="term-zh">七段顯示器</span><span class="term-en">7-segment display</span></p>
+        <p class="term-def">由七段（常再加小數點）發光段組成的數字顯示元件，需要一個解碼器把二進位值轉成各段的亮暗。</p>
+        <p class="term-links">出現於：<a href="ch03-grammar.html#sec-3-27">03 §3.27 Lab03 七段顯示器與除頻器</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch02" data-zh="FPGA / SoPC" data-en="FPGA / SoPC">
+        <p><span class="term-zh">FPGA / SoPC</span><span class="term-en">FPGA / SoPC</span></p>
+        <p class="term-def">可現場燒寫邏輯的可程式元件；在它上面再放進處理器與周邊，就成為可程式晶片系統 (SoPC)。本課程用的 DE0 開發板屬於這一類。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-11">01 §1.11 工具安裝與本課程工具</a><a href="ch02-ychart.html#sec-2-10">02 §2.10 EDA 工具地圖的四種切法</a></p>
+      </li>
+
+      <li data-chapters="ch01 ch03" data-zh="程式庫" data-en="library">
+        <p><span class="term-zh">程式庫</span><span class="term-en">library</span></p>
+        <p class="term-def">可重複使用的模組集合；投影片以「一個程式庫是一片森林、每個模組是一棵樹」比喻檔案與階層的關係。</p>
+        <p class="term-links">出現於：<a href="ch01-overview.html#sec-1-12">01 §1.12 Verilog 檔案與模組的外觀</a><a href="ch03-grammar.html#sec-3-11">03 §3.11 RTL 由程式庫合成</a></p>
+      </li>
+
+      <li data-chapters="ch02 ch03" data-zh="標準單元" data-en="standard cell">
+        <p><span class="term-zh">標準單元</span><span class="term-en">standard cell</span></p>
+        <p class="term-def">製程廠提供的固定高度、已繞好內部的基本元件（閘、正反器）；合成與佈局繞線都以它為單位。</p>
+        <p class="term-links">出現於：<a href="ch02-ychart.html#sec-2-7">02 §2.7 由下而上合成八步</a><a href="ch03-grammar.html#sec-3-11">03 §3.11 RTL 由程式庫合成</a></p>
+      </li>
+
+    </ul>
+
+    <p class="progress-note">
+      小節連結指向各章頁面的小節 id（格式 <code>#sec-章-節</code>，例如 <code>#sec-3-23</code> 是第 3 章 §3.23）。
+    </p>
+
+    <nav class="pager" aria-label="頁面導覽">
+      <a href="index.html"><span class="pager-label">回到</span>課程首頁</a>
+      <a href="ch05-fsm.html"><span class="pager-label">上一章</span>05 有限狀態機 (FSM)</a>
+    </nav>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p>內容整理自 2022 秋季「Hardware Description Language -- Logic Design using Verilog」課程投影片（黃宗柱 / Tsung-Chu Huang，彰師大電子系）。術語定義為本網站為方便複習而撰寫的摘要。</p>
+  </div>
+</footer>
+
+<script>
+/* 術語表的篩選與排序：純原生 JS，無外部依賴 */
+(function () {
+  'use strict';
+  var list = document.getElementById('glossary-list');
+  var counter = document.getElementById('glossary-count');
+  if (!list) { return; }
+
+  var items = [];
+  for (var i = 0; i < list.children.length; i++) { items.push(list.children[i]); }
+
+  var state = { chapter: 'all', sort: 'doc' };
+
+  function setPressed(selector, attr, value) {
+    var buttons = document.querySelectorAll(selector);
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].setAttribute('aria-pressed',
+        buttons[i].getAttribute(attr) === value ? 'true' : 'false');
+    }
+  }
+
+  function apply() {
+    var ordered = items.slice();
+    if (state.sort === 'zh') {
+      ordered.sort(function (a, b) {
+        return String(a.getAttribute('data-zh')).localeCompare(String(b.getAttribute('data-zh')), 'zh-Hant');
+      });
+    } else if (state.sort === 'en') {
+      ordered.sort(function (a, b) {
+        var x = String(a.getAttribute('data-en')).toLowerCase();
+        var y = String(b.getAttribute('data-en')).toLowerCase();
+        return x < y ? -1 : (x > y ? 1 : 0);
+      });
+    }
+    var shown = 0;
+    for (var i = 0; i < ordered.length; i++) {
+      list.appendChild(ordered[i]);
+      var chapters = ' ' + String(ordered[i].getAttribute('data-chapters')) + ' ';
+      var visible = (state.chapter === 'all') || (chapters.indexOf(' ' + state.chapter + ' ') >= 0);
+      ordered[i].hidden = !visible;
+      if (visible) { shown++; }
+    }
+    counter.textContent = '顯示 ' + shown + ' / ' + items.length + ' 個詞條';
+  }
+
+  var filterButtons = document.querySelectorAll('[data-filter]');
+  for (var f = 0; f < filterButtons.length; f++) {
+    filterButtons[f].addEventListener('click', function (ev) {
+      state.chapter = ev.currentTarget.getAttribute('data-filter');
+      setPressed('[data-filter]', 'data-filter', state.chapter);
+      apply();
+    });
+  }
+
+  var sortButtons = document.querySelectorAll('[data-sort]');
+  for (var s = 0; s < sortButtons.length; s++) {
+    sortButtons[s].addEventListener('click', function (ev) {
+      state.sort = ev.currentTarget.getAttribute('data-sort');
+      setPressed('[data-sort]', 'data-sort', state.sort);
+      apply();
+    });
+  }
+
+  apply();
+}());
+</script>
+<script src="js/code.js"></script>
+</body>
+</html>

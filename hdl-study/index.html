@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>硬體描述語言 HDL 學習網站 — 課程首頁</title>
+<meta name="description" content="離線可用的硬體描述語言 (HDL) 學習網站，內容整理自 2022 秋季「Hardware Description Language -- Logic Design using Verilog」五份投影片。">
+<link rel="stylesheet" href="css/site.css">
+<script src="js/site.js"></script>
+</head>
+<body>
+<a class="skiplink" href="#main">跳到主要內容</a>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="index.html">硬體描述語言 (HDL) 學習網站<span>Logic Design using Verilog ・ 離線版</span></a>
+    <nav class="site-nav" aria-label="主導覽">
+      <ul>
+        <li><a href="index.html" aria-current="page">首頁</a></li>
+        <li><a href="ch01-overview.html">01 Overview</a></li>
+        <li><a href="ch02-ychart.html">02 Y 圖</a></li>
+        <li><a href="ch03-grammar.html">03 基本語法</a></li>
+        <li><a href="ch04-asm.html">04 ASM</a></li>
+        <li><a href="ch05-fsm.html">05 FSM</a></li>
+        <li><a href="glossary.html">術語表</a></li>
+      </ul>
+    </nav>
+    <div class="header-tools">
+      <button type="button" class="btn btn-sm" data-action="toggle-theme" aria-pressed="false">
+        <span data-theme-label>深色模式：關</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="layout layout-wide">
+  <main id="main">
+    <h1>硬體描述語言 (HDL) — Logic Design using Verilog</h1>
+
+    <section aria-labelledby="course-info">
+      <h2 id="course-info">課程資訊</h2>
+      <p>
+        本網站的全部內容整理自五份課程投影片，講題為
+        <strong>Hardware Description Language</strong>（副標 <code>-- Logic Design using Verilog</code>），
+        授課者 <strong>黃宗柱 (Tsung-Chu Huang)</strong>，國立彰化師範大學電子工程系
+        (Dept. of Electronic Eng., National Changhua University of Education)，
+        2022 年秋季班，投影片頁尾標記 <code>HDL　T.-C. Huang / NCUE　Fall 2022</code>。
+        <span class="srcref">投影片 p.1（五份共同封面）</span>
+      </p>
+      <p>
+        五章合計 177 張投影片：01 Overview 42 張、02 Y-chart 22 張、03 Basic Grammar 38 張、
+        04 ASM 51 張、05 FSM 24 張。網站把每一張投影片都放進對應的小節，並在每個小節標上
+        <span class="srcref">投影片 p.N</span> 出處標籤。
+      </p>
+    </section>
+
+    <section aria-labelledby="chapters">
+      <h2 id="chapters">五個章節</h2>
+      <p>建議依序閱讀；估計閱讀時間合計約 260 分鐘。</p>
+      <ul class="cards">
+        <li class="card" data-chapter-card="ch01">
+          <span class="card-num">第 01 章 ・ 42 張投影片</span>
+          <h3><a href="ch01-overview.html">01 Overview — HDL 的全貌</a></h3>
+          <p>HDL 的全貌：示意圖與文字、Y 圖的層級與觀點、結構模型與功能模型。</p>
+          <div class="card-meta">
+            <span>估計閱讀 60 分</span>
+            <span class="badge" data-badge>尚未開始</span>
+          </div>
+        </li>
+        <li class="card" data-chapter-card="ch02">
+          <span class="card-num">第 02 章 ・ 22 張投影片</span>
+          <h3><a href="ch02-ychart.html">02 Y-chart — 階層設計與 Y 圖</a></h3>
+          <p>階層設計與 Y 圖：由上而下分解、由下而上合成、EDA 工具在 Y 圖上的位置。</p>
+          <div class="card-meta">
+            <span>估計閱讀 35 分</span>
+            <span class="badge" data-badge>尚未開始</span>
+          </div>
+        </li>
+        <li class="card" data-chapter-card="ch03">
+          <span class="card-num">第 03 章 ・ 38 張投影片</span>
+          <h3><a href="ch03-grammar.html">03 Basic Grammar — Verilog 基本語法</a></h3>
+          <p>Verilog 基本語法：資料型別、運算子、模組與實體、四種模型、八種 block、阻塞與非阻塞。</p>
+          <div class="card-meta">
+            <span>估計閱讀 55 分</span>
+            <span class="badge" data-badge>尚未開始</span>
+          </div>
+        </li>
+        <li class="card" data-chapter-card="ch04">
+          <span class="card-num">第 04 章 ・ 51 張投影片</span>
+          <h3><a href="ch04-asm.html">04 ASM — 演算法狀態機</a></h3>
+          <p>演算法狀態機 (ASM)：流程圖 → ASM 圖 → 定序器與資料路徑，主例為位移相加乘法器。</p>
+          <div class="card-meta">
+            <span>估計閱讀 70 分</span>
+            <span class="badge" data-badge>尚未開始</span>
+          </div>
+        </li>
+        <li class="card" data-chapter-card="ch05">
+          <span class="card-num">第 05 章 ・ 24 張投影片</span>
+          <h3><a href="ch05-fsm.html">05 FSM — 有限狀態機</a></h3>
+          <p>有限狀態機 (FSM)：Mealy/Moore、狀態表、JTAG TAP 控制器、計數器型狀態機。</p>
+          <div class="card-meta">
+            <span>估計閱讀 40 分</span>
+            <span class="badge" data-badge>尚未開始</span>
+          </div>
+        </li>
+      </ul>
+      <p><a href="glossary.html">全站術語表</a>彙整五章的中英術語，每個詞條都回連到出現它的章節小節。</p>
+    </section>
+
+    <section aria-labelledby="howto">
+      <h2 id="howto">如何使用本網站</h2>
+      <ul>
+        <li><strong>完全離線。</strong>整個網站是純 HTML、CSS 與原生 JavaScript，沒有任何網路請求，直接用瀏覽器開啟檔案即可使用，也可以整個資料夾複製帶走。</li>
+        <li><strong>進度存在本機。</strong>章節完成勾選與測驗最佳分數存在這台電腦的瀏覽器儲存空間 (localStorage)，不會上傳；換瀏覽器或清除瀏覽資料後就會歸零。</li>
+        <li><strong><span class="srcref">投影片 p.N</span> 是出處標籤</strong>，代表該段落的內容來自原始投影片的第 N 張。每一章的每一張投影片都有對應段落。</li>
+        <li><strong>「補充說明」是投影片以外的內容。</strong>凡是標成「ⓘ 補充說明」的區塊，都是為了把投影片講清楚而補上的正確但額外的說明，不是投影片原文。</li>
+        <li><strong>「⚠ 投影片原文的瑕疵」照原文呈現。</strong>投影片本身的錯字、不合法語法或前後不一致，網站一律照抄原文並加上標示，不會偷偷改掉，必要時在旁邊的「補充說明」給出正確寫法。</li>
+        <li><strong>程式碼一字不改。</strong>所有程式碼區塊都照抄投影片原文（包含全形引號 <code>’</code>、Tab 與大小寫瑕疵），右上角的「複製」按鈕複製的也是原文。</li>
+        <li><strong>鍵盤可以走完全站。</strong>用 Tab 移動、Enter/Space 操作，所有互動元件（目錄折疊、步進器、狀態機、測驗）都支援鍵盤，焦點位置一律有外框。</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="reset">
+      <h2 id="reset">重設學習進度</h2>
+      <p>下面的按鈕會清除全部五章的完成狀態與最佳測驗分數。為了避免誤觸，需要連按兩次確認。</p>
+      <div class="btn-row">
+        <button type="button" class="btn" data-action="reset-progress">重設學習進度</button>
+      </div>
+      <p class="progress-note" data-reset-status role="status" aria-live="polite"></p>
+    </section>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p>內容整理自 2022 秋季「Hardware Description Language -- Logic Design using Verilog」課程投影片（黃宗柱 / Tsung-Chu Huang，彰師大電子系）。本網站僅供個人學習使用。</p>
+    <p>離線靜態網站 ・ 無網路依賴 ・ 進度只存在本機瀏覽器。</p>
+  </div>
+</footer>
+
+<script src="js/code.js"></script>
+</body>
+</html>

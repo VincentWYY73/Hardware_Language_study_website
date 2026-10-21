@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 FSM — 有限狀態機、JTAG TAP 控制器 ｜ 硬體描述語言 HDL 學習網站</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+.svg-plain .box { fill: #fff; stroke: #5b6472; stroke-width: 2; }
+.svg-plain text { font-size: 13px; fill: #1f2430; }
+.svg-plain .edge { stroke: #8a93a3; stroke-width: 2.5; fill: none; }
+.svg-plain .cloud { fill: #e8f6e2; stroke: #4a7c2f; stroke-width: 2; }
+.svg-plain .reg { fill: #e3f0ff; stroke: #1565c0; stroke-width: 2; }
+.svg-plain .accent { stroke: #b36b00; stroke-width: 3.5; }
+.svg-plain .accent-text { fill: #8a5200; font-weight: 700; }
+.svg-plain .lbl-br { font-size: 12px; font-weight: 700; fill: #4a5362; paint-order: stroke; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; }
+.svg-plain .lbl-hot { fill: #a0246b; }
+/* FSM 狀態節點：目前狀態以粗框＋底色＋文字標記三重標示，不只靠顏色 */
+.fsm .st circle { fill: #fff; stroke: #5b6472; stroke-width: 2.5; }
+.fsm .st text { font-size: 13px; fill: #1f2430; }
+.fsm .st .code { font-size: 15px; font-weight: 700; }
+.fsm .st.is-now circle { fill: #ffe9b8; stroke: #b36b00; stroke-width: 5; }
+.fsm .st.is-now text { font-weight: 700; }
+.fsm .edge.is-now { stroke: #b36b00; stroke-width: 5; }
+[data-theme="dark"] .svg-plain .box { fill: #222733; stroke: #9aa4b4; }
+[data-theme="dark"] .svg-plain text { fill: #e7ebf2; }
+[data-theme="dark"] .svg-plain .cloud { fill: #1d3317; }
+[data-theme="dark"] .svg-plain .reg { fill: #14283d; }
+[data-theme="dark"] .svg-plain .accent { stroke: #ffc34d; }
+[data-theme="dark"] .svg-plain .accent-text { fill: #ffc34d; }
+[data-theme="dark"] .svg-plain .lbl-br { fill: #b9c2d0; stroke: #171b23; }
+[data-theme="dark"] .svg-plain .lbl-hot { fill: #f2a0c8; }
+[data-theme="dark"] .fsm .st circle { fill: #222733; stroke: #9aa4b4; }
+[data-theme="dark"] .fsm .st text { fill: #e7ebf2; }
+[data-theme="dark"] .fsm .st.is-now circle { fill: #5a4412; stroke: #ffc34d; }
+[data-theme="dark"] .fsm .edge.is-now { stroke: #ffc34d; }
+.fsm-panel { border: 2px solid; border-color: rgba(128,128,128,.35); border-radius: 8px; padding: .8rem 1rem; margin: 1rem 0; }
+.fsm-controls { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin-bottom: .6rem; }
+.fsm-readout { font-family: Consolas, "Cascadia Code", monospace; word-break: break-all; }
+.fsm-tape { font-family: Consolas, "Cascadia Code", monospace; font-size: 1.1rem; letter-spacing: .15em; }
+.fsm-hit { font-weight: 700; }
+.cmp-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 1rem 0; }
+@media (min-width: 900px) { .cmp-grid { grid-template-columns: 1fr 1fr; } }
+.cmp-grid > div { min-width: 0; }
+</style>
+<script src="js/site.js"></script>
+</head>
+<body data-chapter="ch05">
+<a class="skiplink" href="#main">跳到主要內容</a>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="index.html">硬體描述語言 (HDL) 學習網站<span>Logic Design using Verilog ・ 離線版</span></a>
+    <nav class="site-nav" aria-label="主導覽">
+      <ul>
+        <li><a href="index.html">首頁</a></li>
+        <li><a href="ch01-overview.html">01 Overview</a></li>
+        <li><a href="ch02-ychart.html">02 Y 圖</a></li>
+        <li><a href="ch03-grammar.html">03 基本語法</a></li>
+        <li><a href="ch04-asm.html">04 ASM</a></li>
+        <li><a href="ch05-fsm.html" aria-current="page">05 FSM</a></li>
+        <li><a href="glossary.html">術語表</a></li>
+      </ul>
+    </nav>
+    <div class="header-tools">
+      <button type="button" class="btn btn-sm" data-action="toggle-theme" aria-pressed="false">
+        <span data-theme-label>深色模式：關</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc" data-toc aria-labelledby="toc-heading">
+    <h2 id="toc-heading">本章目錄</h2>
+    <div class="toc-tools">
+      <button type="button" class="btn btn-sm" data-toc-action="expand">全部展開</button>
+      <button type="button" class="btn btn-sm" data-toc-action="collapse">全部收起</button>
+    </div>
+    <details class="toc-group" open>
+      <summary>小節（24 張投影片）</summary>
+      <ol class="toc-list">
+        <li><a href="#sec-5-1">5.1 Huffman 模型</a></li>
+        <li><a href="#sec-5-2">5.2 常見的有限狀態機</a></li>
+        <li><a href="#sec-5-3">5.3 Mealy 與 Moore 的分類</a></li>
+        <li><a href="#sec-5-4">5.4 Mealy 範例：密碼鎖 1011</a></li>
+        <li><a href="#sec-5-5">5.5 轉移表、布林式與閘級實作</a></li>
+        <li><a href="#sec-5-6">5.6 Mealy 的 Verilog 寫法</a></li>
+        <li><a href="#sec-5-7">5.7 Moore 範例：Recent Ones</a></li>
+        <li><a href="#sec-5-8">5.8 Moore 的 Verilog 寫法</a></li>
+        <li><a href="#sec-5-9">5.9 JTAG 與邊界掃描</a></li>
+        <li><a href="#sec-5-10">5.10 晶片層的 1149.1 架構</a></li>
+        <li><a href="#sec-5-11">5.11 基本邊界掃描單元</a></li>
+        <li><a href="#sec-5-12">5.12 TAP 控制器：抽象狀態圖</a></li>
+        <li><a href="#sec-5-13">5.13 TAP 控制器：完整 16 狀態</a></li>
+        <li><a href="#sec-5-14">5.14 邊界掃描練習與作業</a></li>
+        <li><a href="#sec-5-15">5.15 計數器型狀態機</a></li>
+        <li><a href="#sec-5-16">5.16 多週期狀態的轉換</a></li>
+        <li><a href="#sec-5-17">5.17 範例：基本交通號誌</a></li>
+        <li><a href="#sec-5-18">5.18 Lab05 按鈕計時器</a></li>
+      </ol>
+    </details>
+    <details class="toc-group" open>
+      <summary>本章結尾</summary>
+      <ul class="toc-list">
+        <li><a href="#takeaways">重點整理</a></li>
+        <li><a href="#terms">關鍵術語</a></li>
+        <li><a href="#quiz">自我測驗</a></li>
+      </ul>
+    </details>
+  </nav>
+
+  <main id="main">
+    <h1>05 FSM — 有限狀態機、JTAG TAP 控制器</h1>
+    <p>Mealy 與 Moore、狀態表、JTAG TAP 控制器、計數器型狀態機。原始投影片 24 張，估計閱讀 40 分鐘。</p>
+
+    <section class="chapter-section" id="objectives">
+      <h2>學習目標</h2>
+      <ul>
+        <li>用 <strong>Huffman 模型</strong>說明同步 FSM 的結構，並說出 PI／PO／PPI／PPO 四組訊號。</li>
+        <li>準確分辨 <strong>Mealy</strong> 與 <strong>Moore</strong> 機：輸出相依於什麼、電路結構差在哪、狀態圖怎麼標。</li>
+        <li>自己追蹤 1011 序列偵測器的狀態轉移，並說明為什麼它是「可重疊」的偵測器。</li>
+        <li>把狀態圖寫成轉移表，再寫成標準的兩段式 Verilog（現態／次態）。</li>
+        <li>說明 <strong>JTAG／IEEE 1149.1</strong> 邊界掃描要解決什麼問題，並讀懂 TAP 控制器的 16 狀態圖。</li>
+        <li>說出環形、強生、LFSR 三種移位計數器的差別與用途。</li>
+        <li>用「共用計數器 + 比較器」取代一長串等待狀態。</li>
+      </ul>
+    </section>
+
+    <section class="chapter-section" id="sec-5-1">
+      <h2>5.1 Huffman 模型</h2>
+      <p><span class="srcref" data-slides="1,2">投影片 p.1–2</span></p>
+      <p>本章封面日期 2022/10/13，是 Lec. 05「Exam, FSM」。副標為 <code>Single Clock, Synchronous, DFF-based</code>（單一時脈、同步、以 D 型正反器為基礎）。</p>
+      <p>這張圖與第 01 章 §1.9 是同一張。它是整章的骨架：<strong>任何同步 FSM 都可以切成「一塊組合邏輯」加「一排正反器」。</strong></p>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 520 320" role="img" aria-labelledby="hf5-title hf5-desc">
+          <title id="hf5-title">p.2 的 Huffman 模型</title>
+          <desc id="hf5-desc">中央是組合邏輯電路，左側主要輸入 X 寬度 L 進入，右側主要輸出 Z 寬度 N 離開。下方四個 D 型正反器由 Clk 驅動。組合邏輯的輸出經寬度 M 的 Y 進入正反器的 D 端，稱為偽主要輸出與次態；正反器的 Q 端經寬度 M 的 y 回授到組合邏輯，稱為偽主要輸入與現態。狀態數 S 小於或等於 2 的 M 次方。</desc>
+          <rect class="cloud" x="140" y="40" width="240" height="96" rx="38"></rect>
+          <text x="260" y="94" text-anchor="middle">Combinational Circuit</text>
+          <path class="edge" d="M40 88 L138 88"></path>
+          <text x="34" y="74" text-anchor="middle">X /L</text>
+          <text x="34" y="112" text-anchor="middle">PI</text>
+          <path class="edge" d="M382 88 L480 88"></path>
+          <text x="486" y="74" text-anchor="end">Z /N</text>
+          <text x="486" y="112" text-anchor="end">PO</text>
+          <rect class="reg" x="190" y="216" width="140" height="56" rx="4"></rect>
+          <text x="260" y="250" text-anchor="middle">4 × DFF</text>
+          <path class="edge" d="M260 300 L260 274"></path>
+          <text x="268" y="300">Clk</text>
+          <path class="edge accent" d="M356 138 L356 190 L318 190 L318 214"></path>
+          <text x="364" y="178">Y / NS</text>
+          <text x="364" y="198">PPO /M</text>
+          <path class="edge accent" d="M202 214 L202 190 L164 190 L164 138"></path>
+          <text x="156" y="178" text-anchor="end">y / PS</text>
+          <text x="156" y="198" text-anchor="end">PPI /M</text>
+          <text class="accent-text" x="404" y="258">S ≤ 2^M</text>
+        </svg>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>p.2 的四組訊號（照錄投影片的圖例）</caption>
+          <thead><tr><th scope="col">縮寫</th><th scope="col">全名</th><th scope="col">符號</th><th scope="col">寬度</th></tr></thead>
+          <tbody>
+            <tr><td>PI</td><td>Primary Inputs（主要輸入）</td><td><code>X</code></td><td><code>L</code></td></tr>
+            <tr><td>PO</td><td>Primary Outputs（主要輸出）</td><td><code>Z</code></td><td><code>N</code></td></tr>
+            <tr><td>PPI / PS</td><td>Pseudo PI / Present State（現態）</td><td><code>y</code></td><td><code>M</code></td></tr>
+            <tr><td>PPO / NS</td><td>Pseudo PO / Next State（次態）</td><td><code>Y</code></td><td><code>M</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>右下的方程式 <strong>State Count S ≤ 2<sup>M</sup></strong>：M 個正反器最多編出 2<sup>M</sup> 個狀態。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-5-2">
+      <h2>5.2 常見的有限狀態機</h2>
+      <p><span class="srcref" data-slides="3">投影片 p.3</span></p>
+      <p>這是一張分類表，每一項後面都只有冒號、沒有說明 — 它是本章與後續課程的索引。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Common Finite State Machines（照錄 p.3）</caption>
+          <thead><tr><th scope="col">類別</th><th scope="col">項目</th><th scope="col">本網站的對應章節</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Sequence Detectors<br>序列偵測器</th><td>—</td><td>§5.4–§5.6（1011 密碼鎖）</td></tr>
+            <tr><th scope="row">General Counters<br>一般計數器</th><td>Binary Counters、Ring Counters、Johnson Counters、Linear Feedback Shift Registers</td><td>§5.15</td></tr>
+            <tr><th scope="row">Timed Buttons<br>計時按鈕</th><td>Debouncer、Morse Codes</td><td>§5.18（Lab05）</td></tr>
+            <tr><th scope="row">Controllers<br>控制器</th><td>Memory/CPU Controllers、TAPC (Test Access Port Controller, JTAG, IEEE1149.1)</td><td>§5.9–§5.14</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-5-3">
+      <h2>5.3 Mealy 與 Moore 的分類</h2>
+      <p><span class="srcref" data-slides="4">投影片 p.4</span></p>
+      <p>投影片的兩句定義（照錄）：</p>
+      <ul>
+        <li><strong>Mealy Machine</strong>: The outputs are dependent on both the state and the input.（輸出同時相依於狀態與輸入。）</li>
+        <li><strong>Moore Machine</strong>: The outputs are dependent on only the present state.（輸出只相依於現態。）</li>
+      </ul>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 540 250" role="img" aria-labelledby="mm-title mm-desc">
+          <title id="mm-title">p.4 的 Mealy 與 Moore 結構比較</title>
+          <desc id="mm-desc">左側 Mealy 機只有一朵組合邏輯雲，輸入進入雲、輸出直接從同一朵雲出來，雲下方是狀態暫存器並回授到雲。右側 Moore 機有兩朵雲，上雲接收輸入與狀態回授並驅動暫存器，暫存器輸出同時回授上雲並進入第二朵獨立的雲，由這朵雲產生輸出，因此輸出只由現態解碼而來。</desc>
+          <text class="accent-text" x="120" y="22" text-anchor="middle">Mealy</text>
+          <rect class="cloud" x="54" y="36" width="132" height="60" rx="26"></rect>
+          <text x="120" y="72" text-anchor="middle">組合邏輯</text>
+          <path class="edge" d="M14 66 L52 66"></path>
+          <text x="10" y="56">X</text>
+          <path class="edge accent" d="M188 66 L240 66"></path>
+          <text class="accent-text" x="246" y="62">Z</text>
+          <rect class="reg" x="76" y="140" width="88" height="44" rx="4"></rect>
+          <text x="120" y="167" text-anchor="middle">狀態暫存器</text>
+          <path class="edge" d="M172 96 L172 120 L156 120 L156 138"></path>
+          <path class="edge" d="M84 138 L84 120 L68 120 L68 96"></path>
+          <text x="120" y="212" text-anchor="middle">輸出來自同一朵雲</text>
+          <text x="120" y="232" text-anchor="middle">＝ 與輸入有關</text>
+
+          <text class="accent-text" x="400" y="22" text-anchor="middle">Moore</text>
+          <rect class="cloud" x="334" y="36" width="132" height="54" rx="24"></rect>
+          <text x="400" y="68" text-anchor="middle">次態邏輯</text>
+          <path class="edge" d="M294 62 L332 62"></path>
+          <text x="290" y="52">X</text>
+          <rect class="reg" x="356" y="112" width="88" height="40" rx="4"></rect>
+          <text x="400" y="137" text-anchor="middle">狀態暫存器</text>
+          <path class="edge" d="M452 90 L452 100 L436 100 L436 110"></path>
+          <path class="edge" d="M364 110 L364 100 L348 100 L348 90"></path>
+          <rect class="cloud" x="334" y="172" width="132" height="48" rx="22"></rect>
+          <text x="400" y="201" text-anchor="middle">輸出解碼器</text>
+          <path class="edge" d="M400 152 L400 170"></path>
+          <path class="edge accent" d="M468 196 L518 196"></path>
+          <text class="accent-text" x="524" y="192" text-anchor="end">Z</text>
+          <text x="400" y="240" text-anchor="middle">輸出只由現態解碼</text>
+        </svg>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>兩者的實務差別</caption>
+          <thead><tr><th scope="col"></th><th scope="col">Mealy</th><th scope="col">Moore</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">輸出相依於</th><td>現態 <strong>與</strong> 輸入</td><td>只有現態</td></tr>
+            <tr><th scope="row">狀態圖標法</th><td>標在<strong>邊</strong>上，寫成 <code>輸入/輸出</code></td><td>標在<strong>狀態圈內</strong>，邊上只標輸入</td></tr>
+            <tr><th scope="row">電路結構</th><td>一朵組合邏輯雲同時產生次態與輸出</td><td>兩朵雲：次態邏輯 + 輸出解碼器</td></tr>
+            <tr><th scope="row">反應速度</th><td>快（輸入變化當週期就反映在輸出）</td><td>慢一個時脈，但輸出乾淨、不會跟著輸入抖動</td></tr>
+            <tr><th scope="row">通常狀態數</th><td>較少</td><td>較多（輸出不同就得分成不同狀態）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">「反應速度」與「狀態數」兩列是本網站為了複習而補充的對照，不是投影片原文；投影片只給了兩句定義與結構圖。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-5-4">
+      <h2>5.4 Mealy 範例：密碼鎖 1011</h2>
+      <p><span class="srcref" data-slides="5">投影片 p.5</span></p>
+      <p>標題為 <code>State Diagram — Example of Mealy Machine: A Lock with Password 1011</code>。輸入 <code>X</code> 是一位元序列，輸出 <code>Z</code> 在偵測到 <code>1011</code> 的那個時脈變成 1。四個狀態的名稱描述「還在等什麼」：</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.5 的狀態與編碼（照錄；編碼與 §5.6 的 Verilog 一致）</caption>
+          <thead><tr><th scope="col">狀態名稱</th><th scope="col">編碼 Q1Q0</th><th scope="col">含義</th></tr></thead>
+          <tbody>
+            <tr><td>Waiting for 1011</td><td><code>00</code></td><td>還沒看到密碼的任何部分</td></tr>
+            <tr><td>Waiting for 011</td><td><code>01</code></td><td>已看到 <code>1</code></td></tr>
+            <tr><td>Waiting for 11</td><td><code>10</code></td><td>已看到 <code>10</code></td></tr>
+            <tr><td>Waiting for 1</td><td><code>11</code></td><td>已看到 <code>101</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="svgfig svg-plain fsm" data-fsm="lock">
+        <svg viewBox="0 0 500 400" role="img" aria-labelledby="lk-title lk-desc">
+          <title id="lk-title">p.5 的 1011 Mealy 狀態圖</title>
+          <desc id="lk-desc">四個狀態 00、01、10、11，邊上標示輸入斜線輸出。00 輸入 0 自迴圈輸出 0、輸入 1 到 01；01 輸入 1 自迴圈輸出 0、輸入 0 到 10；10 輸入 1 到 11、輸入 0 回到 00；11 輸入 0 到 10、輸入 1 到 01 並輸出 1，這是唯一輸出為 1 的轉移。</desc>
+          <path class="edge" id="e-00-0" d="M70 74 C 24 30, 6 96, 68 118"></path>
+          <text class="lbl-br" x="18" y="60">0/0</text>
+          <path class="edge" id="e-00-1" d="M156 90 L324 90"></path>
+          <text class="lbl-br" x="240" y="78" text-anchor="middle">1/0</text>
+          <path class="edge" id="e-01-1" d="M410 74 C 458 30, 476 96, 412 118"></path>
+          <text class="lbl-br" x="462" y="60">1/0</text>
+          <path class="edge" id="e-01-0" d="M370 136 L370 224"></path>
+          <text class="lbl-br" x="382" y="184">0/0</text>
+          <path class="edge" id="e-10-1" d="M330 284 L152 296"></path>
+          <text class="lbl-br" x="240" y="316" text-anchor="middle">1/0</text>
+          <path class="edge" id="e-11-0" d="M152 258 L330 248"></path>
+          <text class="lbl-br" x="240" y="240" text-anchor="middle">0/0</text>
+          <path class="edge" id="e-10-0" d="M338 240 L142 124"></path>
+          <text class="lbl-br" x="196" y="150" text-anchor="middle">0/0</text>
+          <path class="edge" id="e-11-1" d="M142 240 L338 124"></path>
+          <text class="lbl-br lbl-hot" x="300" y="186" text-anchor="middle">1/1</text>
+
+          <g class="st" id="st-00"><circle cx="110" cy="90" r="46"></circle><text class="code" x="110" y="84" text-anchor="middle">00</text><text x="110" y="104" text-anchor="middle" style="font-size:10px">等 1011</text></g>
+          <g class="st" id="st-01"><circle cx="370" cy="90" r="46"></circle><text class="code" x="370" y="84" text-anchor="middle">01</text><text x="370" y="104" text-anchor="middle" style="font-size:10px">等 011</text></g>
+          <g class="st" id="st-10"><circle cx="370" cy="272" r="46"></circle><text class="code" x="370" y="266" text-anchor="middle">10</text><text x="370" y="286" text-anchor="middle" style="font-size:10px">等 11</text></g>
+          <g class="st" id="st-11"><circle cx="110" cy="272" r="46"></circle><text class="code" x="110" y="266" text-anchor="middle">11</text><text x="110" y="286" text-anchor="middle" style="font-size:10px">等 1</text></g>
+          <text class="accent-text" x="250" y="378" text-anchor="middle">唯一輸出 1 的邊：11 →(1/1)→ 01</text>
+        </svg>
+      </div>
+
+      <h3>互動步進器：自己餵輸入看它怎麼走</h3>
+      <div class="fsm-panel" data-fsm-panel="lock">
+        <p>點 <strong>0</strong> 或 <strong>1</strong> 餵入一個位元，圖上會高亮目前狀態與剛走過的邊。</p>
+      </div>
+      <p class="warn">投影片<strong>沒有畫重置箭頭</strong>，§5.6 的 Verilog 也沒有重置埠。本步進器以 <code>00</code>（等 1011）為起始狀態，這是語意上最自然的起點。</p>
+      <div class="supplement">
+        <p>這是一個<strong>可重疊 (overlapping)</strong> 的偵測器：偵測成功後回到 <code>01</code> 而不是 <code>00</code>，因為剛才那個結尾的 <code>1</code> 可以當成下一次密碼的開頭。試著餵 <code>1011011</code> 看看 — 會成功兩次。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-5-5">
+      <h2>5.5 轉移表、布林式與閘級實作</h2>
+      <p><span class="srcref" data-slides="6">投影片 p.6</span></p>
+      <p>把 §5.4 的狀態圖寫成表格，就是 <code>Transition Table</code>（轉移表）。這張表與第 01 章 §1.9 的狀態表是同一張。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Transition Table（照錄 p.6）</caption>
+          <thead><tr><th scope="col">Q1</th><th scope="col">Q0</th><th scope="col">X0</th><th scope="col">D1</th><th scope="col">D0</th><th scope="col">Z0</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+            <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+            <tr><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td>1</td><td>0</td><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+            <tr><td>1</td><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>1</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>右欄標題為 <code>K-map or McKlusky Method:</code>，印出三個式子：</p>
+      <div class="codeblock" data-title="p.6 印出的布林式（照抄原文，' 代表反相）">
+<pre><code data-lang="text">D1 = Q1'·X + Q1·Q0·X' + Q1·Q0'·X
+D0 = X
+Z  = Q1·Q0·X</code></pre>
+      </div>
+      <p class="warn"><code>D1</code> 的第一項 <code>Q1'·X</code> 與同頁的表格不符。表上 <code>D1=1</code> 只出現在 <code>Q1Q0X = 010、101、110</code>，而 <code>Q1'·X</code> 會讓 <code>001</code> 與 <code>011</code> 也變成 1。<code>D0</code> 與 <code>Z</code> 都正確。這與第 01 章 §1.9 是同一處錯誤。</p>
+      <div class="supplement">
+        <p>由表反推的正確式子：<br>
+        <code>D1 = Q1'·Q0·X' + Q1·Q0·X' + Q1·Q0'·X = Q0·X' + Q1·Q0'·X</code><br>
+        推測第一項原本要寫的是 <code>Q1'·Q0·X'</code>。狀態圖、轉移表與 §5.6 的 Verilog 三者互相一致，只有這個印出來的第一項是錯的。</p>
+      </div>
+      <p>頁面下方是閘級實作：<code>X</code> 經反相器產生 <code>X'</code>，接著是一個 AND／OR 交叉矩陣（垂直的乘積線與水平的輸入線以點連接）驅動四個 AND 閘 — 最上面那個直接輸出 <code>Z</code>，另外三個匯入 OR 閘再送到正反器的 <code>D</code> 端；兩個 D 型正反器的 <code>Q</code>／<code>Q'</code> 再回授到矩陣。</p>
+      <figure class="figure">
+        <img src="assets/ch05/fig-slide-06.png" alt="投影片 p.6 畫面：左側是 Q1、Q0、X0 對應 D1、D0、Z0 的八列轉移表；右上印出 D1、D0、Z 三個布林式；右下是閘級實作，X 經反相器後進入 AND 與 OR 交叉矩陣，驅動四個 AND 閘與一個 OR 閘，並連到兩個 D 型正反器，其輸出再回授到矩陣。">
+        <figcaption>轉移表、布林式與閘級實作。<span class="srcref" data-slides="6">投影片 p.6</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-5-6">
+      <h2>5.6 Mealy 的 Verilog 寫法</h2>
+      <p><span class="srcref" data-slides="7">投影片 p.7</span></p>
+      <div class="codeblock" data-title="p.7 的 1011 密碼鎖（照抄原文，含全形引號）">
+<pre><code data-lang="verilog">module Lock(Clk, X, Z)
+input     Clk, X;
+output    Z;
+reg       Z;
+parameter W1011=2’b00, W011=2’b01, W11=2’b10, W1=2’b11;
+reg [1:0] Present_State, Next_State;
+	always@(posedge Clk)
+		Present_State = Next_State;
+	always@(X or Present_State) begin
+		Next_State = Present_State;
+		case(Present_State)
+			W1011  : Next_State = X ? W011 : W1011;
+			W011   : Next_State = X ? W011 : W11;
+			W11    : Next_State = X ? W1   : W1011;
+			W1     : Next_State = X ? W011 : W11;
+			default: Next_State = W011;
+		endcase
+		case(Present_State)
+			W1     : Z = X ? 1 : 0;
+			default: Z = 0;
+		endcase
+	end // always
+endmodule</code></pre>
+      </div>
+      <p><strong>這是標準的兩段式寫法</strong>，值得背下來：</p>
+      <ol>
+        <li>第一個 <code>always@(posedge Clk)</code> 只做一件事：把次態搬進現態（這就是正反器）。</li>
+        <li>第二個 <code>always@(X or Present_State)</code> 是組合邏輯：用 <code>case</code> 算次態，再用另一個 <code>case</code> 算輸出。</li>
+      </ol>
+      <p>第二個 <code>case</code> 只有 <code>W1</code> 這一項寫 <code>Z = X ? 1 : 0;</code> — <strong>輸出同時看狀態與輸入，這正是 Mealy 的定義</strong>，也正好對應狀態圖上唯一那條 <code>1/1</code> 的邊。</p>
+      <p class="warn">三處原文問題：模組首行 <code>module Lock(Clk, X, Z)</code> <strong>少了分號</strong>；標題副標寫「Password <strong>1101</strong>」但狀態名稱與圖都是 <code>1011</code>（副標是錯字）；<code>default: Next_State = W011;</code> 會讓未知狀態跳到 <code>W011</code> 而不是閒置狀態 <code>W1011</code>，不太合理。照原文保留。</p>
+      <p>除此之外，<code>case</code> 的內容與 §5.4 的狀態圖<strong>完全一致</strong>，可以逐行對照驗證。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-5-7">
+      <h2>5.7 Moore 範例：Recent Ones</h2>
+      <p><span class="srcref" data-slides="8,9">投影片 p.8–9</span></p>
+      <p>這台機器數「最近兩個輸入位元裡有幾個 1」。每個狀態圈被一條橫線切開：<strong>上半是狀態名稱，下半是 Moore 輸出</strong>；邊上只標輸入值，沒有斜線輸出 — 這就是 Moore 機的畫法。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.8 的狀態與輸出（照錄）</caption>
+          <thead><tr><th scope="col">狀態</th><th scope="col">輸出</th><th scope="col">含義（最近兩個輸入位元）</th></tr></thead>
+          <tbody>
+            <tr><td><code>S0</code></td><td><code>0</code></td><td><code>00</code> — 零個 1</td></tr>
+            <tr><td><code>S1</code></td><td><code>1</code></td><td><code>01</code> — 一個 1</td></tr>
+            <tr><td><code>S2</code></td><td><code>1</code></td><td><code>10</code> — 一個 1</td></tr>
+            <tr><td><code>S3</code></td><td><code>2</code></td><td><code>11</code> — 兩個 1</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="svgfig svg-plain fsm" data-fsm="recent">
+        <svg viewBox="0 0 500 400" role="img" aria-labelledby="mo-title mo-desc">
+          <title id="mo-title">p.8 的 Recent Ones Moore 狀態圖</title>
+          <desc id="mo-desc">四個狀態 S0 輸出 0、S1 輸出 1、S2 輸出 1、S3 輸出 2。S0 輸入 0 自迴圈、輸入 1 到 S1；S1 輸入 0 到 S2、輸入 1 到 S3；S2 輸入 1 到 S1、輸入 0 回到 S0；S3 輸入 1 自迴圈、輸入 0 到 S2。邊上只標輸入值。</desc>
+          <path class="edge" id="r-S0-0" d="M70 74 C 24 30, 6 96, 68 118"></path>
+          <text class="lbl-br" x="22" y="60">0</text>
+          <path class="edge" id="r-S0-1" d="M156 90 L324 90"></path>
+          <text class="lbl-br" x="240" y="78" text-anchor="middle">1</text>
+          <path class="edge" id="r-S1-0" d="M386 136 L386 224"></path>
+          <text class="lbl-br" x="398" y="184">0</text>
+          <path class="edge" id="r-S2-1" d="M354 224 L354 136"></path>
+          <text class="lbl-br" x="330" y="184" text-anchor="end">1</text>
+          <path class="edge" id="r-S3-1" d="M70 256 C 24 212, 6 278, 68 300"></path>
+          <text class="lbl-br" x="22" y="242">1</text>
+          <path class="edge" id="r-S3-0" d="M156 272 L324 272"></path>
+          <text class="lbl-br" x="240" y="294" text-anchor="middle">0</text>
+          <path class="edge" id="r-S1-1" d="M338 124 L142 240"></path>
+          <text class="lbl-br" x="196" y="150" text-anchor="middle">1</text>
+          <path class="edge" id="r-S2-0" d="M338 240 L142 124"></path>
+          <text class="lbl-br" x="300" y="186" text-anchor="middle">0</text>
+
+          <g class="st" id="st-S0"><circle cx="110" cy="90" r="46"></circle><text x="110" y="82" text-anchor="middle">S0</text><line x1="68" y1="90" x2="152" y2="90" stroke="#5b6472" stroke-width="1.5"></line><text class="code" x="110" y="112" text-anchor="middle">0</text></g>
+          <g class="st" id="st-S1"><circle cx="370" cy="90" r="46"></circle><text x="370" y="82" text-anchor="middle">S1</text><line x1="328" y1="90" x2="412" y2="90" stroke="#5b6472" stroke-width="1.5"></line><text class="code" x="370" y="112" text-anchor="middle">1</text></g>
+          <g class="st" id="st-S2"><circle cx="370" cy="272" r="46"></circle><text x="370" y="264" text-anchor="middle">S2</text><line x1="328" y1="272" x2="412" y2="272" stroke="#5b6472" stroke-width="1.5"></line><text class="code" x="370" y="294" text-anchor="middle">1</text></g>
+          <g class="st" id="st-S3"><circle cx="110" cy="272" r="46"></circle><text x="110" y="264" text-anchor="middle">S3</text><line x1="68" y1="272" x2="152" y2="272" stroke="#5b6472" stroke-width="1.5"></line><text class="code" x="110" y="294" text-anchor="middle">2</text></g>
+          <text class="accent-text" x="250" y="378" text-anchor="middle">圈內下半＝Moore 輸出；邊上只標輸入</text>
+        </svg>
+      </div>
+
+      <h3>互動步進器</h3>
+      <div class="fsm-panel" data-fsm-panel="recent">
+        <p>點 <strong>0</strong> 或 <strong>1</strong> 餵入一個位元。</p>
+      </div>
+      <div class="supplement">
+        <p>看穿這台機器的本質：<strong>它就是一個 2 位元移位暫存器</strong> — 次態 =（前一個位元, 新位元），而輸出就是這兩個位元的 1 的個數。所以 §5.8 的輸出解碼器只是一個加法器。</p>
+      </div>
+      <p>p.9 是同一台機器的 Huffman 模型結構圖（整頁幾乎沒有文字，只有一個 <code>+</code>）：上面一朵雲是次態邏輯，中間兩個小方塊是兩個狀態正反器，下面另一朵雲裡有一個粗體 <code>+</code> — 就是把兩個狀態位元相加得到輸出 <code>0/1/2</code> 的 Moore 解碼器。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-5-8">
+      <h2>5.8 Moore 的 Verilog 寫法</h2>
+      <p><span class="srcref" data-slides="10">投影片 p.10</span></p>
+      <div class="codeblock" data-title="p.10 的 Recent1s（照抄原文）">
+<pre><code data-lang="verilog">module Recent1s(Clk, X, Z)
+input     Clk, X;
+output    [1:0] Z;
+reg       [1:0] Z;
+reg [1:0] Present_State, Next_State;
+	always@(posedge Clk)
+		Present_State = Next_State;
+	always@(X or Present_State) begin
+		Next_State = Present_State;
+		case(Present_State)
+			0      : Next_State = X ? 1 : 0;
+			1      : Next_State = X ? 2 : 1;
+			2      : Next_State = X ? 1 : 0;
+			3      : Next_State = X ? 2 : 1;
+			default: Next_State = 0;
+		endcase
+	end // always
+	assign Z = Present_State[1] + Present_State[0];
+endmodule</code></pre>
+      </div>
+      <p>投影片有一個箭頭指著最後那行 <code>assign</code>，標註 <strong>Moore decoder from present state to output</strong>（由現態到輸出的 Moore 解碼器）。</p>
+      <p><strong>這一行就是 Mealy 與 Moore 在程式上的差別</strong>：輸出用 <code>assign</code> 從 <code>Present_State</code> 直接算出來，完全沒碰到 <code>X</code>。對照 §5.6 的 Mealy 版本，那裡的輸出是在 <code>case</code> 裡寫 <code>Z = X ? 1 : 0;</code>。</p>
+      <p class="warn">這一頁有兩個明顯問題：</p>
+      <ul>
+        <li>標題副標仍寫著 <code>Example of Mealy Machine: A Lock with Password 1101</code>，但內容是 Moore 的 <code>Recent1s</code> — 副標是從 p.7 複製後忘了改。</li>
+        <li><strong><code>case</code> 的內容與 p.8 的狀態圖不符</strong>：依狀態圖應為 <code>1 : X ? 3 : 2</code> 與 <code>3 : X ? 3 : 2</code>，但投影片印的是 <code>1 : X ? 2 : 1</code> 與 <code>3 : X ? 2 : 1</code>。狀態 <code>0</code> 與 <code>2</code> 是正確的。</li>
+      </ul>
+      <div class="supplement">
+        <p>依「2 位元移位暫存器」的本質，次態應該是 <code>{Present_State[0], X}</code>，也就是：<br>
+        <code>0 (00) → X ? 1 : 0</code>　✓ 投影片正確<br>
+        <code>1 (01) → X ? 3 : 2</code>　✗ 投影片寫 <code>2 : 1</code><br>
+        <code>2 (10) → X ? 1 : 0</code>　✓ 投影片正確<br>
+        <code>3 (11) → X ? 3 : 2</code>　✗ 投影片寫 <code>2 : 1</code><br>
+        本頁上方 §5.7 的互動步進器採用<strong>狀態圖</strong>的正確轉移，而不是這段程式的印刷錯誤。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-5-9">
+      <h2>5.9 JTAG 與邊界掃描</h2>
+      <p><span class="srcref" data-slides="11,12">投影片 p.11–12</span></p>
+      <h3>為什麼要講這個例子（p.11）</h3>
+      <ul>
+        <li>JTAG is often used in the FPGA flow for HDL practice（JTAG 在 FPGA 流程中經常用到）</li>
+        <li>It is a good example for FSM（它是很好的 FSM 範例）</li>
+        <li>a common knowledge for seniors in electronic eng.（電子系高年級的基本常識）</li>
+      </ul>
+      <p>JTAG 的定義（照錄）：</p>
+      <ul>
+        <li>JTAG (Joint Test Action Group)</li>
+        <li>IEEE 1149.1 – compatible boundary scan access port for printed circuit board-level continuity and diagnostic testing of the device in which all digital input, output, and input/output pins are tested.</li>
+      </ul>
+
+      <h3>問題意識（p.12）</h3>
+      <p>這一頁只有一張立體圖與一句話：綠色電路板上四顆 DIP 封裝<strong>被拔出插座、接腳露在外面</strong>，下方寫著 <strong><code>Pull them up to test?</code></strong>（要把它們拔起來才能測試嗎？）</p>
+      <p>這句反問就是邊界掃描存在的理由：<strong>晶片一旦焊上板子，接腳就碰不到了</strong>，不可能靠探針逐一量測。</p>
+      <figure class="figure">
+        <img src="assets/ch05/fig-slide-12.png" alt="投影片 p.12 畫面：立體繪製的綠色電路板，四顆 DIP 封裝晶片被拔出插座、接腳朝下露在外面，下方中央寫著 Pull them up to test 的問句。">
+        <figcaption>把晶片拔起來測試？這是不可行的。<span class="srcref" data-slides="12">投影片 p.12</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-5-10">
+      <h2>5.10 晶片層的 1149.1 架構</h2>
+      <p><span class="srcref" data-slides="13,14,15">投影片 p.13–15</span></p>
+
+      <h3>基本概念（p.13）</h3>
+      <p>解法是：<strong>在每一支接腳旁邊放一個「邊界掃描單元」，把它們串成一條鏈</strong>。這樣就能從外部序列地寫入與讀出每一支腳的值，不需要碰到實體接腳。</p>
+      <p>圖上畫兩片前後排列的電路板，每片各有兩顆晶片，每顆晶片的接腳周圍是一圈黃色方墊（掃描單元）串成環；同一片板上兩顆晶片的鏈串在一起，兩片板之間再以一條黃線串接。整條鏈的序列輸入標 <strong><code>TDI</code></strong>、輸出標 <strong><code>TDO</code></strong>。</p>
+      <figure class="figure">
+        <img src="assets/ch05/fig-slide-13.png" alt="投影片 p.13 畫面：兩片前後排列的綠色電路板，每片各有兩顆灰色晶片，每顆晶片接腳周圍是一圈黃色方墊串成的掃描鏈；兩顆晶片的鏈串接在一起，兩片板之間再以黃線串接，序列輸入標示 TDI、輸出標示 TDO。">
+        <figcaption>邊界掃描的基本概念：把每支腳旁的單元串成一條鏈。<span class="srcref" data-slides="13">投影片 p.13</span></figcaption>
+      </figure>
+
+      <h3>背景與基本結構（p.14）</h3>
+      <ul>
+        <li>Joint Test Action Group (JTAG) Boundary Scan Standard, 1988</li>
+        <li>IEEE P1149.1 Testability Bus Standard (Proposal), 1989</li>
+        <li><strong>Basic Structure:</strong>
+          <ul>
+            <li>TAP (Test Access Port) Controller</li>
+            <li>Registers: IR (Instruction Register) and BR (Bypass Register)</li>
+            <li>Extra Pins：<code>TMS (Test Mode Singal)</code>、<code>TCK (Test Clock)</code>、<code>TDI (Test Data Input)</code>、<code>TDO (Test Data Output)</code></li>
+          </ul>
+        </li>
+      </ul>
+      <p class="warn">原文把 Signal 拼成 <code>Singal</code>。照原樣保留。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>JTAG 的四支額外接腳</caption>
+          <thead><tr><th scope="col">接腳</th><th scope="col">全名</th><th scope="col">作用</th></tr></thead>
+          <tbody>
+            <tr><td><code>TMS</code></td><td>Test Mode Signal</td><td>TAP 控制器唯一的輸入，決定狀態怎麼走</td></tr>
+            <tr><td><code>TCK</code></td><td>Test Clock</td><td>測試專用時脈，與系統時脈分開</td></tr>
+            <tr><td><code>TDI</code></td><td>Test Data Input</td><td>序列資料進入掃描鏈</td></tr>
+            <tr><td><code>TDO</code></td><td>Test Data Output</td><td>序列資料離開掃描鏈</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>晶片架構（p.15）</h3>
+      <p>圖上一整顆晶片的內部配置：</p>
+      <ul>
+        <li>中央白框是 <code>Application Circuit</code>，註記 <code>probably with scan chains</code>（裡面可能還有自己的掃描鏈），內含一排五個串接的小方塊。</li>
+        <li>晶片左右兩側的黃色方塊是邊界掃描單元，接到接腳並沿周圍串成一環。</li>
+        <li>底部就是 <strong>TAP</strong>：<code>TDI</code> 由左側進入，分別餵給邊界鏈、<code>IR</code>（指令暫存器）與 <code>BR</code>（旁路暫存器）；<code>IR</code> 與 <code>BR</code> 的輸出進入一個多工器，多工器的輸出就是 <code>TDO</code>。</li>
+        <li><code>TAPC</code> 是一個白色橢圓，由 <code>TMS</code> 與 <code>TCK</code> 驅動，三條灰色虛線箭頭往右發散 — 那就是它送給 IR／BR／邊界單元的控制訊號。</li>
+      </ul>
+      <figure class="figure">
+        <img src="assets/ch05/fig-slide-15.png" alt="投影片 p.15 畫面：晶片層的 1149.1 架構圖。外框為晶片，中央白框是應用電路並含一排串接的掃描格，左右兩側黃色方塊是邊界掃描單元並串成環；底部是測試存取埠，TDI 進入後分送邊界鏈、指令暫存器 IR 與旁路暫存器 BR，兩者輸出經多工器成為 TDO；TAPC 橢圓由 TMS 與 TCK 驅動，三條虛線箭頭往右輸出控制訊號。">
+        <figcaption>晶片層的 IEEE 1149.1 架構。<span class="srcref" data-slides="15">投影片 p.15</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-5-11">
+      <h2>5.11 基本邊界掃描單元</h2>
+      <p><span class="srcref" data-slides="16">投影片 p.16</span></p>
+      <p>這是放在每支接腳旁的那一個單元，內部結構是<strong>兩個多工器加兩個正反器</strong>。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.16 單元的接腳（照錄）</caption>
+          <thead><tr><th scope="col">類型</th><th scope="col">接腳</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">訊號</th><td><code>IN</code>（左）、<code>OUT</code>（右）、<code>SCAN_IN</code>（左下）、<code>SCAN_OUT</code>（上方）</td></tr>
+            <tr><th scope="row">控制</th><td><code>Shift</code>、<code>Clock</code>、<code>Update</code>、<code>Mode</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>資料路徑：<code>IN</code> 分成兩路 — 一路直接接到右側<strong>輸出多工器</strong>的 <code>0</code> 腳（正常模式的通路），另一路接到左側<strong>輸入多工器</strong>的 <code>0</code> 腳。<code>SCAN_IN</code> 接輸入多工器的 <code>1</code> 腳，由 <code>Shift</code> 選擇。輸入多工器餵進<strong>擷取／移位正反器</strong>（由 <code>Clock</code> 驅動），它的 <code>Q</code> 一方面輸出 <code>SCAN_OUT</code>、一方面接到<strong>更新正反器</strong>（由 <code>Update</code> 驅動）的 <code>D</code>；更新正反器的 <code>Q</code> 接輸出多工器的 <code>1</code> 腳。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>四種模式（照錄圖面上的標註）</caption>
+          <thead><tr><th scope="col">模式</th><th scope="col">控制條件</th><th scope="col">行為</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Normal mode</th><td><code>Mode = 0</code></td><td><code>IN</code> 直通 <code>OUT</code>，單元等於不存在</td></tr>
+            <tr><th scope="row">Capture mode</th><td><code>Shift = 0</code> + <code>Clock</code></td><td>把接腳上的值擷取進正反器</td></tr>
+            <tr><th scope="row">Scan mode</th><td><code>Shift = 1</code> + <code>Clock</code>（圖上與 <code>Mode = 1</code> 一起用大括號標出）</td><td>沿著鏈把資料移進移出</td></tr>
+            <tr><th scope="row">Update mode</th><td><code>Update</code> 脈衝</td><td>把移進來的值推到 <code>OUT</code> 上</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>投影片底部兩句（照錄）：</p>
+      <ul>
+        <li>Can update PIs (capture POs) simultaneously for detecting delay response.（可以同時更新輸入與擷取輸出，用來偵測延遲響應。）</li>
+        <li>Can be used both as input and output boundary scan cells.（同一個單元可以當輸入也可以當輸出的邊界掃描單元。）</li>
+      </ul>
+      <div class="supplement">
+        <p>為什麼要兩個正反器？因為移位期間 <code>OUT</code> 不能跟著亂跳。第一個正反器負責擷取與移位，第二個（更新正反器）只在 <code>Update</code> 來時才把值推出去 — 這樣整條鏈可以安靜地移完資料，再一次同步生效。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-5-12">
+      <h2>5.12 TAP 控制器：抽象狀態圖</h2>
+      <p><span class="srcref" data-slides="17">投影片 p.17</span></p>
+      <p>副標 <code>A Synchronous Finite State Machine with 2X8 States</code>（具有 2×8 個狀態的同步有限狀態機）。這一頁先把 16 個狀態收合成兩個「元狀態」，讓人先看懂骨架。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.17 的四個節點（照錄）</caption>
+          <thead><tr><th scope="col">節點</th><th scope="col">說明</th></tr></thead>
+          <tbody>
+            <tr><td><code>TestReset</code></td><td>重置狀態</td></tr>
+            <tr><td><code>Start/Iddle</code></td><td>閒置狀態（原文拼法如此，標準名稱為 Run-Test/Idle）</td></tr>
+            <tr><td><code>Meta-state for Instruction Operations</code></td><td>指令操作的 7 個狀態，收合成一個黃色圓角方塊</td></tr>
+            <tr><td><code>Meta-state for Data Operations</code></td><td>資料操作的 7 個狀態，收合成一個粉紅圓角方塊</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>p.17 的轉移（輸入只有 TMS）</caption>
+          <thead><tr><th scope="col">由</th><th scope="col">TMS</th><th scope="col">到</th></tr></thead>
+          <tbody>
+            <tr><td><code>TestReset</code></td><td><code>1</code></td><td><code>TestReset</code>（自迴圈）</td></tr>
+            <tr><td><code>TestReset</code></td><td><code>0</code></td><td><code>Start/Iddle</code></td></tr>
+            <tr><td><code>Start/Iddle</code></td><td><code>0</code></td><td><code>Start/Iddle</code>（自迴圈）</td></tr>
+            <tr><td><code>Start/Iddle</code></td><td><code>1</code></td><td>資料操作元狀態</td></tr>
+            <tr><td><code>Start/Iddle</code></td><td><code>11</code></td><td>指令操作元狀態（連續兩個 1）</td></tr>
+            <tr><td>元狀態區域</td><td><code>11111</code></td><td><code>TestReset</code>（連續五個 1 一定回到重置）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">投影片的 <code>Start/Iddle</code> 是拼寫錯誤，IEEE 1149.1 的標準名稱是 <strong>Run-Test/Idle</strong>。照原文保留。</p>
+      <div class="supplement">
+        <p><strong>「連續五個 1 必定回到 Test-Logic-Reset」</strong>是 JTAG 最重要的性質之一：不管現在在哪個狀態，只要把 <code>TMS</code> 拉高維持五個 <code>TCK</code>，就一定能回到已知的起點。這讓外部設備不需要知道晶片目前的狀態就能重新同步。從 §5.13 的完整表格可以驗證這件事。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-5-13">
+      <h2>5.13 TAP 控制器：完整 16 狀態</h2>
+      <p><span class="srcref" data-slides="18">投影片 p.18</span></p>
+      <p>把元狀態展開就是完整的 IEEE 1149.1 TAP 控制器。圖上狀態畫成圓角方塊，<strong>中間粉紅一欄是 DR（資料暫存器）路徑、右邊黃色一欄是 IR（指令暫存器）路徑</strong>，兩欄左右對稱；<code>TestReset</code> 與 <code>Start/Iddle</code> 在左上角。每條邊只標 <code>TMS</code> 的值。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>TAP 控制器的完整轉移表（照錄 p.18 的狀態圖）</caption>
+          <thead><tr><th scope="col">狀態</th><th scope="col">TMS = 0</th><th scope="col">TMS = 1</th></tr></thead>
+          <tbody>
+            <tr><th scope="row"><code>TestReset</code></th><td><code>Start/Iddle</code></td><td><code>TestReset</code>（自迴圈）</td></tr>
+            <tr><th scope="row"><code>Start/Iddle</code></th><td><code>Start/Iddle</code>（自迴圈）</td><td><code>SelectDR</code></td></tr>
+            <tr><th scope="row"><code>SelectDR</code></th><td><code>CaptureDR</code></td><td><code>SelectIR</code></td></tr>
+            <tr><th scope="row"><code>CaptureDR</code></th><td><code>ShiftDR</code></td><td><code>Exit1DR</code></td></tr>
+            <tr><th scope="row"><code>ShiftDR</code></th><td><code>ShiftDR</code>（自迴圈）</td><td><code>Exit1DR</code></td></tr>
+            <tr><th scope="row"><code>Exit1DR</code></th><td><code>PauseDR</code></td><td><code>UpdateDR</code></td></tr>
+            <tr><th scope="row"><code>PauseDR</code></th><td><code>PauseDR</code>（自迴圈）</td><td><code>Exit2DR</code></td></tr>
+            <tr><th scope="row"><code>Exit2DR</code></th><td><code>ShiftDR</code></td><td><code>UpdateDR</code></td></tr>
+            <tr><th scope="row"><code>UpdateDR</code></th><td><code>Start/Iddle</code></td><td><code>SelectDR</code></td></tr>
+            <tr><th scope="row"><code>SelectIR</code></th><td><code>CaptureIR</code></td><td><code>TestReset</code></td></tr>
+            <tr><th scope="row"><code>CaptureIR</code></th><td><code>ShiftIR</code></td><td><code>Exit1IR</code></td></tr>
+            <tr><th scope="row"><code>ShiftIR</code></th><td><code>ShiftIR</code>（自迴圈）</td><td><code>Exit1IR</code></td></tr>
+            <tr><th scope="row"><code>Exit1IR</code></th><td><code>PauseIR</code></td><td><code>UpdateIR</code></td></tr>
+            <tr><th scope="row"><code>PauseIR</code></th><td><code>PauseIR</code>（自迴圈）</td><td><code>Exit2IR</code></td></tr>
+            <tr><th scope="row"><code>Exit2IR</code></th><td><code>ShiftIR</code></td><td><code>UpdateIR</code></td></tr>
+            <tr><th scope="row"><code>UpdateIR</code></th><td><code>Start/Iddle</code></td><td><code>SelectDR</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>怎麼記這張表</h3>
+      <ul>
+        <li><strong>IR 與 DR 兩欄是鏡像</strong>：七個狀態 <code>Select</code>→<code>Capture</code>→<code>Shift</code>→<code>Exit1</code>→<code>Pause</code>→<code>Exit2</code>→<code>Update</code> 完全同構。</li>
+        <li><strong><code>Shift*</code> 的自迴圈</strong>就是實際搬資料的地方：停在這裡 N 個時脈就移進／移出 N 個位元。</li>
+        <li><strong><code>Pause*</code> 的自迴圈</strong>讓外部設備可以中途暫停（例如重新裝填緩衝區），再由 <code>Exit2*</code> 回到 <code>Shift*</code> 繼續。</li>
+        <li><strong>起始狀態是 <code>TestReset</code></strong>；由 §5.12 可知從任何狀態持續 <code>TMS=1</code> 五個時脈都會回到它。</li>
+      </ul>
+      <div class="supplement">
+        <p>驗證一次「五個 1」：從最遠的 <code>PauseDR</code> 出發，<code>TMS=1</code> 依序走 <code>Exit2DR → UpdateDR → SelectDR → SelectIR → TestReset</code> — 正好五步。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-5-14">
+      <h2>5.14 邊界掃描練習與作業</h2>
+      <p><span class="srcref" data-slides="19">投影片 p.19</span></p>
+      <ul>
+        <li>Exercise and trace some examples using TI Scan Educator 1.0 (downloaded from TI or my web).</li>
+        <li>Write the basic TMS sequence for applying a pattern and detecting the result to a circuit under test (CUT) originally with 4 pins.（為一個原本有 4 支腳的待測電路，寫出施加圖樣與讀取結果的基本 TMS 序列。）</li>
+        <li><strong>Hint:</strong> Initialization, Scanning in 4 bits, Update, Capture, Scanning out 4 bits, Update.</li>
+        <li><strong>Homework #2:</strong> Design a Boundary Scan Control according to the above state diagram using Verilog (due in 2 Weeks)（依上面的狀態圖用 Verilog 設計邊界掃描控制器，兩週後交）</li>
+        <li>You can trace it by comparing to TI Scan Educator 1.0</li>
+      </ul>
+      <div class="supplement">
+        <p>提示裡那六個步驟，正好就是 §5.13 表格的一條路徑：初始化（<code>TestReset</code>）→ 移入 4 位元（停在 <code>ShiftDR</code> 四個時脈）→ <code>UpdateDR</code> → <code>CaptureDR</code> → 移出 4 位元 → 再 <code>UpdateDR</code>。而每一步要怎麼下 <code>TMS</code>，查表就知道。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-5-15">
+      <h2>5.15 計數器型狀態機</h2>
+      <p><span class="srcref" data-slides="20,21">投影片 p.20–21</span></p>
+
+      <h3>廣義的計數器（p.20）</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>Counters in General Sense（照錄 p.20）</caption>
+          <thead><tr><th scope="col">種類</th><th scope="col">特性</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Binary Counter</th><td>Ripple Counter: Toggle FFs triggered by Input.<br>Parallel counter takes much space while FSM design takes much time.（平行計數器佔空間，FSM 設計則耗時間。）</td></tr>
+            <tr><th scope="row">Gray Counter</th><td>Minimum transition count for low power, low noise application（轉移位元數最少，適合低功耗低雜訊）</td></tr>
+            <tr><th scope="row">Shifting Counter</th><td>Incomplete coding.（編碼不完整）<br>Almost zero propagation time in Huffman model of sequential circuits → <strong>Fastest</strong>（在 Huffman 模型中幾乎沒有傳遞延遲，所以最快）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>三種移位計數器（照錄 p.20 的子項）</caption>
+          <thead><tr><th scope="col">名稱</th><th scope="col">投影片的說明</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Ring Counter<br>環形計數器</th><td>1-hot code for some direct or fast application（一熱碼，適合直接或快速的應用）</td></tr>
+            <tr><th scope="row">Johnson Counter<br>強生計數器</th><td>Fastest and with 2N states（最快，且有 2N 個狀態）</td></tr>
+            <tr><th scope="row">LFSR (Random) Counter</th><td>Random number generation, random test and compression（隨機數產生、隨機測試與壓縮）<br>Decoder required for use as counter.（當計數器用時需要解碼器）</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>三者的差別只在<strong>回授路徑</strong>：</p>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 520 330" role="img" aria-labelledby="cnt-title cnt-desc">
+          <title id="cnt-title">三種移位計數器的回授差別</title>
+          <desc id="cnt-desc">環形計數器把最後一級的輸出直接接回第一級；強生計數器經過一個反相器再接回；LFSR 則把兩級的輸出經 XOR 後接回。三者的移位鏈結構相同。</desc>
+          <text class="accent-text" x="10" y="22">環形 Ring：直接回授</text>
+          <rect class="reg" x="100" y="34" width="56" height="34" rx="3"></rect><text x="128" y="56" text-anchor="middle">FF1</text>
+          <rect class="reg" x="196" y="34" width="56" height="34" rx="3"></rect><text x="224" y="56" text-anchor="middle">FF2</text>
+          <rect class="reg" x="292" y="34" width="56" height="34" rx="3"></rect><text x="320" y="56" text-anchor="middle">FF3</text>
+          <path class="edge" d="M156 51 L194 51"></path>
+          <path class="edge" d="M252 51 L290 51"></path>
+          <path class="edge accent" d="M348 51 L390 51 L390 88 L80 88 L80 51 L98 51"></path>
+
+          <text class="accent-text" x="10" y="140">強生 Johnson：經反相器回授</text>
+          <rect class="reg" x="100" y="152" width="56" height="34" rx="3"></rect><text x="128" y="174" text-anchor="middle">FF1</text>
+          <rect class="reg" x="196" y="152" width="56" height="34" rx="3"></rect><text x="224" y="174" text-anchor="middle">FF2</text>
+          <rect class="reg" x="292" y="152" width="56" height="34" rx="3"></rect><text x="320" y="174" text-anchor="middle">FF3</text>
+          <path class="edge" d="M156 169 L194 169"></path>
+          <path class="edge" d="M252 169 L290 169"></path>
+          <path class="edge accent" d="M348 169 L390 169 L390 206 L452 206"></path>
+          <path class="box" d="M418 192 L444 206 L418 220 Z"></path>
+          <circle class="box" cx="449" cy="206" r="5"></circle>
+          <path class="edge accent" d="M418 206 L390 206"></path>
+          <path class="edge accent" d="M456 206 L480 206 L480 232 L80 232 L80 169 L98 169"></path>
+
+          <text class="accent-text" x="10" y="276">LFSR：經 XOR 回授</text>
+          <rect class="reg" x="100" y="288" width="56" height="34" rx="3"></rect><text x="128" y="310" text-anchor="middle">FF1</text>
+          <rect class="reg" x="196" y="288" width="56" height="34" rx="3"></rect><text x="224" y="310" text-anchor="middle">FF2</text>
+          <rect class="reg" x="292" y="288" width="56" height="34" rx="3"></rect><text x="320" y="310" text-anchor="middle">FF3</text>
+          <path class="edge" d="M156 305 L194 305"></path>
+          <path class="edge" d="M252 305 L290 305"></path>
+          <circle class="box" cx="398" cy="305" r="13"></circle>
+          <text x="398" y="310" text-anchor="middle">⊕</text>
+          <path class="edge accent" d="M348 305 L385 305"></path>
+          <path class="edge accent" d="M252 288 L252 266 L398 266 L398 292"></path>
+          <path class="edge accent" d="M411 305 L440 305 L440 266 L480 266 L480 258"></path>
+          <text x="446" y="326">→ 回第一級</text>
+        </svg>
+      </div>
+      <p class="warn">投影片 p.20 把這三張小圖畫在文字上方，實際算繪時會<strong>遮住部分文字</strong>（<code>circuits → Fastest</code>、<code>Examples:</code>、<code>Ring Counter</code>、<code>Johnson Counter</code>、<code>2N states</code>、<code>Decoder required for use as counter.</code>）。上面的文字取自投影片的完整內容，圖則重畫在文字旁邊，避免重疊。</p>
+
+      <h3>把計數器接到 FSM 上（p.21）</h3>
+      <p>圖的中央是一個綠色 <code>Counter</code> 方塊，輸入腳由上而下為 <code>Data</code>、<code>Load</code>、<code>Reset</code>、<code>Up/Down</code>、<code>Clock</code>，輸出為 <code>Q</code>；右側橘色方塊是 <code>Decoder Or Comparator</code>，由 <code>Q</code> 驅動，輸出接到狀態 <code>Sk</code>。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.21 的三句註記（照錄）</caption>
+          <thead><tr><th scope="col">註記</th><th scope="col">位置與意義</th></tr></thead>
+          <tbody>
+            <tr><td><code>Initialized by some state </code></td><td>由某個狀態 <code>Sj</code> 去初始化計數器（接到 <code>Load</code>／<code>Reset</code>）</td></tr>
+            <tr><td><code>Triggered by some state</code></td><td>由某個狀態 <code>Si</code> 去觸發計數（接到 <code>Clock</code>）</td></tr>
+            <tr><td><code>Decode to some inputs of FSM </code></td><td>解碼後的結果變成 FSM 的輸入</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>核心觀念：<strong>計數器與解碼器只是掛在一台普通 FSM 旁邊的額外輸入與輸出</strong>。FSM 負責決策，計數器負責數數，兩者分工。</p>
+      <figure class="figure">
+        <img src="assets/ch05/fig-slide-21.png" alt="投影片 p.21 畫面：中央綠色 Counter 方塊的輸入腳為 Data、Load、Reset、Up/Down、Clock，輸出 Q 接到右側橘色的 Decoder Or Comparator，再接到狀態 Sk；左側狀態 Sj 標示由某個狀態初始化、狀態 Si 標示由某個狀態觸發；下方是 S1 到 Sn 的一般狀態圖。">
+        <figcaption>計數器與解碼器掛在 FSM 旁邊。<span class="srcref" data-slides="21">投影片 p.21</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-5-16">
+      <h2>5.16 多週期狀態的轉換</h2>
+      <p><span class="srcref" data-slides="22">投影片 p.22</span></p>
+      <p>副標 <code>Using a Shared Resettable Counter and Comparators</code>（使用共用的可重置計數器與比較器）。這一頁解決一個很實際的問題：<strong>要等 n 個時脈，難道要畫 n 個狀態？</strong></p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.22 的三層細化（依圖整理，邊標為 Mealy 的 輸入/輸出 形式）</caption>
+          <thead><tr><th scope="col">層次</th><th scope="col">畫法</th><th scope="col">代價</th></tr></thead>
+          <tbody>
+            <tr>
+              <th scope="row">1. 抽象</th>
+              <td><code>Si</code> --<code>Ii /Oi</code>--&gt;（<code>delay n cycles</code> 佔位元狀態）--<code>/Oi+n</code>--&gt; <code>Si+n+1</code></td>
+              <td>只是需求描述，還不能實作</td>
+            </tr>
+            <tr>
+              <th scope="row">2. 展開</th>
+              <td><code>Si</code> --&gt; <code>Si+1</code> --&gt; <code>· · · ·</code> --&gt; <code>Si+n</code> --&gt; <code>Si+n+1</code></td>
+              <td><strong>要花 n 個狀態</strong></td>
+            </tr>
+            <tr>
+              <th scope="row">3. 用共用計數器</th>
+              <td><code>Si</code> --<code>Ii+n /Oi+n,c=0</code>--&gt; <code>c++ Sc</code>（自迴圈條件 <code>c&lt;n</code>），再由 <code>c==n /Oi+n</code> --&gt; <code>Si+n+1</code></td>
+              <td><strong>只要一個狀態</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>第三種作法：進入狀態時把計數器清零 (<code>c=0</code>)，在 <code>Sc</code> 這一個狀態裡自迴圈並遞增 (<code>c++</code>)，只要 <code>c&lt;n</code> 就留在原地，等到 <code>c==n</code> 才離開。</p>
+      <p>圖的右側是對應的方塊圖：一個大白橢圓是 FSM，下方一欄狀態暫存器回授，旁邊另一欄粉紅暫存器就是計數器，再接一個小粉紅圓圈 <code>&lt; n</code> 當比較器，比較結果回授進 FSM。</p>
+      <div class="supplement">
+        <p>這就是 §5.15 「計數器掛在 FSM 旁邊」的具體用法，也是實務上寫延遲、除頻、去彈跳 (debounce) 的標準手法。<strong>「共用」兩個字是重點</strong>：同一個計數器可以被好幾個等待狀態輪流使用，不必每處都做一個。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-5-17">
+      <h2>5.17 範例：基本交通號誌</h2>
+      <p><span class="srcref" data-slides="23">投影片 p.23</span></p>
+      <h3>問題描述（照錄 p.23）</h3>
+      <ul>
+        <li><strong>Normal Procedure:</strong> 15 sec green → 5 sec yellow → 60 sec red.（正常流程：綠 15 秒、黃 5 秒、紅 60 秒。）</li>
+        <li><strong>If the button pressed</strong>（若按鈕被按下）
+          <ul>
+            <li>Green: the rest time &lt; 10, extend it to 10 sec.（綠燈時若剩餘時間少於 10 秒，延長到 10 秒。）</li>
+            <li>Yellow or red: shorten the next period of the red light to 15 sec.（黃燈或紅燈時，把下一次紅燈縮短為 15 秒。）</li>
+          </ul>
+        </li>
+        <li>Assumed 1KHz Clock is supported.（假設有 1KHz 時脈。）</li>
+        <li>An RC-delay with an enough time constant used as Power-On state. The lights may be at any state just prior to power-on. At the moment of Power-On, initialize the counter and give 60 sec red light for safe.（用時間常數足夠的 RC 延遲作為開機重置。開機前燈可能在任何狀態，所以開機瞬間要初始化計數器並給 60 秒紅燈以確保安全。）</li>
+      </ul>
+      <p>圖是目標的黑盒子：左側輸入 <code>Button</code> 與 <code>Clock</code>，方塊內左上角畫著 RC 開機重置電路（電阻、電容到地、一個緩衝／反相三角形）標著 <code>Power-On</code>，右側輸出三個圓點 — 紅、黃、綠三個燈。</p>
+      <div class="supplement">
+        <p>這題把本章所有工具用上了：<strong>三個燈狀態 = FSM</strong>（§5.3）、<strong>秒數倒數 = 共用計數器</strong>（§5.16，1KHz 時脈要除頻到 1Hz）、<strong>按鈕 = 額外輸入</strong>，而「剩餘時間 &lt; 10」就是一個<strong>比較器</strong>。開機必給紅燈的要求，正是為了避免 §5.4 提過的「沒有重置就不知道起始狀態」問題。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-5-18">
+      <h2>5.18 Lab05 按鈕計時器</h2>
+      <p><span class="srcref" data-slides="24">投影片 p.24</span></p>
+      <ul>
+        <li>Design a 4Hz frequency divider（設計一個 4Hz 除頻器）</li>
+        <li>Draw the 3-state state diagram.（畫出三狀態的狀態圖。）</li>
+        <li>Show the button press time on the 7Seg LEDs（在七段顯示器上顯示按鈕被按住的時間）</li>
+        <li>Separate the duration into 2 or 3 periods and show the results on the green LEDs.（把時間長度分成 2 到 3 個區間，結果顯示在綠色 LED 上。）</li>
+      </ul>
+      <p>兩道練習題：</p>
+      <ul>
+        <li><strong>Problem 1.</strong> Design a sequence detector for receiving 1011.（設計接收 1011 的序列偵測器。）</li>
+        <li><strong>Problem 2.</strong> Can you design the Morse Codes by yourself now?（現在你能自己設計摩斯碼了嗎？）</li>
+      </ul>
+      <div class="supplement">
+        <p>Problem 1 就是 §5.4–§5.6 的那台機器 — 讀完本章可以直接寫出來。Problem 2 的摩斯碼是下一講 (Lec. 06) 的主題，而它正是「用計數器量按壓時間長短，再用 FSM 判斷點或劃」的典型應用。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="takeaways">
+      <h2>重點整理</h2>
+      <div class="takeaways">
+        <ol>
+          <li><strong>Huffman 模型是所有同步 FSM 的骨架</strong>：一塊組合邏輯加一排正反器，以 PPI／PPO（現態 <code>y</code>／次態 <code>Y</code>）回授，狀態數 S ≤ 2<sup>M</sup>。</li>
+          <li><strong>Mealy 看狀態與輸入，Moore 只看狀態</strong>。狀態圖上 Mealy 把 <code>輸入/輸出</code> 標在邊上，Moore 把輸出標在狀態圈內。</li>
+          <li><strong>程式上的差別只有一行</strong>：Mealy 在 <code>case</code> 裡算輸出（會用到 <code>X</code>），Moore 用 <code>assign</code> 直接從 <code>Present_State</code> 解碼。</li>
+          <li><strong>兩段式寫法要背下來</strong>：一個 <code>always@(posedge Clk)</code> 只做 <code>Present_State = Next_State;</code>，另一個 <code>always@(X or Present_State)</code> 用 <code>case</code> 算次態與輸出。</li>
+          <li><strong>1011 偵測器是可重疊的</strong>：偵測成功後回到 <code>01</code> 而不是 <code>00</code>，因為結尾的 <code>1</code> 可以當下一次的開頭。</li>
+          <li><strong>狀態圖 → 轉移表 → 布林式 → 閘級</strong>是一條機械式的路；投影片 p.6 的 <code>D1</code> 第一項與自己的表格矛盾，正好提醒要回頭用表驗算。</li>
+          <li><strong>邊界掃描解決「晶片焊上板子後碰不到接腳」的問題</strong>：每支腳旁放一個單元、串成一條鏈，用 <code>TDI</code>／<code>TDO</code> 序列存取。</li>
+          <li><strong>JTAG 只要四支腳</strong>：<code>TMS</code>（唯一的狀態輸入）、<code>TCK</code>、<code>TDI</code>、<code>TDO</code>。</li>
+          <li><strong>TAP 控制器是 16 狀態、IR 與 DR 兩路對稱</strong>；<code>Shift*</code> 的自迴圈負責搬資料，<code>Pause*</code> 讓外部設備可以中途暫停。</li>
+          <li><strong>連續五個 <code>TMS=1</code> 一定回到 <code>TestReset</code></strong> — 不必知道目前狀態就能重新同步。</li>
+          <li><strong>邊界掃描單元用兩個正反器</strong>：擷取／移位正反器負責搬資料，更新正反器只在 <code>Update</code> 時才把值推到輸出，避免移位期間輸出亂跳。</li>
+          <li><strong>移位計數器只差回授路徑</strong>：環形直接回授（一熱碼）、強生經反相器（2N 個狀態）、LFSR 經 XOR（偽隨機，當計數器用要解碼器）。</li>
+          <li><strong>要等 n 個時脈不必畫 n 個狀態</strong>：用一個共用的可重置計數器加比較器，一個狀態自迴圈到 <code>c==n</code> 就好。</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="terms">
+      <h2>關鍵術語</h2>
+      <div class="terms">
+        <dl>
+          <dt>有限狀態機 <span class="en">FSM, Finite State Machine</span></dt>
+          <dd>由有限個狀態與轉移規則構成的循序電路模型。<span class="srcref" data-slides="2">投影片 p.2</span></dd>
+
+          <dt>Mealy 機 <span class="en">Mealy machine</span></dt>
+          <dd>輸出同時相依於現態與輸入；狀態圖上標在邊上。<span class="srcref" data-slides="4">投影片 p.4</span></dd>
+
+          <dt>Moore 機 <span class="en">Moore machine</span></dt>
+          <dd>輸出只相依於現態；需要一個獨立的輸出解碼器。<span class="srcref" data-slides="4">投影片 p.4</span></dd>
+
+          <dt>轉移表 <span class="en">transition table</span></dt>
+          <dd>把狀態圖寫成「現態＋輸入 → 次態＋輸出」的表格。<span class="srcref" data-slides="6">投影片 p.6</span></dd>
+
+          <dt>序列偵測器 <span class="en">sequence detector</span></dt>
+          <dd>偵測輸入序列中是否出現特定圖樣的 FSM。<span class="srcref" data-slides="5">投影片 p.5</span></dd>
+
+          <dt>邊界掃描 <span class="en">boundary scan</span></dt>
+          <dd>在每支接腳旁放掃描單元並串成鏈，以序列方式測試接腳與互連。<span class="srcref" data-slides="13">投影片 p.13</span></dd>
+
+          <dt>JTAG / IEEE 1149.1</dt>
+          <dd>Joint Test Action Group 制定、後成為 IEEE 1149.1 的邊界掃描存取埠標準。<span class="srcref" data-slides="11,14">投影片 p.11、p.14</span></dd>
+
+          <dt>TAP 控制器 <span class="en">TAPC, Test Access Port Controller</span></dt>
+          <dd>以 <code>TMS</code> 為唯一輸入、具 16 個狀態的同步 FSM，控制 IR 與 DR 的擷取、移位與更新。<span class="srcref" data-slides="17,18">投影片 p.17–18</span></dd>
+
+          <dt>指令暫存器與旁路暫存器 <span class="en">IR / BR</span></dt>
+          <dd>IR 存放測試指令；BR 讓資料直接跳過本晶片，以縮短鏈長。<span class="srcref" data-slides="14,15">投影片 p.14–15</span></dd>
+
+          <dt>環形計數器 <span class="en">ring counter</span></dt>
+          <dd>移位鏈輸出直接回授，產生一熱碼序列。<span class="srcref" data-slides="20">投影片 p.20</span></dd>
+
+          <dt>強生計數器 <span class="en">Johnson counter</span></dt>
+          <dd>移位鏈經反相器回授，N 級可得 2N 個狀態。<span class="srcref" data-slides="20">投影片 p.20</span></dd>
+
+          <dt>線性反饋移位暫存器 <span class="en">LFSR</span></dt>
+          <dd>移位鏈經 XOR 回授，產生偽隨機序列；用於隨機測試與壓縮。<span class="srcref" data-slides="20">投影片 p.20</span></dd>
+        </dl>
+        <p>完整詞條見<a href="glossary.html">全站術語表</a>。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="quiz">
+      <h2>自我測驗</h2>
+      <div class="quiz" data-quiz-root></div>
+    </section>
+
+    <div data-progress-panel></div>
+    <nav class="pager" data-pager></nav>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p>內容整理自 2022 秋季「Hardware Description Language -- Logic Design using Verilog」課程投影片（黃宗柱 / Tsung-Chu Huang，彰師大電子系）。本網站僅供個人學習使用。</p>
+  </div>
+</footer>
+
+<script src="js/ch05-fsm.js"></script>
+<script src="js/ch05-quiz.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/code.js"></script>
+</body>
+</html>

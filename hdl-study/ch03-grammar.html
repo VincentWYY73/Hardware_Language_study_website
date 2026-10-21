@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 基本語法 — Verilog 的型別、運算子與八種 Block ｜ 硬體描述語言 HDL 學習網站</title>
+<link rel="stylesheet" href="css/site.css">
+<style>
+.svg-plain .box { fill: #fff; stroke: #5b6472; stroke-width: 2; }
+.svg-plain text { font-size: 13px; fill: #1f2430; }
+.svg-plain .edge { stroke: #8a93a3; stroke-width: 2.5; fill: none; }
+.svg-plain .bus { stroke: #2e7d32; stroke-width: 7; fill: none; stroke-linecap: round; }
+.svg-plain .bus-b { stroke: #1565c0; }
+.svg-plain .bus-c { stroke: #b08b00; }
+.svg-plain .cloud { fill: #e8f6e2; stroke: #4a7c2f; stroke-width: 2; }
+.svg-plain .reg { fill: #e3f0ff; stroke: #1565c0; stroke-width: 2; }
+.svg-plain .accent-text { fill: #8a5200; font-weight: 700; }
+.svg-plain .venn-out { fill: #fff; stroke: #5b6472; stroke-width: 2; }
+.svg-plain .venn-in { fill: #e8f6e2; stroke: #4a7c2f; stroke-width: 2; }
+[data-theme="dark"] .svg-plain .box { fill: #222733; stroke: #9aa4b4; }
+[data-theme="dark"] .svg-plain text { fill: #e7ebf2; }
+[data-theme="dark"] .svg-plain .cloud, [data-theme="dark"] .svg-plain .venn-in { fill: #1d3317; }
+[data-theme="dark"] .svg-plain .reg { fill: #14283d; }
+[data-theme="dark"] .svg-plain .venn-out { fill: #222733; }
+[data-theme="dark"] .svg-plain .accent-text { fill: #ffc34d; }
+.cmp-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin: 1rem 0; }
+@media (min-width: 900px) { .cmp-grid { grid-template-columns: 1fr 1fr; } }
+.cmp-grid > div { min-width: 0; }
+</style>
+<script src="js/site.js"></script>
+</head>
+<body data-chapter="ch03">
+<a class="skiplink" href="#main">跳到主要內容</a>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="index.html">硬體描述語言 (HDL) 學習網站<span>Logic Design using Verilog ・ 離線版</span></a>
+    <nav class="site-nav" aria-label="主導覽">
+      <ul>
+        <li><a href="index.html">首頁</a></li>
+        <li><a href="ch01-overview.html">01 Overview</a></li>
+        <li><a href="ch02-ychart.html">02 Y 圖</a></li>
+        <li><a href="ch03-grammar.html" aria-current="page">03 基本語法</a></li>
+        <li><a href="ch04-asm.html">04 ASM</a></li>
+        <li><a href="ch05-fsm.html">05 FSM</a></li>
+        <li><a href="glossary.html">術語表</a></li>
+      </ul>
+    </nav>
+    <div class="header-tools">
+      <button type="button" class="btn btn-sm" data-action="toggle-theme" aria-pressed="false">
+        <span data-theme-label>深色模式：關</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc" data-toc aria-labelledby="toc-heading">
+    <h2 id="toc-heading">本章目錄</h2>
+    <div class="toc-tools">
+      <button type="button" class="btn btn-sm" data-toc-action="expand">全部展開</button>
+      <button type="button" class="btn btn-sm" data-toc-action="collapse">全部收起</button>
+    </div>
+    <details class="toc-group" open>
+      <summary>小節（38 張投影片）</summary>
+      <ol class="toc-list">
+        <li><a href="#sec-3-1">3.1 簡化的 VLSI 設計流程</a></li>
+        <li><a href="#sec-3-2">3.2 本章大綱</a></li>
+        <li><a href="#sec-3-3">3.3 Verilog 的特殊符號</a></li>
+        <li><a href="#sec-3-4">3.4 資料型別與常數</a></li>
+        <li><a href="#sec-3-5">3.5 運算子</a></li>
+        <li><a href="#sec-3-6">3.6 模組與實體</a></li>
+        <li><a href="#sec-3-7">3.7 埠與接線的對應、參數傳遞</a></li>
+        <li><a href="#sec-3-8">3.8 數位 IC 設計自動化的四個層次</a></li>
+        <li><a href="#sec-3-9">3.9 Verilog 的四種模型</a></li>
+        <li><a href="#sec-3-10">3.10 閘級設計範例與突波消除</a></li>
+        <li><a href="#sec-3-11">3.11 RTL 由程式庫合成</a></li>
+        <li><a href="#sec-3-12">3.12 匯流排的切割與串接</a></li>
+        <li><a href="#sec-3-13">3.13 什麼是「行為」</a></li>
+        <li><a href="#sec-3-14">3.14 內容順序與時序、可合成的範圍</a></li>
+        <li><a href="#sec-3-15">3.15 Verilog 的事件</a></li>
+        <li><a href="#sec-3-16">3.16 電路時間與 CPU 時間、時間輪</a></li>
+        <li><a href="#sec-3-17">3.17 左值與 reg</a></li>
+        <li><a href="#sec-3-18">3.18 Verilog 的八種 Block</a></li>
+        <li><a href="#sec-3-19">3.19 編譯指令與系統函式</a></li>
+        <li><a href="#sec-3-20">3.20 命令列與監看輸出</a></li>
+        <li><a href="#sec-3-21">3.21 三種指定敘述</a></li>
+        <li><a href="#sec-3-22">3.22 函式與任務</a></li>
+        <li><a href="#sec-3-23">3.23 阻塞與非阻塞的逐步比較</a></li>
+        <li><a href="#sec-3-24">3.24 case / casex / casez</a></li>
+        <li><a href="#sec-3-25">3.25 範例：正反器</a></li>
+        <li><a href="#sec-3-26">3.26 範例：計數器</a></li>
+        <li><a href="#sec-3-27">3.27 Lab03 七段顯示器與除頻器</a></li>
+      </ol>
+    </details>
+    <details class="toc-group" open>
+      <summary>本章結尾</summary>
+      <ul class="toc-list">
+        <li><a href="#takeaways">重點整理</a></li>
+        <li><a href="#terms">關鍵術語</a></li>
+        <li><a href="#quiz">自我測驗</a></li>
+      </ul>
+    </details>
+  </nav>
+
+  <main id="main">
+    <h1>03 基本語法 — Verilog 的型別、運算子與八種 Block</h1>
+    <p>資料型別、運算子、模組與實體、四種模型、八種 block、阻塞與非阻塞。原始投影片 38 張，估計閱讀 55 分鐘。</p>
+
+    <section class="chapter-section" id="objectives">
+      <h2>學習目標</h2>
+      <ul>
+        <li>寫出 Verilog 的常數格式（<code>8’haf</code>、<code>1’bz</code>），並說明 <code>`</code> 與 <code>’</code> 兩種引號的用途差別。</li>
+        <li>分辨可合成與不可合成的運算子與敘述。</li>
+        <li>說明模組 (module) 與實體 (instance) 的關係，並寫出埠對應的兩種寫法與參數傳遞。</li>
+        <li>認出 Verilog 的<strong>四種模型</strong>：行為、RTL、閘級、開關級，並讀懂各自的範例程式。</li>
+        <li>說出 Verilog 的八種 block 各自的性質（並行／序列／程序式）。</li>
+        <li>準確區分<strong>連續指定</strong>、<strong>阻塞指定</strong>與<strong>非阻塞指定</strong>在模擬與合成上的差別。</li>
+        <li>讀懂 <code>case</code>／<code>casex</code>／<code>casez</code> 的差異，並寫出正反器與計數器的標準寫法。</li>
+      </ul>
+    </section>
+
+    <section class="chapter-section" id="sec-3-1">
+      <h2>3.1 簡化的 VLSI 設計流程</h2>
+      <p><span class="srcref" data-slides="1,2">投影片 p.1–2</span></p>
+      <p>本章封面日期 2022/09/29，是 Lec. 03「Type, Op, 4Mdl, 8Blks」。</p>
+      <p>p.2 把整個 VLSI 流程畫成一條流水線：<strong>idea（燈泡）→ 寫 RTL 程式 → Rapid Prototyping（FPGA）→ OK? → Prototyping Chip → 晶圓／晶粒 → OK? → 量產</strong>。兩個 <code>OK</code> 菱形各有一條 <code>Y</code> 的出口，不 OK 時則有黃色回饋箭頭繞回 idea 與撰寫階段。</p>
+      <div class="codeblock" data-title="p.2 流程圖中的程式片段（照抄原文）">
+<pre><code data-lang="verilog">module cpu(ports)
+inout ports;
+:
+// RTL Coding
+:
+endmodule</code></pre>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-02.png" alt="投影片 p.2 畫面：簡化的 VLSI 設計流程圖。由左至右是代表想法的燈泡、含 Verilog 程式的文件、標示 Rapid Prototyping 的 FPGA 圖示、OK 判斷菱形、Prototyping Chip 佈局方塊、晶圓與晶粒，最後是量產的晶粒堆疊；兩條黃色回饋箭頭由 OK 菱形繞回前段。">
+        <figcaption>簡化的 VLSI 設計流程。<span class="srcref" data-slides="2">投影片 p.2</span></figcaption>
+      </figure>
+      <div class="supplement">
+        <p>這張圖解釋了為什麼要先學 FPGA：在 Rapid Prototyping 階段改錯只要重新燒錄，到了 Prototyping Chip 之後每次修正都是一次光罩與流片的成本。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-2">
+      <h2>3.2 本章大綱</h2>
+      <p><span class="srcref" data-slides="3">投影片 p.3</span></p>
+      <ul>
+        <li>Data Types and Operators in Verilog（資料型別與運算子）</li>
+        <li>Organic Elements in Structure View（結構觀點的組成元素）
+          <ul>
+            <li>Module/Instance</li>
+            <li>Ports/Nets Mapping</li>
+          </ul>
+        </li>
+        <li>Four Models of HDL（HDL 的四種模型）
+          <ul>
+            <li>Switch/Gate/RTL/Behavioral</li>
+          </ul>
+        </li>
+        <li>Two Usual Phases of HDLs（HDL 的兩個主要階段）
+          <ul>
+            <li>Simulation: Event Driven（模擬：事件驅動）</li>
+            <li>Synthesis: Continuous/Procedural（合成：連續／程序式）</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section class="chapter-section" id="sec-3-3">
+      <h2>3.3 Verilog 的特殊符號</h2>
+      <p><span class="srcref" data-slides="4">投影片 p.4</span></p>
+      <p>投影片用一張鍵盤照片，標出 Verilog 會用到的五個特殊符號：</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.4 標出的五個符號</caption>
+          <thead><tr><th scope="col">符號</th><th scope="col">投影片的說明</th><th scope="col">用途</th></tr></thead>
+          <tbody>
+            <tr><td><code>`</code></td><td>Left single quote（左單引號／反引號）</td><td>編譯指令，如 <code>`define</code>、<code>`include</code></td></tr>
+            <tr><td><code>@</code></td><td>at sign</td><td>敏感度列表，如 <code>always@(...)</code></td></tr>
+            <tr><td><code>#</code></td><td>number sign</td><td>延遲與參數，如 <code>#10</code>、<code>#(8)</code></td></tr>
+            <tr><td><code>$</code></td><td>dollar sign</td><td>系統函式，如 <code>$display</code>、<code>$time</code></td></tr>
+            <tr><td><code>'</code></td><td>right single quote（右單引號）</td><td>有位寬的常數，如 <code>8'hAF</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">投影片刻意區分<strong>反引號</strong> <code>`</code>（編譯指令）與<strong>單引號</strong> <code>'</code>（常數位寬），兩者在鍵盤上是不同的鍵，初學時最常打錯。</p>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-04.png" alt="投影片 p.4 畫面：一張 Dell 鍵盤照片，上面有五個橢圓標註分別指向波浪號鍵的反引號、數字 2 的 at 符號、數字 3 的井號、數字 4 的錢號，以及引號鍵的右單引號。">
+        <figcaption>Verilog 用到的五個特殊符號在鍵盤上的位置。<span class="srcref" data-slides="4">投影片 p.4</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-3-4">
+      <h2>3.4 資料型別與常數</h2>
+      <p><span class="srcref" data-slides="5">投影片 p.5</span></p>
+
+      <h3>Switch-Level：訊號強度</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>Signal Intention of Switch（照錄 p.5 的強度表）</caption>
+          <thead><tr><th scope="col">Input</th><th scope="col">Output</th></tr></thead>
+          <tbody>
+            <tr><td>supply</td><td>pull</td></tr>
+            <tr><td>strong</td><td>pull</td></tr>
+            <tr><td>pull</td><td>weak</td></tr>
+            <tr><td>weak</td><td>medium</td></tr>
+            <tr><td>large</td><td>medium</td></tr>
+            <tr><td>medium</td><td>small</td></tr>
+            <tr><td>small</td><td>small</td></tr>
+            <tr><td>high</td><td>high</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Logic-Level：四種邏輯值</h3>
+      <ul>
+        <li><code>1’b0 </code></li>
+        <li><code>1’b1 </code></li>
+        <li><code>1’bz (floating, high impedance), </code></li>
+        <li><code>1’bx (unknown)</code></li>
+      </ul>
+
+      <h3>Constants：常數寫法</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>常數格式（照錄 p.5，包含原文的全形單引號）</caption>
+          <thead><tr><th scope="col">寫法</th><th scope="col">投影片的說明</th></tr></thead>
+          <tbody>
+            <tr><td><code>8’b01011100</code></td><td>8-bit Binary</td></tr>
+            <tr><td><code>8’o377</code></td><td>8-bit Octal</td></tr>
+            <tr><td><code>8’d255</code></td><td>8-bit Decimal</td></tr>
+            <tr><td><code>8’haf</code></td><td>8-bit Hexadecimal</td></tr>
+            <tr><td><code>‘ha0b9</code></td><td>unsized hex</td></tr>
+            <tr><td><code>255</code></td><td>unsized decimal</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>投影片左下角把 <code>13’ h1A2F</code> 放大，用大括號標出兩個部分：<strong><code>13</code> 是 #bits（位寬）</strong>，<strong><code>h</code> 是 radix（基底）</strong>。</p>
+      <div class="supplement">
+        <p>格式是「位寬 + 單引號 + 基底字母 + 數值」。省略位寬時由上下文決定寬度（unsized）。<code>z</code> 代表高阻抗、<code>x</code> 代表未知，這兩個值在模擬中很常見，但合成後的實體電路只有 0 與 1。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-5">
+      <h2>3.5 運算子</h2>
+      <p><span class="srcref" data-slides="6,7">投影片 p.6–7</span></p>
+
+      <h3>與 C 語言類似（p.6）</h3>
+      <div class="codeblock" data-title="p.6 的三類運算子範例（照抄原文）">
+<pre><code data-lang="verilog">Unary:    assign a = ~b; // bitwise not
+Binary:   assign a = b &amp; c; // bitwise and
+                     such as: +, -, *, /, |, ^, &lt;&lt;, &gt;&gt;, 
+Ternary: assign d = c ? a : b; // if 1, d=a; else d=b</code></pre>
+      </div>
+
+      <h3>可合成的運算子</h3>
+      <ul>
+        <li>Most ALU and logic operation designs are developed in library.（大部分 ALU 與邏輯運算的設計都已在程式庫中。）</li>
+        <li>In RTL model, the designs are “assigned” according to data flow.（在 RTL 模型中，設計是依資料流「指定」出來的。）</li>
+      </ul>
+
+      <h3>不可合成的敘述與運算子</h3>
+      <ul>
+        <li>Statements dependent to time or times, e.g., initial, repeat（依賴時間或次數的敘述）</li>
+        <li>Switch-level（開關級）</li>
+        <li>Operators used in compiling/simulation only, e.g., <code>===</code></li>
+        <li>Operators with no design/method in current library, e.g., <code>/ %</code> (in some tool)</li>
+      </ul>
+
+      <h3>完整運算子表（p.7）</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>Operations in Verilog（照錄 p.7，共 26 列）</caption>
+          <thead><tr><th scope="col">Type</th><th scope="col">Symbol</th><th scope="col">Operation</th></tr></thead>
+          <tbody>
+            <tr><th scope="row" rowspan="7">Arithmetic</th><td><code>*</code></td><td>Multiply</td></tr>
+            <tr><td><code>/</code></td><td>Divide</td></tr>
+            <tr><td><code>+</code></td><td>Add</td></tr>
+            <tr><td><code>-</code></td><td>Subtract</td></tr>
+            <tr><td><code>%</code></td><td>Modulus</td></tr>
+            <tr><td><code>+</code></td><td>Unary plus</td></tr>
+            <tr><td><code>-</code></td><td>Unary minus</td></tr>
+            <tr><th scope="row" rowspan="3">Logical</th><td><code>!</code></td><td>Logical negation</td></tr>
+            <tr><td><code>&amp;&amp;</code></td><td>Logical and</td></tr>
+            <tr><td><code>||</code></td><td>Logical or</td></tr>
+            <tr><th scope="row" rowspan="4">Relational</th><td><code>&gt;</code></td><td>Greater than</td></tr>
+            <tr><td><code>&lt;</code></td><td>Less than</td></tr>
+            <tr><td><code>&gt;=</code></td><td>Greater than or equal</td></tr>
+            <tr><td><code>&lt;=</code></td><td>Less than or equal</td></tr>
+            <tr><th scope="row" rowspan="2">Equality</th><td><code>==</code></td><td>Equality</td></tr>
+            <tr><td><code>!=</code></td><td>inequality</td></tr>
+            <tr><th scope="row" rowspan="6">Reduction</th><td><code>&amp;</code></td><td>Bitwise negation</td></tr>
+            <tr><td><code>~&amp;</code></td><td>nand</td></tr>
+            <tr><td><code>|</code></td><td>or</td></tr>
+            <tr><td><code>~|</code></td><td>nor</td></tr>
+            <tr><td><code>^</code></td><td>xor</td></tr>
+            <tr><td><code>^~  ~^</code></td><td>xnor</td></tr>
+            <tr><th scope="row" rowspan="2">Shift</th><td><code>&gt;&gt;</code></td><td>Right shift</td></tr>
+            <tr><td><code>&lt;&lt;</code></td><td>Left shift</td></tr>
+            <tr><th scope="row">Concatenation</th><td><code>{ }</code></td><td>Concatenation</td></tr>
+            <tr><th scope="row">Conditional</th><td><code>?:</code></td><td>conditional</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">Reduction 群組的第一列，投影片確實寫成 <code>&amp;</code> → 「Bitwise negation」。依該群組的其餘各列推斷，這一列應該是 <strong>and</strong>（縮減 AND）。此處照原文保留。</p>
+    </section>
+
+    <section class="chapter-section" id="sec-3-6">
+      <h2>3.6 模組與實體</h2>
+      <p><span class="srcref" data-slides="8">投影片 p.8</span></p>
+      <p>投影片的兩句關鍵定義（照錄）：</p>
+      <ul>
+        <li><strong>A module is an object that is defined as a template.</strong>（模組是以樣板形式定義的物件。）</li>
+        <li><strong>Instances are duplicated elements in the parent module of its associated module.</strong>（實體是在父模組中被複製出來的元素，對應到某個模組。）</li>
+      </ul>
+      <div class="cmp-grid">
+        <div>
+          <div class="codeblock" data-title="p.8 左側：三個模組樣板（照抄原文）">
+<pre><code data-lang="verilog">module MODULE1( … );
+:
+:
+endmodule 
+
+module MODULE2( … );
+:
+:
+endmodule 
+
+module MODULE3( … );
+:
+:
+endmodule </code></pre>
+          </div>
+        </div>
+        <div>
+          <div class="codeblock" data-title="p.8 右側：Testbench 或待實作的頂層模組（照抄原文）">
+<pre><code data-lang="verilog">module top( … );
+:
+:
+MODULE1 Instance1(…);
+MODULE1 Instance2(…);
+MODULE2 Instance3(…);
+MODULE1 Instance4(…);
+MODULE2 Instance5(…);
+:
+:
+endmodule</code></pre>
+          </div>
+        </div>
+      </div>
+      <p>注意右側：<code>MODULE1</code> 被實體化三次（Instance1、2、4），<code>MODULE2</code> 兩次，而 <code>MODULE3</code> 完全沒用到。<strong>模組是定義，實體才佔用硬體資源。</strong></p>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-08.png" alt="投影片 p.8 畫面：左側灰色雲形中有三個黑色程式方塊，代表三個模組樣板；右側金色立體方塊是頂層模組，內含五行實體化敘述；五條紅色箭頭由樣板指向對應的實體化行。">
+        <figcaption>模組（樣板）與實體（複製品）。<span class="srcref" data-slides="8">投影片 p.8</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-3-7">
+      <h2>3.7 埠與接線的對應、參數傳遞</h2>
+      <p><span class="srcref" data-slides="9,10">投影片 p.9–10</span></p>
+
+      <h3>埠是內部觀點，接線是外部觀點（p.9）</h3>
+      <p>投影片用兩個欄位標題說明：<code>Port (Pin) – Internal View</code>（埠／接腳，模組內部看）與 <code>Net (Wire) – External View</code>（網線，模組外部看）。圖上 <code>Instance1 of M1</code> 的三條線標為 <code>Wire1</code>、<code>Node2</code>、<code>Net3</code>，並附註 <strong>They may have the same or different names.</strong>（名稱可以相同也可以不同。）</p>
+      <div class="codeblock" data-title="p.9 的模組宣告（照抄原文，含原本的前置空白）">
+<pre><code data-lang="verilog">  module M1(Clk, A, B);
+    input  Clk;
+    inout  A;
+    output B;
+    :
+    :    
+  endmodule </code></pre>
+      </div>
+      <p>埠對應有兩種寫法：</p>
+      <div class="codeblock" data-title="p.9 的兩種埠對應（照抄原文）">
+<pre><code data-lang="verilog">Port-Associated Mapping:
+     e.g., M1 Instance1(.A(Node2), .Clk(Wire1), .B(Net3));
+Ordered Mapping:
+   e.g., M1 Instance2(Wire1, Node2, Net3);</code></pre>
+      </div>
+      <div class="supplement">
+        <p>名稱對應 (<code>.A(Node2)</code>) 不怕順序寫錯，埠一多就該用它；順序對應 (<code>M1 Instance2(...)</code>) 比較短，但必須和宣告順序完全一致，改埠順序就會錯得無聲無息。</p>
+      </div>
+      <p>參數埠的宣告與實體化：</p>
+      <div class="codeblock" data-title="p.9 的參數宣告與實體化（照抄原文）">
+<pre><code data-lang="verilog">Declaration:
+     e.g., module M1 #(parameter N=16)(Port1, Port2);
+Instantiation:
+   e.g., M1 #(8) Instance1 (Net1, Net2);</code></pre>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-09.png" alt="投影片 p.9 畫面：左側是模組 M1 的程式方塊，邊緣畫著代表 Clk 輸入的菱形、代表 A 雙向埠與 B 輸出埠的三角形；右側是標示 Instance1 of M1 的黑色方塊，左邊兩條網線標為 Wire1 與 Node2，右邊一條標為 Net3。">
+        <figcaption>埠（內部）與網線（外部）的對應。<span class="srcref" data-slides="9">投影片 p.9</span></figcaption>
+      </figure>
+
+      <h3>參數傳遞的四種寫法（p.10）</h3>
+      <div class="cmp-grid">
+        <div>
+          <div class="codeblock" data-title="p.10 實體化：順序對應（照抄原文）">
+<pre><code data-lang="verilog">ADD  #(4, 8)  U1  (X, Y, Sum);</code></pre>
+          </div>
+          <div class="codeblock" data-title="p.10 實體化：名稱對應（照抄原文）">
+<pre><code data-lang="verilog">ADD #(.M(4), .N(8)) U1(.A(X), .B(Y), .S(Sum));</code></pre>
+          </div>
+        </div>
+        <div>
+          <div class="codeblock" data-title="p.10 模組宣告：傳統寫法（照抄原文）">
+<pre><code data-lang="verilog">module ADD(A, B, S);
+    parameter M=2, N=3;
+    input [M-1:0] A;
+    input [N-1:0] B;
+        :
+endmodule</code></pre>
+          </div>
+          <div class="codeblock" data-title="p.10 模組宣告：ANSI 寫法（照抄原文）">
+<pre><code data-lang="verilog">module ADD #(
+    parameter M=2,
+    parameter N=3) (
+    input [M-1:0] A,
+    input [N-1:0] B,
+    output [N:0]  S);
+        :
+endmodule</code></pre>
+          </div>
+        </div>
+      </div>
+      <p>投影片對預設值的註記照錄：<em>default values should / cannot given for some compilers.</em>（某些編譯器要求／不允許給預設值。）</p>
+    </section>
+
+    <section class="chapter-section" id="sec-3-8">
+      <h2>3.8 數位 IC 設計自動化的四個層次</h2>
+      <p><span class="srcref" data-slides="11">投影片 p.11</span></p>
+      <div class="table-wrap">
+        <table>
+          <caption>Digital IC Design Automation（照錄 p.11）</caption>
+          <thead><tr><th scope="col">層次</th><th scope="col">方法</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Switch Level Syntheses</th><td>Physical Design Automation for Various Logic Structures.<br>Primitive Logic Gates: Eular-Path Guided CMOS Layout</td></tr>
+            <tr><th scope="row">Gate Level Syntheses</th><td>K-Map → McKlusky &amp; Quintus Method: 2-Level Optimized<br>Breyton’s ESSPRESSO: Multiple-Level Efficient</td></tr>
+            <tr><th scope="row">RTL Model Syntheses</th><td>Data-Flow Graph Theory<br>Macro Instancing from Library (Database and Rule-base)</td></tr>
+            <tr><th scope="row">Behavioral Model Syntheses</th><td>Finite State Machine (FSM)<br>Algorithmic State Machine (ASM) (Mapped from Flowchart)<br>Rule-Base or Artificial Intellectual Techniques </td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">原文的拼法 <code>Eular-Path</code>、<code>McKlusky &amp; Quintus</code>、<code>Breyton’s ESSPRESSO</code> 均有誤，一般寫作 <strong>Euler path</strong>、<strong>Quine–McCluskey</strong>、<strong>Brayton's ESPRESSO</strong>。照原文保留。</p>
+      <div class="supplement">
+        <p>這張表正好對應第 04、05 章：行為模型的合成靠 FSM 與 ASM，而 ASM 是由流程圖對應過來的 — 這就是第 04 章整章要做的事。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-9">
+      <h2>3.9 Verilog 的四種模型</h2>
+      <p><span class="srcref" data-slides="12">投影片 p.12</span></p>
+      <p>投影片由上而下分成四個橫帶，抽象層級<strong>由高到低</strong>：行為 → RTL → 閘級 → 開關級。四段程式都是同一件事的不同層級寫法。</p>
+
+      <h3>1. 行為模型（Behavioral Model / Procedural Model）</h3>
+      <div class="codeblock" data-title="p.12 第 1 帶：計數器（照抄原文）">
+<pre><code data-lang="verilog">module counter(Clk, Q);
+    input  Clk;
+    output [15:0] Q;
+    reg    [15:0] Q;
+    always@(posedge Clk)
+	Q=Q+1;
+endmodule </code></pre>
+      </div>
+      <p>圖示為一個運算子梯形接到帶時脈記號的暫存器，輸出再回授到自己的輸入。</p>
+
+      <h3>2. 暫存器轉移層（Register Transfer Level / Data-Flow / Register-Transfer Model）</h3>
+      <div class="codeblock" data-title="p.12 第 2 帶：加法器（照抄原文）">
+<pre><code data-lang="verilog">module adder(A, B, Ci, Co, S);
+    input [31:0] A, B;
+    input Ci;
+    output Co;
+    output [31:0] S;
+    assign {Co, S}=A+B+Ci;
+endmodule </code></pre>
+      </div>
+      <p>圖示為兩條暫存器橫條餵進一個標著 <code>operator</code> 的梯形，輸出再寫入下方第三條暫存器橫條 — 這正是「暫存器之間的資料轉移」。</p>
+
+      <h3>3. 閘級模型（Gate Level Model / Structural Model）</h3>
+      <div class="codeblock" data-title="p.12 第 3 帶：SR 閂鎖器（照抄原文）">
+<pre><code data-lang="verilog">module SR_latch(S, R, P, Q);
+    input S, R;
+    output P, Q;
+    nor g1(Q, R, P);
+    nor g2(P, S, Q);
+endmodule </code></pre>
+      </div>
+      <p>圖示為兩個交叉耦合的 NOR 閘。注意這裡用的是<strong>閘級原始元件</strong> <code>nor</code>，並給了實體名 <code>g1</code>、<code>g2</code>。</p>
+
+      <h3>4. 開關級模型（Switch Level Model）</h3>
+      <div class="codeblock" data-title="p.12 第 4 帶：多工器（照抄原文）">
+<pre><code data-lang="verilog">module multiplexer(A, B, C, F);
+    input A, B, C;
+    output F;
+    tranif1 (F, A, C);
+    pmos    (F,B,C);
+endmodule </code></pre>
+      </div>
+      <p>圖示為一個 MOS 電晶體符號與一個傳輸閘（蝴蝶結）符號。</p>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-12.png" alt="投影片 p.12 畫面：四個橫帶由上而下分別是行為模型、暫存器轉移層、閘級模型與開關級模型，每一帶左側是對應的電路符號圖，右側是 Verilog 程式方塊。">
+        <figcaption>Verilog 的四種模型，由高抽象到低抽象。<span class="srcref" data-slides="12">投影片 p.12</span></figcaption>
+      </figure>
+      <div class="supplement">
+        <p>實務上只有第 1、2 種常用（對應第 01 章 p.16 的 Behavioral Mode 與 RTL Mode）。閘級通常是合成工具的<strong>輸出</strong>而不是人寫的輸入；開關級幾乎只在元件庫開發或特殊電路才會碰到。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-10">
+      <h2>3.10 閘級設計範例與突波消除</h2>
+      <p><span class="srcref" data-slides="13">投影片 p.13</span></p>
+
+      <h3>範例 1：正緣偵測器</h3>
+      <div class="codeblock" data-title="p.13 範例 1（照抄原文，含大寫的 Output）">
+<pre><code data-lang="verilog">module posedge_detector(in, out);
+input in;
+Output out;
+not #5 (c, b), (b, a), (a, in);
+nand #10 (out, in, a);
+endmodule </code></pre>
+      </div>
+      <p class="warn">原文 <code>Output out;</code> 的 O 是大寫，Verilog 區分大小寫，此處照抄不修正。</p>
+      <p>電路是三個反相器串成鏈 (<code>in → a → b → c</code>)，再把原輸入 <code>in</code> 與延遲後的 <code>a</code> 一起送進 NAND。<code>#5</code> 與 <code>#10</code> 是閘延遲。</p>
+
+      <h3>範例 2：突波 (Hazard / Glitch) 消除</h3>
+      <div class="table-wrap">
+        <table>
+          <caption>p.13 的 3 變數卡諾圖（照錄；列為 AB、欄為 C）</caption>
+          <thead><tr><th scope="col">AB \ C</th><th scope="col">0</th><th scope="col">1</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">00</th><td>0</td><td>1</td></tr>
+            <tr><th scope="row">01</th><td>0</td><td>1</td></tr>
+            <tr><th scope="row">11</th><td>1</td><td>1</td></tr>
+            <tr><th scope="row">10</th><td>0</td><td>0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>投影片把 <code>C=1</code> 欄中 <code>AB=01</code> 與 <code>AB=11</code> 兩格圈紅 — 這是會產生突波的相鄰處。右側的時序圖顯示 <code>A</code> 上升時 <code>F</code> 出現一個窄脈衝。</p>
+      <p>修正方式是加入<strong>共識項 (consensus term)</strong>。投影片用動畫把第一行換成第二行：</p>
+      <div class="codeblock" data-title="p.13 步驟 1：原式（會有突波）">
+<pre><code data-lang="verilog">assign F=(A&amp;B)|(~A&amp;C);</code></pre>
+      </div>
+      <div class="codeblock" data-title="p.13 步驟 2：加上共識項 B&amp;C（突波消失）">
+<pre><code data-lang="verilog">assign F=(A&amp;B)|(~A&amp;C)|B&amp;C;</code></pre>
+      </div>
+      <div class="supplement">
+        <p>為什麼有效：當 <code>B=C=1</code> 時，不論 <code>A</code> 怎麼跳，<code>B&amp;C</code> 這一項恆為 1，<code>F</code> 就被固定住，中間的空檔被填滿。這個多餘項在邏輯上完全不改變真值表，純粹是為了消除時序上的毛刺。</p>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-13.png" alt="投影片 p.13 畫面：上方是正緣偵測器的程式與疊在其上的反相器鏈加 NAND 閘電路圖；下方左側是三變數卡諾圖，C 等於 1 欄中兩格被紅圈標出，右側是 A、B、C、F 的時序圖，F 上有一個窄的突波脈衝。">
+        <figcaption>閘級範例與突波消除。<span class="srcref" data-slides="13">投影片 p.13</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-3-11">
+      <h2>3.11 RTL 由程式庫合成</h2>
+      <p><span class="srcref" data-slides="14,15">投影片 p.14–15</span></p>
+
+      <h3>基本合成方法（p.14）</h3>
+      <p>投影片列出三步：</p>
+      <ol>
+        <li>To parse an arithmetic-logic expression into a tree（把算術邏輯式剖析成一棵樹）</li>
+        <li>Matching parameters and checking the port-net consistencies（比對參數並檢查埠與網線的一致性）</li>
+        <li>Calling the instance from macro-block libraries and connecting.（從巨集區塊程式庫叫出實體並接線。）</li>
+      </ol>
+      <p>範例式子是 <code>E.g., assign A=B + ~C;</code>，圖中畫出它的剖析樹：根是 <code>=</code>，子節點為 <code>A</code> 與 <code>+</code>；<code>+</code> 的子節點是 <code>B</code> 與 <code>~</code>；<code>~</code> 的子節點是 <code>C</code>。</p>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 420 240" role="img" aria-labelledby="pt-title pt-desc">
+          <title id="pt-title">p.14 的運算式剖析樹</title>
+          <desc id="pt-desc">根節點是等號，左子為 A，右子為加號；加號的左子為 B，右子為波浪號反相運算子；波浪號的子節點為 C。</desc>
+          <path class="edge" d="M210 52 L130 96"></path>
+          <path class="edge" d="M210 52 L290 96"></path>
+          <path class="edge" d="M290 128 L230 172"></path>
+          <path class="edge" d="M290 128 L350 172"></path>
+          <path class="edge" d="M350 204 L350 216"></path>
+          <g><circle class="box" cx="210" cy="36" r="20"></circle><text x="210" y="42" text-anchor="middle">=</text></g>
+          <g><circle class="cloud" cx="124" cy="112" r="20"></circle><text x="124" y="118" text-anchor="middle">A</text></g>
+          <g><circle class="box" cx="290" cy="112" r="20"></circle><text x="290" y="118" text-anchor="middle">+</text></g>
+          <g><circle class="cloud" cx="224" cy="188" r="20"></circle><text x="224" y="194" text-anchor="middle">B</text></g>
+          <g><circle class="box" cx="350" cy="188" r="20"></circle><text x="350" y="194" text-anchor="middle">~</text></g>
+          <g><circle class="cloud" cx="350" cy="236" r="18"></circle><text x="350" y="242" text-anchor="middle">C</text></g>
+        </svg>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-14.png" alt="投影片 p.14 畫面：左側三條綠色匯流排分別標示 A、B、C，黃色箭頭由 B 與 C 指向 A；中央灰色雲形內是運算式的剖析樹；右側金色圓柱代表巨集區塊程式庫，白色箭頭由樹指向圓柱。">
+        <figcaption>把運算式剖析成樹，再從程式庫叫出對應的巨集區塊。<span class="srcref" data-slides="14">投影片 p.14</span></figcaption>
+      </figure>
+
+      <h3>三個 RTL 設計範例（p.15）</h3>
+      <div class="codeblock" data-title="p.15 範例 1：比較器（照抄原文）">
+<pre><code data-lang="verilog">module comparator(A, B, GT, EQ, LT);
+parameter SIZE=16;
+input [SIZE-1:0] A, B;
+output GT, EQ, LT;
+assign GT=(A&gt;B);
+assign EQ=(A==B);
+assign LT=(A&lt;B);
+endmodule </code></pre>
+      </div>
+      <div class="codeblock" data-title="p.15 範例 2：3 對 8 解碼器，輸出為 1-hot code（照抄原文）">
+<pre><code data-lang="verilog">module decode3to8(in, out);
+parameter SIZE=3;
+input  [SIZE-1:0] in;
+output [1&lt;&lt;SIZE-1] out;
+assign out=1’b1&lt;&lt;in;
+endmodule </code></pre>
+      </div>
+      <div class="codeblock" data-title="p.15 範例 3：多工器（照抄原文）">
+<pre><code data-lang="verilog">module multiplexer(F, C, A, B);
+input  A, B, C;
+output F;
+assign F=C?A:B;
+endmodule </code></pre>
+      </div>
+      <div class="supplement">
+        <p>三個範例都只用 <code>assign</code>，沒有任何 <code>always</code> — 這就是 RTL／資料流風格：描述「輸出等於輸入的什麼函數」，由合成器去挑程式庫裡的巨集區塊。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-12">
+      <h2>3.12 匯流排的切割與串接</h2>
+      <p><span class="srcref" data-slides="16">投影片 p.16</span></p>
+      <p>圖上兩條 4 位元匯流排 <code>A[3:0]</code> 與 <code>B[3:0]</code> 由上方進入，合成 8 位元的 <code>C[7:0]</code>，再從下方切成 <code>D[1:0]</code> 與 <code>E[5:0]</code>。</p>
+      <div class="cmp-grid">
+        <div>
+          <div class="codeblock" data-title="p.16 切割 Splitting（照抄原文）">
+<pre><code data-lang="verilog">assign A=C[7:4];
+assign B=C[3:0];
+assign D=C[7:6];
+assign E=C[5:0];</code></pre>
+          </div>
+        </div>
+        <div>
+          <div class="codeblock" data-title="p.16 串接 Concatenation（照抄原文）">
+<pre><code data-lang="verilog">assign C={A,B};
+assign {D, E}=C;</code></pre>
+          </div>
+        </div>
+      </div>
+      <p>重複 (replication) 的例子：</p>
+      <div class="codeblock" data-title="p.16 的重複運算式（照抄原文，含混用的直引號與全形引號）">
+<pre><code data-lang="verilog">assign data = 2{4'b0001, 2{3‘b011}};</code></pre>
+      </div>
+      <p>投影片下方用兩條綠色橫條展開結果：</p>
+      <div class="codeblock" data-title="p.16 的展開結果（兩條綠色橫條，照抄原文）">
+<pre><code data-lang="text">0001-001-001-0001-001-001
+00010010010001001001</code></pre>
+      </div>
+      <p class="warn">這一頁有三處原文瑕疵，全部照原樣呈現：(1) <code>4'b0001</code> 用直引號，<code>3‘b011</code> 卻用全形左引號；(2) 重複語法寫成 <code>2{...}</code>，合法的 Verilog 應為 <code>{2{...}}</code>；(3) 兩條展開字串長度互相矛盾（24 位 vs 20 位）。</p>
+      <div class="supplement">
+        <p>正確寫法是 <code>assign data = {2{4'b0001, {2{3'b011}}}};</code>，展開後為 <code>0001 011 011 0001 011 011</code> 共 20 位元。投影片的 <code>001</code> 與位數都和 <code>3'b011</code> 不符，推測是手寫示意時的筆誤。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-13">
+      <h2>3.13 什麼是「行為」</h2>
+      <p><span class="srcref" data-slides="17">投影片 p.17</span></p>
+      <p>這一頁只有一張卡通圖與兩個標籤：一個綠色小人舉著手，一道黃色閃電打在他的右手上標著 <code>Event!</code>，左上角一顆太陽照過來標著 <code>Another Event!</code>。</p>
+      <p>教學重點：<strong>「行為」就是對事件的反應</strong>。電路平時什麼都不做，事件（時脈邊緣、訊號變化）一來才反應 — 這正是 <code>always@(事件)</code> 的語意。</p>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-17.png" alt="投影片 p.17 畫面：一個綠色火柴人舉起雙手，一道黃色閃電打在他的右手上並標示 Event！，左上方一顆黃色太陽照射過來並標示 Another Event！，左下角有一個代表反應的小圓圈與散射箭頭。">
+        <figcaption>行為 = 對事件的反應。<span class="srcref" data-slides="17">投影片 p.17</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-3-14">
+      <h2>3.14 內容順序與時序、可合成的範圍</h2>
+      <p><span class="srcref" data-slides="18,19,20">投影片 p.18–20</span></p>
+
+      <h3>哪些東西有順序、哪些沒有（p.18）</h3>
+      <p>圖的橫軸是 <code>time</code>（原點標 <code>0</code>），縱軸是 <code>context</code>。左側綠色欄位列出「連續、無順序」的那一類：</p>
+      <div class="codeblock" data-title="p.18 左欄（照抄原文）">
+<pre><code data-lang="text">Continuous
+Basis
+
+Non-ordered
+
+Switch Model
+Gate Model
+RTL Model</code></pre>
+      </div>
+      <p>右側沿著時間軸排了六條橫帶，由上而下依序是：</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.18 的六條橫帶（照錄文字與底色）</caption>
+          <thead><tr><th scope="col">#</th><th scope="col">帶上的文字</th><th scope="col">底色</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>always block / Procedural ・ RTL / Behavioral</td><td>淺綠</td></tr>
+            <tr><td>2</td><td>initial block / Simulation only</td><td>黃</td></tr>
+            <tr><td>3</td><td>Compiler/system blocks ・ task/function/specify …</td><td>粉紅</td></tr>
+            <tr><td>4</td><td>initial block / Simulation only</td><td>黃</td></tr>
+            <tr><td>5</td><td>always block / Procedural ・ RTL / Behavioral</td><td>淺綠</td></tr>
+            <tr><td>6</td><td>initial block / Simulation only</td><td>黃</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>頁尾的結論一句話：<strong>Synthesizable: Continuous and Procedural Blocks</strong>（可合成的只有連續敘述與程序式區塊）。</p>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-18.png" alt="投影片 p.18 畫面：橫軸為時間、縱軸為內容的圖表。左側綠色欄位列出連續、無順序的開關、閘級與 RTL 模型；右側沿時間軸排列六條橫帶，淺綠為 always 區塊、黃色為僅供模擬的 initial 區塊、粉紅為編譯器與系統區塊。">
+        <figcaption>哪些內容有時間順序，哪些沒有。<span class="srcref" data-slides="18">投影片 p.18</span></figcaption>
+      </figure>
+
+      <h3>答案版（p.19）</h3>
+      <p>同樣的版面，但只留下兩條淺綠色的 <code>always block / Procedural ・ RTL / Behavioral</code> 帶，其餘都移除。底部兩個標註：左欄下方寫 <strong>Combinational</strong>（組合），橫帶下方寫 <strong>Sequential</strong>（循序）。</p>
+      <p>這就是最精簡的答案：<strong>連續敘述 → 組合邏輯；<code>always</code> 程序式區塊 → 循序邏輯。兩者都可合成，<code>initial</code> 與系統函式不可。</strong></p>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-19.png" alt="投影片 p.19 畫面：與前一張相同的版面，但只留下兩條淺綠色的 always 區塊橫帶；左欄下方標示 Combinational，橫帶下方標示 Sequential。">
+        <figcaption>可合成的範圍：組合（連續）與循序（always）。<span class="srcref" data-slides="19">投影片 p.19</span></figcaption>
+      </figure>
+
+      <h3>資料路徑的畫法（p.20）</h3>
+      <p>一朵大綠雲代表組合邏輯，輸入 <code>X</code> 從左邊進來，輸出 <code>Z</code> 往右出去；雲下方是一疊帶時脈三角形的暫存器，存放 <code>Q</code>，輸入是 <code>D</code>。<code>Q</code> 回授進雲，<code>D</code> 由雲驅動，而 <code>event</code> 這條線接到暫存器的時脈輸入。</p>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 520 300" role="img" aria-labelledby="dp-title dp-desc">
+          <title id="dp-title">p.20 的資料路徑圖</title>
+          <desc id="dp-desc">中央雲形是持續存在的組合邏輯電路，裡面寫著 Z 等於 X 與 Q 的函數、D 等於 X 與 Q 的另一個函數。輸入 X 由左方進入，輸出 Z 向右離開。下方暫存器存放 Q，輸入為 D，由 event 訊號觸發；Q 回授進組合邏輯，D 由組合邏輯驅動。</desc>
+          <rect class="cloud" x="130" y="30" width="250" height="100" rx="40"></rect>
+          <text x="255" y="62" text-anchor="middle">Combinational Circuit</text>
+          <text x="255" y="82" text-anchor="middle">Continuously Exists</text>
+          <text x="255" y="104" text-anchor="middle">assign Z = f(X,Q)</text>
+          <text x="255" y="122" text-anchor="middle">assign D = g(X,Q)</text>
+          <path class="edge" d="M44 80 L128 80"></path>
+          <text x="32" y="76" text-anchor="middle">X</text>
+          <path class="edge" d="M382 80 L470 80"></path>
+          <text x="482" y="76" text-anchor="middle">Z</text>
+          <rect class="reg" x="190" y="196" width="130" height="54" rx="4"></rect>
+          <text x="255" y="228" text-anchor="middle">Q（暫存器）</text>
+          <path class="edge" d="M352 132 L352 170 L318 170 L318 194"></path>
+          <text x="368" y="166">D</text>
+          <path class="edge" d="M192 194 L192 170 L158 170 L158 132"></path>
+          <text x="140" y="166" text-anchor="end">Q</text>
+          <path class="edge" d="M255 290 L255 252"></path>
+          <text class="accent-text" x="266" y="284">event</text>
+          <text x="400" y="250" text-anchor="middle">always@(event) Q←D;</text>
+        </svg>
+      </div>
+      <p>投影片右下角的註記照錄：<code>Procedural behaviors</code> / <code>always@(event) Q←D;</code></p>
+    </section>
+
+    <section class="chapter-section" id="sec-3-15">
+      <h2>3.15 Verilog 的事件</h2>
+      <p><span class="srcref" data-slides="21">投影片 p.21</span></p>
+      <p>圖的上方是兩條波形 <code>Inputs</code> 與 <code>Inout</code>。<code>Inputs</code> 上的邊緣標為 <strong>Driving Events</strong>（驅動事件，紅色），<code>Inout</code> 上對應的邊緣標為 <strong>Driven Events</strong>（被驅動事件），兩者之間用虛線箭頭表示因果。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.21 的事件分類（照錄）</caption>
+          <thead><tr><th scope="col">分類</th><th scope="col">寫法</th></tr></thead>
+          <tbody>
+            <tr><th scope="row" rowspan="3">Primitive Event of a Signal<br>單一訊號的基本事件</th><td>Positive edge: <code>posedge variable</code></td></tr>
+            <tr><td>Negative edge: <code>negedge variable</code></td></tr>
+            <tr><td>Changing to another state (such as <code>1’bz</code>)</td></tr>
+            <tr><th scope="row" rowspan="3">Compound Events<br>複合事件</th><td>Any event of a signal: <code>variable</code></td></tr>
+            <tr><td>Using <code>or</code></td></tr>
+            <tr><td>Example: <code>always@(posedge Clk or negedge In)</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>投影片用一個黃色大括號框住 <code>(posedge Clk or negedge In)</code>，標上 <strong>Sensitivity List</strong>（敏感度列表）。</p>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-21.png" alt="投影片 p.21 畫面：上方兩條標示 Inputs 與 Inout 的波形，邊緣處有紅色向上與黃色向下箭頭；Inputs 的邊緣標為 Driving Events，Inout 的邊緣標為 Driven Events，兩者以虛線箭頭連接表示因果關係。">
+        <figcaption>驅動事件與被驅動事件、敏感度列表。<span class="srcref" data-slides="21">投影片 p.21</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-3-16">
+      <h2>3.16 電路時間與 CPU 時間、時間輪</h2>
+      <p><span class="srcref" data-slides="22,23">投影片 p.22–23</span></p>
+
+      <h3>兩種時間（p.22）</h3>
+      <p>圖的中段是一支標著 <strong>Simulated Circuit Time</strong>（模擬的電路時間）的白色箭頭，下方是一排六個標著 <strong>Simulation CPU Time</strong>（模擬所花的 CPU 時間）的綠色箭頭。虛線把每個訊號邊緣對應到一個 CPU 時間格 — 說明<strong>兩種時間各自獨立前進</strong>。</p>
+      <ul>
+        <li>Circuit Time &gt;&gt; CPU Time for Small Low-Speed Design（小型低速設計：電路時間遠大於 CPU 時間）</li>
+        <li>CPU Time &gt;&gt; Circuit Time for Large High-Speed Design（大型高速設計：CPU 時間遠大於電路時間）</li>
+      </ul>
+      <div class="supplement">
+        <p>換句話說：模擬一顆小晶片跑 1 秒的行為，電腦可能只花幾毫秒；但模擬一顆大型高速晶片跑 1 微秒，電腦可能要算好幾個小時。這是驗證工程的核心成本。</p>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-22.png" alt="投影片 p.22 畫面：上方是 Inputs 與 Inout 兩條波形，中段是標示 Simulated Circuit Time 的白色箭頭，下方是一排六個標示 Simulation CPU Time 的綠色箭頭，虛線把訊號邊緣對應到各個 CPU 時間格。">
+        <figcaption>電路時間與 CPU 時間是兩條獨立的時間軸。<span class="srcref" data-slides="22">投影片 p.22</span></figcaption>
+      </figure>
+
+      <h3>時間輪（p.23）</h3>
+      <p>投影片的一句定義：<code>Internal Queue Structure for Event-Driven Simulation </code>（事件驅動模擬的內部佇列結構）。</p>
+      <p>圖是一個大的綠色圓形箭頭（輪子），輪緣上用黃線與藍色別針掛著十個白色行李標籤，每個標籤都寫著同樣的三行字：</p>
+      <div class="codeblock" data-title="p.23 每個標籤上的三行字（照抄原文）">
+<pre><code data-lang="text">Event
+Circuit time
+Cause &amp; Effect</code></pre>
+      </div>
+      <div class="supplement">
+        <p>事件驅動模擬器的運作方式：每個待處理事件都帶著「發生時間」與「因果關係」掛在時間輪上，模擬器按電路時間順序一個一個取下來處理，處理時又可能產生新的事件掛回輪子。這就是為什麼模擬時間不是等速前進 — 沒有事件的時段會被直接跳過。</p>
+      </div>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-23.png" alt="投影片 p.23 畫面：一個大型綠色圓形箭頭代表時間輪，輪緣以黃線與藍色別針掛著十個白色行李標籤，每個標籤上都寫著 Event、Circuit time、Cause and Effect 三行字。">
+        <figcaption>時間輪：事件驅動模擬的內部佇列。<span class="srcref" data-slides="23">投影片 p.23</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-3-17">
+      <h2>3.17 左值與 reg</h2>
+      <p><span class="srcref" data-slides="24">投影片 p.24</span></p>
+      <ul>
+        <li><strong>Left Value（左值）</strong>：The variable left to the assignment of an expression in C or Verilog（在 C 或 Verilog 中，位於指定運算左邊的變數）。</li>
+        <li><strong>Register（暫存器）</strong>：
+          <ul>
+            <li>Register circuit usually denotes the flipflop array, such as counters.（暫存器電路通常指正反器陣列，例如計數器。）</li>
+            <li><strong>reg in behavioral mode may not necessarily be a register</strong>（行為模式中的 <code>reg</code> 未必真的是暫存器。）</li>
+            <li>reg keeps the variable data while elapsing in simulation phase（<code>reg</code> 在模擬過程中保存變數的值。）</li>
+            <li><strong>Declare reg for all left values in behavioral model blocks.</strong>（行為模型區塊中所有的左值都要宣告為 <code>reg</code>。）</li>
+            <li>reg can also define memory arrays during simulation phase.（<code>reg</code> 也可以在模擬階段定義記憶體陣列。）</li>
+          </ul>
+        </li>
+      </ul>
+      <div class="codeblock" data-title="p.24 的範例（照抄原文，含大寫的 Output 與原本的 Tab）">
+<pre><code data-lang="verilog">module M1(in, out);
+:
+Output	[7:0] out;
+reg 	[7:0] out; // behavioral Lvalue
+reg	[7:0] Memory[1023:0]; //1KB
+
+	always@(Events) begin
+			:
+		out = right_expression;
+			:
+	end
+endmodule </code></pre>
+      </div>
+      <p class="warn">原文 <code>Output</code> 的 O 是大寫。照抄不修正。</p>
+      <div class="supplement">
+        <p>這是初學者最大的誤解來源：<code>reg</code> <strong>不等於</strong>硬體暫存器。它只是「可以在程序式區塊裡被指定的變數型別」。真正會不會合成出正反器，取決於你怎麼寫 — 用 <code>always@(posedge Clk)</code> 才會，用 <code>always@(a or b)</code> 寫組合邏輯就不會。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-18">
+      <h2>3.18 Verilog 的八種 Block</h2>
+      <p><span class="srcref" data-slides="25">投影片 p.25</span></p>
+      <div class="table-wrap">
+        <table>
+          <caption>8 Blocks in Verilog（照錄 p.25，空格即為原文空白）</caption>
+          <thead><tr><th scope="col">Block</th><th scope="col">Outlook</th><th scope="col">Property</th><th scope="col">for-loop</th><th scope="col">index</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">statements</th><td><code>begin [:name]</code> / <code>end</code></td><td>grouping</td><td></td><td></td></tr>
+            <tr><th scope="row">module</th><td><code>module #(para) ID (ports);</code> / <code>endmodule</code></td><td>parallel</td><td></td><td></td></tr>
+            <tr><th scope="row">always</th><td><code>always@(events)</code> / <code>statements;</code></td><td>procedural</td><td>concurrent</td><td>integer</td></tr>
+            <tr><th scope="row">initial</th><td><code>initial statements;</code></td><td>serial</td><td>sequential</td><td>Integer</td></tr>
+            <tr><th scope="row">task</th><td><code>task ID;</code> / <code>endtask </code></td><td>procedural</td><td>sequential</td><td>integer</td></tr>
+            <tr><th scope="row">function</th><td><code>function ID;</code> / <code>endfunction</code></td><td>procedural</td><td>sequential</td><td>sequential</td></tr>
+            <tr><th scope="row">generate</th><td><code>generate</code> / <code>endgenerate</code></td><td></td><td>by time 0</td><td>genvar</td></tr>
+            <tr><th scope="row">specify</th><td><code>specify</code> / <code>endspecify</code></td><td></td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="warn">兩處原文瑕疵：<code>initial</code> 列的 index 寫成大寫的 <code>Integer</code>；<code>function</code> 列的 index 欄寫成 <code>sequential</code>（依其他列的規律應為 <code>integer</code>）。照原文保留。</p>
+      <div class="supplement">
+        <p>第 01 章 p.41 從「詞性」的角度列了 13 種 block 用法，這裡則從「性質」整理成 8 種並加上 for-loop 與索引變數型別 — 兩張表互補，建議對照著看。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-19">
+      <h2>3.19 編譯指令與系統函式</h2>
+      <p><span class="srcref" data-slides="26,27">投影片 p.26–27</span></p>
+      <p>投影片標題兩行：<code>Directives in Verilog</code> / <code>`back-quote and $dollar-sign Directives</code>。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>p.26 的指令分類（照錄）</caption>
+          <thead><tr><th scope="col">分類</th><th scope="col">內容</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Preprocessor<br>前置處理器</th><td>Macro Substitutions: <code>`define sym string</code><br>Include Construct: <code>`include file</code><br>Conditional Process: <code>`ifdef sym &lt;Code&gt; `endif</code></td></tr>
+            <tr><th scope="row">Simulation Directives<br>（Ignored by HDL Compiler）</th><td><code>`timescale	unit / precision</code><br><code>`resetall</code></td></tr>
+            <tr><th scope="row">System Functions<br>（Prefixed by $）</th><td><code>$display, $write</code>: write a message to the display<br><code>$monitor</code>: monitoring every event<br><code>$time</code>: return the circuit simulation time<br><code>$stop, $continue</code><br><code>$finish</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>綜合範例（p.27）</h3>
+      <div class="codeblock" data-title="p.27 的完整範例（照抄原文，含全形雙引號與大寫的 Assign / Endmodule）">
+<pre><code data-lang="verilog">`include ”parts.v”
+`timescale 1ns/1ps
+`define high 7:4
+`define Sum {C, S}
+module xyz(input, output);
+:
+parameter five = 4’b0101;
+:
+Assign `Sum = Bus[`high] + five;
+:
+Endmodule
+
+module testbench;
+	initial begin
+		:
+		$monitor($time, ”Sum=%b, Adr=%H”, Sum, A);
+		:
+		#10 $stop;
+	end
+endmodule</code></pre>
+      </div>
+      <p class="warn">這段有多處原文瑕疵：字串用的是全形雙引號 <code>”</code>；<code>Assign</code> 與 <code>Endmodule</code> 首字母大寫；模組埠直接取名為 <code>input</code>、<code>output</code>（與關鍵字衝突）。全部照抄不修正。</p>
+      <div class="supplement">
+        <p><code>`define Sum {C, S}</code> 這種把串接寫進巨集的做法很常見：之後寫 <code>`Sum = ...</code> 就等於同時指定 <code>C</code> 與 <code>S</code>，也就是進位與和一次寫入。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-20">
+      <h2>3.20 命令列與監看輸出</h2>
+      <p><span class="srcref" data-slides="28">投影片 p.28</span></p>
+      <p>這一頁把「設計 + 測試平台 + 模擬輸出」三者放在一起對照，是本章最完整的一個範例。</p>
+
+      <h3>設計本體</h3>
+      <div class="codeblock" data-title="p.28 設計：32 位元計數器（照抄原文）">
+<pre><code data-lang="verilog">module cnt(Clk, Rst, Q);
+input 	Clk, Rst;
+output [31:0] Q;
+reg    [31:0] Q;
+	always@(posedge Clk or posedge Rst)
+		if(Rst) Q=0;
+		else Q=Q+1;
+endmodule</code></pre>
+      </div>
+
+      <h3>測試平台</h3>
+      <div class="codeblock" data-title="p.28 測試平台（照抄原文）">
+<pre><code data-lang="verilog">module test;
+reg Clk, Rst;
+wire [31:0] Q;
+cnt u1(Clk, Rst, Q);
+	always Clk = #10 ~Clk;
+	initial begin
+		Clk=0;
+		$display("------------Time---- Clk-------Q-");
+		$monitor("%5d  %b  %h", $time, Clk, Q);
+		Rst=1;
+		#15 Rst=0;
+		#320 $stop;
+	end
+endmodule</code></pre>
+      </div>
+
+      <h3>模擬輸出</h3>
+      <div class="codeblock" data-title="p.28 模擬輸出（照抄原文）">
+<pre><code data-lang="text">------------Time---- Clk-------Q-
+                   0  0  00000000
+                  10  1  00000000
+                  20  0  00000000
+                  30  1  00000001
+                          :
+                 320  0  0000000f                    
+		  330: 1  00000010
+Stop at simulation time 335000</code></pre>
+      </div>
+      <p class="warn">輸出的最後兩行在投影片中是手動編輯的：<code>330:</code> 那一行用 Tab 縮排而非空白對齊，且多了一個冒號。照原樣保留。</p>
+      <div class="supplement">
+        <p>讀法：時脈每 10 個時間單位翻轉一次，所以 <code>Q</code> 每 20 單位加一（只在正緣累加）。<code>Rst</code> 在 t=15 放掉，因此 t=30 的正緣開始計數。t=320 時 <code>Q</code> 為 <code>0000000f</code>（十進位 15），再一個正緣就變成 <code>00000010</code>（十六進位 16）。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-21">
+      <h2>3.21 三種指定敘述</h2>
+      <p><span class="srcref" data-slides="29">投影片 p.29</span></p>
+      <p>這是全章最關鍵的一頁。Verilog 有三種指定，語意完全不同。</p>
+      <div class="table-wrap">
+        <table>
+          <caption>Assignments（照錄 p.29）</caption>
+          <thead><tr><th scope="col">種類</th><th scope="col">模擬時 (Simulation)</th><th scope="col">合成時 (Synthesis)</th></tr></thead>
+          <tbody>
+            <tr>
+              <th scope="row">Continuous Assignments<br>連續指定 <code>=</code>（用於 <code>assign</code>）</th>
+              <td>Evaluate RHS and change Lvalue at 1 step when any event occurs.<br>（任何事件發生時，一步內算完右式並改變左值。）</td>
+              <td>Draw a wire from the RHS to the Lvalue.<br>（從右式拉一條線到左值。）</td>
+            </tr>
+            <tr>
+              <th scope="row">Blocking Assignments<br>阻塞指定 <code>=</code>（用於程序式區塊）</th>
+              <td>“Blocking” means to be locked at the dependency.<br>Evaluate RHS and change Lvalue at 1 step when any event occurs.<br>（「阻塞」是指被相依性鎖住；事件發生時一步內算完並改變左值。）</td>
+              <td>Cannot be synthesized if any data dependency.<br>（只要有資料相依性就無法合成。）</td>
+            </tr>
+            <tr>
+              <th scope="row">Non-blocking Assignments<br>非阻塞指定 <code>&lt;=</code></th>
+              <td>Evaluate RHS at the first phase then change Lvalue at the second phase.<br>（第一階段先算右式，第二階段才改變左值。）</td>
+              <td>Cannot be synthesized if any data dependency; There won’t be dependency if all are non-blocking.<br>（有相依性則無法合成；但若全部都用非阻塞，就不會有相依性。）</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="supplement">
+        <p>最後那句是整頁的結論：<strong>只要同一個 <code>always</code> 區塊裡全部使用非阻塞指定 <code>&lt;=</code>，就不會產生資料相依性問題，因此可以合成</strong>。這也是「循序邏輯一律用 <code>&lt;=</code>、組合邏輯一律用 <code>=</code>」這條業界慣例的由來。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-22">
+      <h2>3.22 函式與任務</h2>
+      <p><span class="srcref" data-slides="30,31">投影片 p.30–31</span></p>
+      <p>投影片把 function／task 類比為其他語言的既有概念：<em>The same as function/procedure in PASCAL</em>，以及 C 的 non-void／void 函式。</p>
+      <p>優點 (Advantage)：</p>
+      <ul>
+        <li>Fast, convenient and easy to maintain the source code.（快速、方便、好維護。）</li>
+        <li>Convenient for reading.（易讀。）</li>
+        <li>Repetition and duplication（可重複使用。）</li>
+      </ul>
+      <div class="codeblock" data-title="p.31 的函式與任務範例（照抄原文，含大寫的 Endfunction）">
+<pre><code data-lang="verilog">module xyz(Clk, X, Y);
+:
+	always(posedge Clk)
+		begin
+			:
+			X &lt;= Reverse(Y);
+			:
+		end
+:
+endmodule
+
+function [7:0] Reverse(In); // functionname is a reg
+input [7:0] In;
+	swap(Reverse[7], Reverse[0]);
+	swap(Reverse[6], Reverse[1]);
+	swap(Reverse[5], Reverse[2]);
+	swap(Reverse[4], Reverse[3]);
+Endfunction
+
+task swap(A, B);
+input A, B;
+reg	A, B;
+	A &lt;= B;
+	B &lt;= A;
+endtask</code></pre>
+      </div>
+      <p class="warn">兩處原文瑕疵：<code>always(posedge Clk)</code> 少了 <code>@</code>；<code>Endfunction</code> 首字母大寫。照原樣保留。</p>
+      <div class="supplement">
+        <p>程式中的註解 <code>// functionname is a reg</code> 點出 Verilog 函式的特性：<strong>函式名稱本身就是回傳值的變數</strong>，所以 <code>Reverse[7]</code>、<code>Reverse[0]</code> 可以當成一般位元來操作。另外 <code>task</code> 可以含時間控制，<code>function</code> 不行且必須有回傳值。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-23">
+      <h2>3.23 阻塞與非阻塞的逐步比較</h2>
+      <p><span class="srcref" data-slides="32,33">投影片 p.32–33</span></p>
+      <p>投影片用四段程式做對照，初始值都假設 <code>X==3</code> 且 <code>Y==6</code>。</p>
+
+      <h3>阻塞指定（左欄）</h3>
+      <div class="cmp-grid">
+        <div>
+          <div class="codeblock" data-title="p.32 阻塞 ①（照抄原文）">
+<pre><code data-lang="verilog">always@(posedge Clk) 
+	begin
+		X = Y + 1;
+		Y = X &lt;&lt; 1;
+	end</code></pre>
+          </div>
+          <p>投影片的說明照錄：<em>Assume X==3 and Y==6 at first, the simulator evaluates Y+1==7 and gives 7 to X; then it evaluates X&lt;&lt;1 == 14 and gives 14 to Y.</em></p>
+          <p>也就是 <strong>X=7、Y=14</strong>。第二行用到的是<em>剛被改過</em>的 X。</p>
+        </div>
+        <div>
+          <div class="codeblock" data-title="p.32 阻塞 ②：兩行對調（照抄原文）">
+<pre><code data-lang="verilog">always@(posedge Clk) 
+	begin
+		Y = X &lt;&lt; 1;			X = Y + 1;
+	end</code></pre>
+          </div>
+          <p>投影片的說明照錄：<em>Assume X==3 and Y==6 at first, the simulator evaluates X&lt;&lt;1==6 and gives 6 to Y; then it evaluates Y+1 == 7 and gives 7 to Y.</em></p>
+          <p class="warn">原文最後寫「gives 7 to <strong>Y</strong>」，但該行程式指定的是 <code>X</code>。依程式應為 <strong>Y=6、X=7</strong>。照原文保留，不修改投影片文字。</p>
+        </div>
+      </div>
+      <p><strong>重點：阻塞指定的結果會隨著兩行的先後順序而改變</strong>（①得到 X=7,Y=14；②得到 Y=6,X=7）。</p>
+
+      <h3>非阻塞指定（右欄）</h3>
+      <div class="cmp-grid">
+        <div>
+          <div class="codeblock" data-title="p.32 非阻塞 ①（照抄原文）">
+<pre><code data-lang="verilog">always@(posedge Clk) 
+	begin
+		X &lt;= Y + 1;
+		Y &lt;= X &lt;&lt; 1;
+	end</code></pre>
+          </div>
+          <p>投影片的說明照錄：<em>Assume X==3 and Y==6 at first, the simulator evaluates X’==Y+1==7 and Y’==X&lt;&lt;1==6, then it gives values: X←X’==7 and Y←Y’==6;</em></p>
+          <p>也就是 <strong>X=7、Y=6</strong>。兩個右式都用<em>舊值</em>計算。</p>
+        </div>
+        <div>
+          <div class="codeblock" data-title="p.32 非阻塞 ②：兩行對調（照抄原文）">
+<pre><code data-lang="verilog">always@(posedge Clk) 
+	begin
+		Y &lt;= X &lt;&lt; 1;		X &lt;= Y + 1;
+	end</code></pre>
+          </div>
+          <p>投影片的說明照錄：<em>The simulation results will be the same as the above and it can be synthesized.</em>（結果與上面相同，而且可以合成。）</p>
+        </div>
+      </div>
+      <p><strong>重點：非阻塞指定的結果與書寫順序無關</strong>，因此可以合成。這正是 §3.21 最後那句結論的具體示範。</p>
+
+      <h3>電路觀點（p.33）</h3>
+      <p>p.33 用電路圖解釋為什麼。兩半各畫兩個虛線框的正反器 <code>F1</code>（上）與 <code>F2</code>（下），每個虛線框內有兩個綠色閂鎖器：第一個標 <code>D</code>、輸出 <code>Q’</code>，第二個標 <code>Q</code>，並註明 <strong>Dual latches</strong>（雙閂鎖器）與 <strong>FF</strong>。粉紅色線把兩個正反器的輸出交叉接到對方的輸入。</p>
+      <div class="cmp-grid">
+        <div>
+          <div class="codeblock" data-title="p.33 左：阻塞（照抄原文）">
+<pre><code data-lang="verilog">begin
+  F1=F2;
+  F2=F1;
+end</code></pre>
+          </div>
+        </div>
+        <div>
+          <div class="codeblock" data-title="p.33 右：非阻塞（照抄原文）">
+<pre><code data-lang="verilog">begin
+  F1&lt;=F2;
+  F2&lt;=F1;
+end</code></pre>
+          </div>
+        </div>
+      </div>
+      <p>右半邊的圖在每個 <code>Q</code> 輸出端多畫了一個粉紅接點才交叉過去 — 這就是關鍵：<strong>非阻塞指定取的是交換前的舊值</strong>，所以 <code>F1</code> 與 <code>F2</code> 真的會互換；左邊的阻塞寫法則是 <code>F1</code> 先變成 <code>F2</code>，第二行再把這個新的 <code>F1</code> 寫回 <code>F2</code>，結果兩者都變成原本的 <code>F2</code>，交換失敗。</p>
+      <figure class="figure">
+        <img src="assets/ch03/fig-slide-33.png" alt="投影片 p.33 畫面：左右兩半各畫兩個虛線框的正反器 F1 與 F2，每個框內有標示 D 與 Q 的兩個綠色閂鎖器並註明 Dual latches 與 FF；粉紅色線把兩個正反器的輸出交叉接到對方輸入，右半邊在每個 Q 輸出端多畫一個接點。">
+        <figcaption>阻塞與非阻塞在電路上的差別：雙閂鎖器與舊值取樣。<span class="srcref" data-slides="33">投影片 p.33</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="chapter-section" id="sec-3-24">
+      <h2>3.24 case / casex / casez</h2>
+      <p><span class="srcref" data-slides="34">投影片 p.34</span></p>
+      <div class="codeblock" data-title="p.34 一般形式（照抄原文）">
+<pre><code data-lang="verilog">case (expression)
+	constant1: 	statement1;
+	:
+	constantj: 	statementj;
+	:
+	default:	statementd;
+endcase</code></pre>
+      </div>
+      <div class="cmp-grid">
+        <div>
+          <div class="codeblock" data-title="p.34 casex 範例（照抄原文）">
+<pre><code data-lang="verilog">casex(c)
+	4’b00xx: statement1;
+	:
+	4’b0xxx: statementj;
+	:
+	default: statementd;
+endcase</code></pre>
+          </div>
+        </div>
+        <div>
+          <div class="codeblock" data-title="p.34 casez 範例（照抄原文）">
+<pre><code data-lang="verilog">casez(c)
+	8’b01z?11??: statement1;
+	:
+	8’b1100????: statementj;
+	:
+	default:	statementd;
+endcase</code></pre>
+          </div>
+        </div>
+      </div>
+      <p>投影片左下用一張范氏圖說明三者的涵蓋範圍：外圈白色標 <code>z</code>，內圈綠色標 <code>0, 1</code>，外圈左側另有 <code>x</code> 與一個帶箭頭的 <code>?</code>。</p>
+      <div class="svgfig svg-plain">
+        <svg viewBox="0 0 360 200" role="img" aria-labelledby="venn-title venn-desc">
+          <title id="venn-title">p.34 的 case 比對範圍范氏圖</title>
+          <desc id="venn-desc">外圈代表 z 與問號，內圈代表 0 與 1。casez 比對內圈加上 z 與問號；casex 再額外把 x 也視為相符。</desc>
+          <circle class="venn-out" cx="190" cy="100" r="82"></circle>
+          <circle class="venn-in" cx="190" cy="100" r="46"></circle>
+          <text x="190" y="105" text-anchor="middle">0, 1</text>
+          <text x="190" y="44" text-anchor="middle">z ／ ?</text>
+          <text class="accent-text" x="48" y="105" text-anchor="middle">x</text>
+          <path class="edge" d="M66 100 L104 100"></path>
+        </svg>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption>三者的差別</caption>
+          <thead><tr><th scope="col">敘述</th><th scope="col">把哪些值當成「不比對」</th></tr></thead>
+          <tbody>
+            <tr><td><code>case</code></td><td>完全精確比對，<code>x</code> 與 <code>z</code> 都必須一字不差</td></tr>
+            <tr><td><code>casez</code></td><td><code>z</code> 與 <code>?</code> 視為不比對</td></tr>
+            <tr><td><code>casex</code></td><td><code>z</code>、<code>?</code> <strong>以及 <code>x</code></strong> 都視為不比對（範圍最寬）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-25">
+      <h2>3.25 範例：正反器</h2>
+      <p><span class="srcref" data-slides="35">投影片 p.35</span></p>
+      <div class="codeblock" data-title="p.35 ①正緣觸發 D 型正反器（照抄原文）">
+<pre><code data-lang="verilog">module DFF(Clk, D, Q);
+input  Clk, D;
+output Q;
+reg    Q;
+    always@(posedge Clk)
+	Q=D;
+endmodule </code></pre>
+      </div>
+      <div class="codeblock" data-title="p.35 ②可重置 DFF（非同步 Asynchronous，照抄原文）">
+<pre><code data-lang="verilog">module DFF(Rst,Clk, D, Q);
+input  Rst, Clk, D;
+output Q;
+reg    Q;
+    always@(posedge Clk or posedge Rst)
+	if(Rst) Q=1’b0;
+	else    Q=D;
+endmodule </code></pre>
+      </div>
+      <div class="codeblock" data-title="p.35 ③可重置 DFF（同步 Synchronous，照抄原文）">
+<pre><code data-lang="verilog">module DFF(Rst,Clk, D, Q);
+input  Rst, Clk, D;
+output Q;
+reg    Q;
+    always@(posedge Clk)
+	if(Rst) Q=1’b0;
+	else    Q=D;
+endmodule </code></pre>
+      </div>
+      <p><strong>同步與非同步的唯一差別就在敏感度列表</strong>：非同步版把 <code>posedge Rst</code> 也放進 <code>always@(...)</code>，所以重置不必等時脈；同步版只看 <code>posedge Clk</code>，重置要等到下一個時脈邊緣才生效。</p>
+      <div class="supplement">
+        <p>依 §3.21 的結論，這三段若要合成成正反器，業界慣例會把 <code>Q=D</code> 寫成 <code>Q&lt;=D</code>。投影片此處用的是 <code>=</code>，照原文保留。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-26">
+      <h2>3.26 範例：計數器</h2>
+      <p><span class="srcref" data-slides="36,37">投影片 p.36–37</span></p>
+      <div class="codeblock" data-title="p.36 ①基本上數計數器（照抄原文）">
+<pre><code data-lang="verilog">module CNT(Clk, Q);
+input  Clk;
+output [7:0] Q;
+reg    [7:0] Q;
+    always@(posedge Clk)
+	Q=Q+1;
+endmodule </code></pre>
+      </div>
+      <div class="codeblock" data-title="p.36 ②可重置計數器（非同步，照抄原文）">
+<pre><code data-lang="verilog">module CNT(Rst,Clk, Q);
+input  Rst, Clk;
+output [15:0] Q;
+reg    [15:0] Q;
+    always@(posedge Clk or posedge Rst)
+	if(Rst) Q=15’b0;
+	else    Q=Q+1;
+endmodule </code></pre>
+      </div>
+      <div class="codeblock" data-title="p.36 ③可重置計數器（同步，照抄原文）">
+<pre><code data-lang="verilog">module CNT(Rst,Clk, Q);
+input  Rst, Clk;
+output [31:0] Q;
+reg    [31:0] Q;
+    always@(posedge Clk)
+	if(Rst) Q=31’b0;
+	else    Q=Q+1;
+endmodule </code></pre>
+      </div>
+      <p class="warn">原文的重置常數寫成 <code>15’b0</code> 與 <code>31’b0</code>，但暫存器寬度分別是 16 與 32 位元，位寬應為 <code>16’b0</code> 與 <code>32’b0</code>。照原文保留。</p>
+
+      <div class="codeblock" data-title="p.37 ④基本下數計數器（照抄原文，含大寫的 Module）">
+<pre><code data-lang="verilog">Module CNT(Clk, Q);
+input  Clk;
+output [7:0] Q;
+reg    [7:0] Q;
+    always@(posedge Clk)
+	Q=Q-1;
+endmodule </code></pre>
+      </div>
+      <p class="warn">原文這一段的 <code>Module</code> 首字母大寫。照原樣保留。</p>
+      <div class="codeblock" data-title="p.37 ⑤可載入計數器（照抄原文）">
+<pre><code data-lang="verilog">module CNT(Load, Clk, D, Q);
+input  Load, Clk, D;
+output [15:0] Q;
+reg    [15:0] Q;
+    always@(posedge Clk)
+	if(Load) Q=D;
+	else    Q=Q+1;
+endmodule </code></pre>
+      </div>
+      <div class="codeblock" data-title="p.37 ⑥模數計數器（照抄原文）">
+<pre><code data-lang="verilog">module CNT(Rst,Clk, Q);
+input  Rst, Clk;
+output [7:0] Q;
+reg    [7:0] Q;
+    always@(posedge Clk)
+	if(Rst) Q=7’b0;
+	else 	if(Q==99) Q=7’b0;	//%100
+		else Q=Q+1;
+endmodule </code></pre>
+      </div>
+      <div class="supplement">
+        <p>模數計數器的註解 <code>//%100</code> 說明它數 0 到 99 共 100 個狀態。不過 8 位元只能表示 0–255，而 <code>7’b0</code> 的位寬同樣與 <code>[7:0]</code> 不符（應為 <code>8’b0</code>）— 和 p.36 是同一類筆誤。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="sec-3-27">
+      <h2>3.27 Lab03 七段顯示器與除頻器</h2>
+      <p><span class="srcref" data-slides="38">投影片 p.38</span></p>
+      <p>標題：<code>Lab03  7SEG Decoder &amp; Freq Dividers</code></p>
+      <ul>
+        <li>Boolean Logic（布林邏輯）</li>
+        <li>7-Segment LED Decoder（七段顯示器解碼器）</li>
+        <li>Frequency Dividers（除頻器）</li>
+        <li>Running Lamps（跑馬燈）</li>
+        <li>(Snake – a FPGA contest problem)（貪食蛇，FPGA 競賽題）</li>
+      </ul>
+      <p>三道練習題：</p>
+      <ul>
+        <li><strong>Problem 1.</strong> Review Karnaugh-Map（複習卡諾圖）</li>
+        <li><strong>Problem 2.</strong> Quine–McCluskey Algorithm</li>
+        <li><strong>Problem 3.</strong> Study Espresso Algorithm by exercise the Logic Friday.（用 Logic Friday 工具實作練習 Espresso 演算法）</li>
+      </ul>
+      <div class="supplement">
+        <p>注意這裡的拼法是正確的 <strong>Quine–McCluskey</strong> 與 <strong>Espresso</strong>，與 §3.8（p.11）投影片上的 <code>McKlusky &amp; Quintus</code>、<code>ESSPRESSO</code> 不同。同一份教材內前後拼法不一致。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="takeaways">
+      <h2>重點整理</h2>
+      <div class="takeaways">
+        <ol>
+          <li><strong>常數格式是「位寬 + ' + 基底 + 數值」</strong>，如 <code>8’haf</code>；<code>`</code> 反引號用於編譯指令，<code>'</code> 單引號用於常數位寬，兩者不同鍵。</li>
+          <li><strong>不可合成的東西有跡可循</strong>：依賴時間或次數的（<code>initial</code>、<code>repeat</code>）、開關級、只在編譯／模擬用的運算子（<code>===</code>），以及程式庫裡沒有對應設計的（<code>/</code>、<code>%</code>）。</li>
+          <li><strong>模組是樣板，實體才佔資源</strong>；埠對應有名稱對應與順序對應兩種寫法，埠一多就該用名稱對應。</li>
+          <li><strong>Verilog 有四種模型</strong>：行為 → RTL → 閘級 → 開關級。實務只常用前兩種，閘級通常是合成工具的輸出。</li>
+          <li><strong>加入共識項可以消除突波</strong>：<code>(A&amp;B)|(~A&amp;C)</code> 加上 <code>B&amp;C</code> 後，邏輯不變但毛刺消失。</li>
+          <li><strong>行為就是對事件的反應</strong>；<code>always@(...)</code> 括號裡的就是敏感度列表，可用 <code>posedge</code>、<code>negedge</code> 與 <code>or</code> 組合。</li>
+          <li><strong>電路時間與 CPU 時間是兩條獨立時間軸</strong>；事件驅動模擬靠「時間輪」這個佇列把事件按電路時間排程。</li>
+          <li><strong><code>reg</code> 不等於硬體暫存器</strong>，它只是「可在程序式區塊中被指定的變數型別」；但行為區塊裡所有左值都必須宣告為 <code>reg</code>。</li>
+          <li><strong>三種指定要分清楚</strong>：<code>assign</code> 的連續指定等於拉一條線；阻塞 <code>=</code> 會立刻生效、順序會影響結果、有相依性就不能合成；非阻塞 <code>&lt;=</code> 先全部算完再一起寫入，與順序無關，<strong>全部用非阻塞就不會有相依性</strong>。</li>
+          <li><strong>交換兩個值必須用非阻塞</strong>：<code>F1=F2; F2=F1;</code> 會讓兩者都變成舊的 <code>F2</code>；<code>F1&lt;=F2; F2&lt;=F1;</code> 才真的互換。</li>
+          <li><strong>casex 比 casez 寬鬆</strong>：<code>casez</code> 只把 <code>z</code>／<code>?</code> 當不比對，<code>casex</code> 連 <code>x</code> 也不比對。</li>
+          <li><strong>同步與非同步重置的差別只在敏感度列表</strong>：非同步把 <code>posedge Rst</code> 也列進去。</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="terms">
+      <h2>關鍵術語</h2>
+      <div class="terms">
+        <dl>
+          <dt>模組 <span class="en">module</span></dt>
+          <dd>以樣板形式定義的設計單位。<span class="srcref" data-slides="8">投影片 p.8</span></dd>
+
+          <dt>實體 <span class="en">instance</span></dt>
+          <dd>在父模組中被複製出來、真正佔用硬體資源的元素。<span class="srcref" data-slides="8">投影片 p.8</span></dd>
+
+          <dt>埠 <span class="en">port / pin</span></dt>
+          <dd>模組對外的介面，是模組內部的觀點。<span class="srcref" data-slides="9">投影片 p.9</span></dd>
+
+          <dt>接線 <span class="en">net / wire</span></dt>
+          <dd>連接各實體的訊號線，是模組外部的觀點；名稱可與埠不同。<span class="srcref" data-slides="9">投影片 p.9</span></dd>
+
+          <dt>敏感度列表 <span class="en">sensitivity list</span></dt>
+          <dd><code>always@(...)</code> 括號內列出的事件集合。<span class="srcref" data-slides="21">投影片 p.21</span></dd>
+
+          <dt>時間輪 <span class="en">time wheel</span></dt>
+          <dd>事件驅動模擬器用來依電路時間排程事件的內部佇列結構。<span class="srcref" data-slides="23">投影片 p.23</span></dd>
+
+          <dt>左值 <span class="en">L-value</span></dt>
+          <dd>位於指定運算左邊、被寫入的變數。<span class="srcref" data-slides="24">投影片 p.24</span></dd>
+
+          <dt>連續指定 <span class="en">continuous assignment</span></dt>
+          <dd><code>assign</code> 的指定；合成後就是一條從右式拉到左值的線。<span class="srcref" data-slides="29">投影片 p.29</span></dd>
+
+          <dt>阻塞指定 <span class="en">blocking assignment</span></dt>
+          <dd>程序式區塊中的 <code>=</code>；立刻生效，後續敘述會看到新值。<span class="srcref" data-slides="29">投影片 p.29</span></dd>
+
+          <dt>非阻塞指定 <span class="en">non-blocking assignment</span></dt>
+          <dd><code>&lt;=</code>；先算完所有右式再一起寫入，與書寫順序無關。<span class="srcref" data-slides="29">投影片 p.29</span></dd>
+
+          <dt>突波 <span class="en">hazard / glitch</span></dt>
+          <dd>組合邏輯因路徑延遲不同而產生的短暫錯誤脈衝。<span class="srcref" data-slides="13">投影片 p.13</span></dd>
+
+          <dt>一熱碼 <span class="en">1-hot code</span></dt>
+          <dd>同一時間只有一個位元為 1 的編碼方式，解碼器的輸出形式。<span class="srcref" data-slides="15">投影片 p.15</span></dd>
+        </dl>
+        <p>完整詞條見<a href="glossary.html">全站術語表</a>。</p>
+      </div>
+    </section>
+
+    <section class="chapter-section" id="quiz">
+      <h2>自我測驗</h2>
+      <div class="quiz" data-quiz-root></div>
+    </section>
+
+    <div data-progress-panel></div>
+    <nav class="pager" data-pager></nav>
+  </main>
+</div>
+
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <p>內容整理自 2022 秋季「Hardware Description Language -- Logic Design using Verilog」課程投影片（黃宗柱 / Tsung-Chu Huang，彰師大電子系）。本網站僅供個人學習使用。</p>
+  </div>
+</footer>
+
+<script src="js/ch03-quiz.js"></script>
+<script src="js/quiz.js"></script>
+<script src="js/code.js"></script>
+</body>
+</html>
